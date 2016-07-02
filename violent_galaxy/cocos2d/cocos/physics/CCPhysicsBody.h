@@ -472,6 +472,13 @@ public:
     /** set the body's tag. */
     inline void setTag(int tag) { _tag = tag; }
     
+    using UpdateVelocityFunc = std::function<void(cpBody *body, float dt)>;
+    inline UpdateVelocityFunc getUpdateVelocityFunc() const { return _updateVelocityFunc; }
+    inline bool hasUpdateVelocityFunc() { return (bool)_updateVelocityFunc; }
+    inline void applyUpdateVelocityFunc(cpBody *body, float dt) { _updateVelocityFunc(body, dt); }
+    inline void setUpdateVelocityFunc(UpdateVelocityFunc func) { _updateVelocityFunc = func; }
+    inline void resetUpdateVelocityFunc() { _updateVelocityFunc = UpdateVelocityFunc(); }
+
     /** Convert the world point to local. */
     Vec2 world2Local(const Vec2& point);
     
@@ -491,13 +498,13 @@ protected:
     virtual ~PhysicsBody();
 
     virtual bool init()override;
-    
+public:
     virtual void setPosition(float positionX, float positionY);
 
     virtual void setRotation(float rotation);
 
     virtual void setScale(float scaleX, float scaleY);
-    
+protected:
     void update(float delta)override;
     
     void removeJoint(PhysicsJoint* joint);
@@ -551,6 +558,8 @@ protected:
 
     float _recordPosX;
     float _recordPosY;
+
+    UpdateVelocityFunc _updateVelocityFunc;
 
     friend class PhysicsWorld;
     friend class PhysicsShape;

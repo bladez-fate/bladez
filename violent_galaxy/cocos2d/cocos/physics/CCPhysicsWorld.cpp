@@ -821,6 +821,11 @@ void PhysicsWorld::setDebugDrawMask(int mask)
     _debugDrawMask = mask;
 }
 
+void PhysicsWorld::setForceField(PhysicsForceField* forceField)
+{
+    _forceField = forceField;
+}
+
 const Vector<PhysicsBody*>& PhysicsWorld::getAllBodies() const
 {
     return _bodies;

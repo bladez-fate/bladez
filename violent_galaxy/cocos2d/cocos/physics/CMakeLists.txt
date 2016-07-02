@@ -6,4 +6,5 @@ set(COCOS_PHYSICS_SRC
   physics/CCPhysicsJoint.cpp
   physics/CCPhysicsShape.cpp
   physics/CCPhysicsWorld.cpp
+  physics/CCPhysicsForceField.cpp
 )

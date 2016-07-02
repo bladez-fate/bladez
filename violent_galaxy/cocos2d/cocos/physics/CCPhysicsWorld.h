@@ -30,14 +30,17 @@
 
 #include <list>
 #include "base/CCVector.h"
+#include "base/CCRefPtr.h"
 #include "math/CCGeometry.h"
 #include "physics/CCPhysicsBody.h"
+#include "physics/CCPhysicsForceField.h"
 
 struct cpSpace;
 
 NS_CC_BEGIN
 
 class PhysicsBody;
+class PhysicsForceField;
 class PhysicsJoint;
 class PhysicsShape;
 class PhysicsContact;
@@ -333,6 +336,9 @@ public:
     */
     bool isAutoStep() { return _autoStep; }
 
+    inline PhysicsForceField* getForceField() { return _forceField.get(); }
+    void setForceField(PhysicsForceField* forceField);
+
     /**
      * The step for physics world.
      *
@@ -380,6 +386,7 @@ protected:
     bool _updateBodyTransform;
     Vector<PhysicsBody*> _bodies;
     std::list<PhysicsJoint*> _joints;
+    RefPtr<PhysicsForceField> _forceField;
     Scene* _scene;
     
     bool _autoStep;

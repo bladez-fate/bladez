@@ -52,12 +52,26 @@ static void internalBodyUpdateVelocity(cpBody *body, cpVect gravity, cpFloat dam
     
     cpAssertSoft(body->m > 0.0f && body->i > 0.0f, "Body's mass and moment must be positive to simulate. (Mass: %f Moment: f)", body->m, body->i);
     
+    // Apply custom forces and torques
     cocos2d::PhysicsBody *physicsBody = static_cast<cocos2d::PhysicsBody*>(body->userData);
-    
-    if(physicsBody->isGravityEnabled())
-            body->v = cpvclamp(cpvadd(cpvmult(body->v, damping), cpvmult(cpvadd(gravity, cpvmult(body->f, body->m_inv)), dt)), physicsBody->getVelocityLimit());
-    else
-            body->v = cpvclamp(cpvadd(cpvmult(body->v, damping), cpvmult(cpvmult(body->f, body->m_inv), dt)), physicsBody->getVelocityLimit());
+    if (physicsBody->hasUpdateVelocityFunc()) {
+        physicsBody->applyUpdateVelocityFunc(body, dt);
+    }
+    cpVect acc = cpvmult(body->f, body->m_inv);
+
+    // Apply force fields
+    cocos2d::PhysicsWorld* world = physicsBody->getWorld();
+    cocos2d::PhysicsForceField* ff = world->getForceField();
+    if (ff) {
+        acc = cpvadd(acc, ff->getGravity(cpBodyGetPosition(body)));
+    }
+    if (physicsBody->isGravityEnabled()) {
+        acc = cpvadd(acc, gravity);
+    }
+
+    body->v = cpvadd(cpvmult(body->v, damping), cpvmult(acc, dt));
+    body->v = cpvclamp(body->v, physicsBody->getVelocityLimit());
+
     cpFloat w_limit = physicsBody->getAngularVelocityLimit();
     body->w = cpfclamp(body->w*damping + body->t*body->i_inv*dt, -w_limit, w_limit);
     

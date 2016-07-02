@@ -90,6 +90,7 @@ if(MACOSX OR APPLE)
       proj.ios_mac/mac/main.cpp
     )
 elseif(LINUX)
+    LINK_DIRECTORIES(/usr/local/lib)
     set(PLATFORM_SPECIFIC_SRC
       proj.linux/main.cpp
     )
@@ -113,6 +114,7 @@ include_directories(
   ${COCOS2D_ROOT}/cocos
   ${COCOS2D_ROOT}/cocos/platform
   ${COCOS2D_ROOT}/cocos/audio/include/
+  ${COCOS2D_ROOT}/external/chipmunk/include
   Classes
 )
 if ( WIN32 )
@@ -124,13 +126,23 @@ endif( WIN32 )
 
 set(GAME_SRC
   Classes/AppDelegate.cpp
-  Classes/HelloWorldScene.cpp
+  Classes/AstroObjs.cpp
+  Classes/Defs.cpp
+  Classes/GameScene.cpp
+  Classes/Obj.cpp
+  Classes/Physics.cpp
+  Classes/Units.cpp
   ${PLATFORM_SPECIFIC_SRC}
 )
 
 set(GAME_HEADERS
   Classes/AppDelegate.h
-  Classes/HelloWorldScene.h
+  Classes/AstroObjs.h
+  Classes/Defs.h
+  Classes/GameScene.h
+  Classes/Obj.h
+  Classes/Physics.h
+  Classes/Units.h
   ${PLATFORM_SPECIFIC_HEADERS}
 )
 

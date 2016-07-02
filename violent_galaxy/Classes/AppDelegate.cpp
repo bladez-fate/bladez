@@ -1,9 +1,10 @@
 #include "AppDelegate.h"
-#include "HelloWorldScene.h"
+#include "GameScene.h"
 
 USING_NS_CC;
 
-static cocos2d::Size designResolutionSize = cocos2d::Size(480, 320);
+static int unityHeaderSize = 24;
+static cocos2d::Size designResolutionSize = cocos2d::Size(1366, 768 - unityHeaderSize);
 static cocos2d::Size smallResolutionSize = cocos2d::Size(480, 320);
 static cocos2d::Size mediumResolutionSize = cocos2d::Size(1024, 768);
 static cocos2d::Size largeResolutionSize = cocos2d::Size(2048, 1536);
@@ -34,17 +35,34 @@ static int register_all_packages()
     return 0; //flag for packages manager
 }
 
+static void dontCloseCallback(GLFWwindow* window)
+{
+    glfwSetWindowShouldClose(window, GL_FALSE);
+}
+
+
 bool AppDelegate::applicationDidFinishLaunching() {
     // initialize director
     auto director = Director::getInstance();
     auto glview = director->getOpenGLView();
+    GLViewImpl* glviewimpl = nullptr;
     if(!glview) {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
-        glview = GLViewImpl::createWithRect("violent_galaxy", cocos2d::Rect(0, 0, designResolutionSize.width, designResolutionSize.height));
+        // Fullscreen just doesn't work properly with Ubunty Unity, HUD and Super keys will hang system
+        //glview = GLViewImpl::createWithFullScreen("test1");
+        glview = glviewimpl = GLViewImpl::createWithRect("test1", cocos2d::Rect(
+            0, 0,
+            designResolutionSize.width, designResolutionSize.height
+        ), 1.0f, true);
 #else
-        glview = GLViewImpl::create("violent_galaxy");
+        glview = glviewimpl = GLViewImpl::create("test1");
 #endif
         director->setOpenGLView(glview);
+    }
+
+    // Disable closing by clicking in title bar cross
+    if (glviewimpl) {
+        glfwSetWindowCloseCallback(glviewimpl->getWindow(), dontCloseCallback);
     }
 
     // turn on display FPS
@@ -75,7 +93,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     register_all_packages();
 
     // create a scene. it's an autorelease object
-    auto scene = HelloWorld::createScene();
+    auto scene = GameScene::createScene();
 
     // run
     director->runWithScene(scene);

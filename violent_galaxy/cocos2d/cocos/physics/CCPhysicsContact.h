@@ -107,6 +107,7 @@ public:
     /** Get the event code */
     EventCode getEventCode() const { return _eventCode; };
 
+    inline void* getContactInfo() const { return _contactInfo; }
 private:
     static PhysicsContact* construct(PhysicsShape* a, PhysicsShape* b);
     bool init(PhysicsShape* a, PhysicsShape* b);
