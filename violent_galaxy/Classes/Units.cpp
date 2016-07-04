@@ -47,22 +47,21 @@ ObjType Unit::getObjType()
 
 bool ColonyShip::init(GameScene* game)
 {
-    _rootNode = DrawNode::create();
-    float radius = 10;
-    node()->drawSolidCircle(Vec2::ZERO, radius, 0, 12, Color4F::WHITE);
-    node()->drawSolidRect(
-        Vec2(-radius/10, -9*radius/10),
-        Vec2( radius/10,  9*radius/10),
-        Color4F::BLUE
-    );
-    node()->drawSolidRect(
-        Vec2(-9*radius/10, -radius/10),
-        Vec2( 9*radius/10,  radius/10),
-        Color4F::BLUE
-    );
+    _radius = 10;
+    Unit::init(game);
+    listenContactAstroObj = true;
+    return true;
+}
 
+Node* ColonyShip::createNodes()
+{
+    return DrawNode::create();
+}
+
+PhysicsBody* ColonyShip::createBody()
+{
     _body = PhysicsBody::createCircle(
-        radius,
+        _radius,
         gUnitMaterial,
         Vec2::ZERO
     );
@@ -73,14 +72,22 @@ bool ColonyShip::init(GameScene* game)
 //    );
     _body->setMass(1.0);
     _body->setMoment(200.0);
-    _body->setContactTestBitmask(gMatterBitmask);
-    _rootNode->setPhysicsBody(_body);
+    return _body;
+}
 
-    Unit::init(game);
-
-    listenContactAstroObj = true;
-
-    return true;
+void ColonyShip::draw()
+{
+    node()->drawSolidCircle(Vec2::ZERO, _radius, 0, 12, Color4F::WHITE);
+    node()->drawSolidRect(
+        Vec2(-_radius/10, -9*_radius/10),
+        Vec2( _radius/10,  9*_radius/10),
+        Color4F::BLUE
+    );
+    node()->drawSolidRect(
+        Vec2(-9*_radius/10, -_radius/10),
+        Vec2( 9*_radius/10,  _radius/10),
+        Color4F::BLUE
+    );
 }
 
 bool ColonyShip::onContactAstroObj(ContactInfo& cinfo)
@@ -117,73 +124,83 @@ bool ColonyShip::onContactAstroObj(ContactInfo& cinfo)
     return true;
 }
 
-bool Spaceport::init(GameScene* game)
-{
-    _rootNode = DrawNode::create();
-    cc::Size size(20, 20);
-    node()->drawSolidCircle(Vec2::ZERO, size.width/2, 0, 12, Color4F::WHITE);
-    node()->drawSolidRect(
-        Vec2(-size.width/2, -size.height/2),
-        Vec2( size.width/2,  0),
-        Color4F::WHITE
-    );
+//bool Spaceport::init(GameScene* game)
+//{
+//    _rootNode = DrawNode::create();
+//    cc::Size size(20, 20);
+//    node()->drawSolidCircle(Vec2::ZERO, size.width/2, 0, 12, Color4F::WHITE);
+//    node()->drawSolidRect(
+//        Vec2(-size.width/2, -size.height/2),
+//        Vec2( size.width/2,  0),
+//        Color4F::WHITE
+//    );
 
-    _body = PhysicsBody::createBox(
-        size,
-        gUnitMaterial,
-        Vec2::ZERO
-    );
-    _rootNode->setPhysicsBody(_body);
+//    _body = PhysicsBody::createBox(
+//        size,
+//        gUnitMaterial,
+//        Vec2::ZERO
+//    );
+//    _rootNode->setPhysicsBody(_body);
 
-    Unit::init(game);
+//    Unit::init(game);
 
-    return true;
-}
+//    return true;
+//}
 
 bool Tank::init(GameScene* game)
 {
-    _rootNode = DrawNode::create();
-    float size = 20;
+    _size = 20;
 
     Size bb(100,50);
     Vec2 offs(0,5);
-    Vec2 base[] = {
+    Vec2 base[8] = {
         Vec2(-40, -20), Vec2(-50, -10), Vec2(-50, 0), Vec2(-40, 10),
         Vec2(40, 10), Vec2(50, 0), Vec2(50, -10), Vec2(40, -20)
     };
-    Vec2 head[] = {
+    Vec2 head[6] = {
         Vec2(-30, 10), Vec2(-30, 20), Vec2(-20, 30), Vec2(20, 30),
         Vec2(30, 20), Vec2(30, 10)
     };
     Vec2 gunBegin(0, 20);
     float gunLength = 50;
 
-    float scale = size/bb.width;
-    for (size_t i = 0; i < sizeof(base)/sizeof(*base); i++) base[i] *= scale;
-    for (size_t i = 0; i < sizeof(head)/sizeof(*head); i++) head[i] *= scale;
-    gunBegin *= scale;
-    bb = bb * scale;
-    offs *= scale;
-    gunLength *= scale;
+    float scale = _size/bb.width;
+    for (size_t i = 0; i < sizeof(_base)/sizeof(*_base); i++) _base[i] = base[i] * scale;
+    for (size_t i = 0; i < sizeof(_head)/sizeof(*_head); i++) _head[i] = head[i] * scale;
+    _gunBegin = gunBegin * scale;
+    _bb = bb * scale;
+    _offs = offs * scale;
+    _gunLength = gunLength * scale;
 
-    float angle = 60 * (M_PI/180);
-
-    node()->drawSegment(
-        gunBegin,
-        gunBegin + gunLength * Vec2(cosf(angle), sinf(angle)),
-        1, Color4F::BLUE
-    );
-    node()->drawSolidPoly(base, sizeof(base)/sizeof(*base), Color4F::WHITE);
-    node()->drawSolidPoly(head, sizeof(head)/sizeof(*head), Color4F::BLUE);
-
-    _body = PhysicsBody::createBox(
-        bb,
-        gUnitMaterial,
-        offs
-    );
-    _rootNode->setPhysicsBody(_body);
+    _angle = 60 * (M_PI/180);
 
     Unit::init(game);
 
     return true;
+}
+
+Node* Tank::createNodes()
+{
+    return DrawNode::create();
+}
+
+PhysicsBody* Tank::createBody()
+{
+    _body = PhysicsBody::createBox(
+        _bb,
+        gUnitMaterial,
+        _offs
+    );
+    return _body;
+}
+
+void Tank::draw()
+{
+    node()->drawSegment(
+        _gunBegin,
+        _gunBegin + _gunLength * Vec2(cosf(_angle), sinf(_angle)),
+        1, Color4F::BLUE
+    );
+    node()->drawSolidPoly(_base, sizeof(_base)/sizeof(*_base), Color4F::WHITE);
+    node()->drawSolidPoly(_head, sizeof(_head)/sizeof(*_head), Color4F::BLUE);
 }

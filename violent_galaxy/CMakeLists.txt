@@ -142,6 +142,7 @@ set(GAME_HEADERS
   Classes/GameScene.h
   Classes/Obj.h
   Classes/Physics.h
+  Classes/RadialGrid.h
   Classes/Units.h
   ${PLATFORM_SPECIFIC_HEADERS}
 )

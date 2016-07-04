@@ -546,17 +546,22 @@ PhysicsShapePolygon* PhysicsShapePolygon::create(const Vec2* points, int count, 
     return nullptr;
 }
 
+static_assert(sizeof(Vec2) == sizeof(cpVect), "incompatible Vec2 and cpVect binary representations");
+
 bool PhysicsShapePolygon::init(const Vec2* points, int count, const PhysicsMaterial& material/* = MaterialDefault*/, const Vec2& offset/* = Vec2(0, 0)*/, float radius/* = 0.0f*/)
 {
     do
     {
         _type = Type::POLYGEN;
-        
-        auto vecs = new (std::nothrow) cpVect[count];
-        PhysicsHelper::points2cpvs(points, vecs, count);        //count = cpConvexHull((int)count, vecs, nullptr, nullptr, 0);
+
+        //Avoid unnecessary allocation and copy
+        //auto vecs = new (std::nothrow) cpVect[count];
+        //PhysicsHelper::points2cpvs(points, vecs, count); //count = cpConvexHull((int)count, vecs, nullptr, nullptr, 0);
+
         cpTransform transform = cpTransformTranslate(PhysicsHelper::point2cpv(offset));
-        auto shape = cpPolyShapeNew(s_sharedBody, count, vecs, transform, radius);
-        CC_SAFE_DELETE_ARRAY(vecs);
+        //auto shape = cpPolyShapeNew(s_sharedBody, count, vecs, transform, radius);
+        auto shape = cpPolyShapeNew(s_sharedBody, count, (const cpVect*)points, transform, radius);
+        //CC_SAFE_DELETE_ARRAY(vecs);
         
         CC_BREAK_IF(shape == nullptr);
         cpShapeSetUserData(shape, this);

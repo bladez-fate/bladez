@@ -19,16 +19,20 @@ void Obj::destroy()
 bool VisualObj::init(GameScene* game)
 {
     Obj::init(game);
-    game->addChild(_rootNode);
 
+    _rootNode = createNodes();
+    game->addChild(_rootNode);
     char buf[128];
     snprintf(buf, sizeof(buf), "%s#%d", typeid(this).name(), (int)_id);
     _rootNode->setName(buf);
-
     _rootNode->setTag(ObjTag(getObjType(), _id));
-
     _rootNode->setCameraMask((unsigned short)CameraFlag::USER1);
 
+    if (auto body = createBody()) {
+        _rootNode->setPhysicsBody(body);
+    }
+
+    draw();
     return true;
 }
 

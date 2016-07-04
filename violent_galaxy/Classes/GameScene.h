@@ -104,7 +104,7 @@ private: // View
     cc::Vec2 screen2world(cc::Vec2 s);
     bool _viewPanEnabled = false;
     cc::Vec2 _viewPanLastLoc;
-    float _viewZoom = 1.0f;
+    float _viewZoom = 10.0f;
     float _viewRotation = M_PI_2;
     cc::Camera* _worldCamera = nullptr;
     static constexpr float _viewZoomFactor = 1.1f; // zoom per one scroll

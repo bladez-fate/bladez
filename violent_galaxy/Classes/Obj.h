@@ -89,7 +89,9 @@ protected:
     VisualObj() {}
     bool init(GameScene* game) override;
     void destroy() override;
+    virtual cc::Node* createNodes() = 0;
+    virtual cc::PhysicsBody* createBody() = 0;
+    virtual void draw() = 0;
 protected:
     cc::Node* _rootNode = nullptr;
 };
-

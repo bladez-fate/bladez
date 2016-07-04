@@ -113,30 +113,19 @@ void GameScene::createWorld(Scene* scene, PhysicsWorld* pworld)
     _pworld = pworld;
     pworld->setSpeed(1.0);
 
-//    auto pl = Planet::create(this);
-//    pl->setPosition(Vec2(s.width/2 + o.x, s.height/2 + o.y));
-
-//    auto cs = ColonyShip::create(this);
-//    cs->setPosition(Vec2(visibleSize.width/4 + origin.x, visibleSize.height/2 + origin.y));
-//    cs->getNode()->getPhysicsBody()->applyImpulse(Vec2(0, 30));
-
     auto pl = Planet::create(this);
-    pl->setPosition(Vec2(s.width/2 + o.x, s.height*1/4 + o.y));
-    pl->getNode()->getPhysicsBody()->applyImpulse(Vec2(4e7,0));
-    pl->getNode()->getPhysicsBody()->applyTorque(5e8);
+    pl->setPosition(Vec2(s.width/2 + o.x, s.height/2 + o.y));
+
+//    auto pl = Planet::create(this);
+//    pl->setPosition(Vec2(s.width/2 + o.x, s.height*1/4 + o.y));
+//    pl->getNode()->getPhysicsBody()->applyImpulse(Vec2(4e7,0));
+//    pl->getNode()->getPhysicsBody()->applyTorque(5e8);
 
 
-    auto pl2 = Planet::create(this);
-    pl2->setPosition(Vec2(s.width/2 + o.x, s.height*3/4 + o.y));
-    pl2->getNode()->getPhysicsBody()->applyImpulse(Vec2(-4e7,0));
-    pl2->getNode()->getPhysicsBody()->applyTorque(-5e8);
-
-//    auto cs = ColonyShip::create(this);
-//    cs->setPosition(Vec2(visibleSize.width*0.3 + origin.x, visibleSize.height*0.8 + origin.y));
-//    cs->getNode()->getPhysicsBody()->applyImpulse(Vec2(0, 30));
-//    cs->onLandCreate = [](GameScene* game) {
-//        return Tank::create(game);
-//    };
+//    auto pl2 = Planet::create(this);
+//    pl2->setPosition(Vec2(s.width/2 + o.x, s.height*3/4 + o.y));
+//    pl2->getNode()->getPhysicsBody()->applyImpulse(Vec2(-4e7,0));
+//    pl2->getNode()->getPhysicsBody()->applyTorque(-5e8);
 
     auto contactListener = EventListenerPhysicsContact::create();
     contactListener->onContactBegin = CC_CALLBACK_1(GameScene::onContactBegin, this);

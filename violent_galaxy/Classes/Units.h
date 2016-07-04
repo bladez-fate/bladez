@@ -29,23 +29,29 @@ public:
 protected:
     ColonyShip() {}
     bool init(GameScene* game) override;
+    cc::Node* createNodes() override;
+    cc::PhysicsBody* createBody() override;
+    void draw() override;
 protected:
     cc::DrawNode* node() { return static_cast<cc::DrawNode*>(_rootNode); }
     cc::PhysicsBody* _body = nullptr;
 public:
     std::function<Unit*(GameScene*)> onLandCreate;
+    float _radius;
 };
 
-class Spaceport : public Unit {
-public:
-    OBJ_CREATE_FUNC(Spaceport);
-protected:
-    Spaceport() {}
-    virtual bool init(GameScene* game) override;
-protected:
-    cc::DrawNode* node() { return static_cast<cc::DrawNode*>(_rootNode); }
-    cc::PhysicsBody* _body = nullptr;
-};
+//class Spaceport : public Unit {
+//public:
+//    OBJ_CREATE_FUNC(Spaceport);
+//protected:
+//    Spaceport() {}
+//    virtual bool init(GameScene* game) override;
+//    cc::Node* createNodes() override;
+//    void draw() override;
+//protected:
+//    cc::DrawNode* node() { return static_cast<cc::DrawNode*>(_rootNode); }
+//    cc::PhysicsBody* _body = nullptr;
+//};
 
 class Tank : public Unit {
 public:
@@ -53,7 +59,20 @@ public:
 protected:
     Tank() {}
     virtual bool init(GameScene* game) override;
+    cc::Node* createNodes() override;
+    cc::PhysicsBody* createBody() override;
+    void draw() override;
 protected:
     cc::DrawNode* node() { return static_cast<cc::DrawNode*>(_rootNode); }
     cc::PhysicsBody* _body = nullptr;
+
+    float _size;
+
+    cc::Size _bb;
+    cc::Vec2 _offs;
+    cc::Vec2 _base[8];
+    cc::Vec2 _head[6];
+    cc::Vec2 _gunBegin;
+    float _gunLength;
+    float _angle;
 };
