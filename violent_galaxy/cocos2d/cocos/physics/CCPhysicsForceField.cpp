@@ -14,7 +14,7 @@ PhysicsForceField::PhysicsForceField()
 
 bool PhysicsForceField::init()
 {
-
+    return true;
 }
 
 void PhysicsForceField::addGravitySource(cocos2d::PhysicsBody* body)

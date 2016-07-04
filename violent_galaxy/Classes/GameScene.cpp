@@ -13,7 +13,7 @@ void GameScene::updateUnitVelocityOnSurface(cpBody* body, float dt)
     CCASSERT(unit, "unit has been already destroyed");
     if (unit->surfaceId) {
         if (AstroObj* surface = _objs->getByIdAs<AstroObj>(unit->surfaceId)) {
-            // TODO[serxa]: calculate normal force using astroobj's gravity and apply
+            // TODO[fate]: calculate normal force using astroobj's gravity and apply
             // force of friction (rolling resistance) instead of this:
             float w_surf = surface->getNode()->getPhysicsBody()->getAngularVelocity();
             body->w -= (body->w - w_surf) * (1 - cpfpow(0.1, dt));
@@ -263,7 +263,7 @@ bool GameScene::onContactUnitAstroObj(ContactInfo& cinfo)
 void GameScene::onMouseMove(Event* event)
 {
     EventMouse* e = (EventMouse*)event;
-    if (e->getMouseButton() == 1) {
+    if (e->getMouseButton() == 2) {
         onViewPan(e->getLocationInView());
     }
 //    CCLOG("MOUSEMOVE button# %d", e->getMouseButton());
@@ -272,7 +272,7 @@ void GameScene::onMouseMove(Event* event)
 void GameScene::onMouseDown(Event* event)
 {
     EventMouse* e = (EventMouse*)event;
-    if (e->getMouseButton() == 1) {
+    if (e->getMouseButton() == 2) {
         onViewPan(e->getLocationInView());
     }
 //    CCLOG("MOUSEDOWN button# %d", e->getMouseButton());
@@ -287,8 +287,16 @@ void GameScene::onMouseUp(Event *event)
         cs->onLandCreate = [](GameScene* game) {
             return Tank::create(game);
         };
-    }
-    if (e->getMouseButton() == 1) {
+    } else if (e->getMouseButton() == 1) {
+        if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
+            Vec2 p = screen2world(e->getLocationInView());
+            _pworld->queryPoint(
+                CC_CALLBACK_3(GameScene::onViewFollowQueryPoint, this),
+                p, nullptr
+            );
+            viewSurface(p, true);
+        }
+    } else if (e->getMouseButton() == 2) {
         onViewPanStop();
     }
 //    CCLOG("MOUSEUP button# %d", e->getMouseButton());
@@ -306,10 +314,77 @@ void GameScene::onMouseScroll(Event* event)
     CCLOG("MOUSESCROLL button# %d scrollX# %f scrollY# %f", e->getMouseButton(), e->getScrollX(), e->getScrollY());
 }
 
-void GameScene::viewLookAt(Vec2 eye)
+Vec2 GameScene::viewCenter() const
+{
+    Vec2 eye = _worldCamera->getPosition();
+    return eye + (_worldCameraSize / 2.0).rotate(Vec2::forAngle(_viewRotation - M_PI_2));
+}
+
+void GameScene::viewEyeAt(Vec2 eye)
 {
     _worldCamera->setPosition(eye);
     _worldCamera->lookAt(Vec3(eye.x, eye.y, 0.0f), Vec3(cosf(_viewRotation), sinf(_viewRotation), 0.0f));
+}
+
+void GameScene::viewLookAt(Vec2 eye)
+{
+    viewEyeAt(eye);
+    if (_viewSurfaceId) {
+        viewSurface(viewCenter(), false);
+    }
+}
+
+void GameScene::viewCenterAt(Vec2 center)
+{
+    viewEyeAt(center - (_worldCameraSize/2.0).rotate(Vec2::forAngle(_viewRotation - M_PI_2)));
+}
+
+void GameScene::viewZoom(float scaleBy, Vec2 center)
+{
+    Vec2 eye = _worldCamera->getPosition();
+    Vec2 offs = eye - center;
+    _viewZoom *= scaleBy;
+    offs *= scaleBy;
+    Vec2 eyeNew = center + offs;
+    _worldCamera->removeFromParent();
+    createWorldCamera(eyeNew);
+}
+
+void GameScene::viewRotate(float rotateBy, Vec2 center)
+{
+    Vec2 eye = _worldCamera->getPosition();
+    Vec2 offs = eye - center;
+    _viewRotation += rotateBy;
+    offs = offs.rotate(Vec2::forAngle(rotateBy));
+    Vec2 eyeNew = center + offs;
+    viewLookAt(eyeNew);
+}
+
+void GameScene::viewSurface(Vec2 p, bool zoomIfRequired)
+{
+    if (!_viewSurfaceId) {
+        return;
+    }
+    if (AstroObj* aobj = _objs->getByIdAs<AstroObj>(_viewSurfaceId)) {
+        Vec2 up = p - aobj->getNode()->getPosition();
+        if (up == Vec2::ZERO) {
+            viewCenterAt(p);
+        } else {
+            float ratio = up.length() / (_worldCameraSize.y / 2.0);
+            bool zoomRequired = ratio < 1.0;
+            if (zoomRequired && zoomIfRequired) {
+                float scaleBy = ratio / 2;
+                viewZoom(scaleBy, viewCenter());
+                zoomRequired = false;
+            }
+            if (!zoomRequired) {
+                _viewRotation = up.getAngle();
+                viewCenterAt(p);
+                return;
+            }
+        }
+    }
+    _viewSurfaceId = 0;
 }
 
 void GameScene::onViewPan(Vec2 loc)
@@ -333,7 +408,11 @@ void GameScene::onViewPanStop()
 void GameScene::createWorldCamera(Vec2 eye)
 {
     auto s = Director::getInstance()->getVisibleSize();
-    _worldCamera = Camera::createOrthographic(s.width * _viewZoom, s.height * _viewZoom, _viewNearPlane, _viewFarPlane);
+    _worldCameraSize = Vec2(s.width * _viewZoom, s.height * _viewZoom);
+    _worldCamera = Camera::createOrthographic(
+        _worldCameraSize.x, _worldCameraSize.y,
+        _viewNearPlane, _viewFarPlane
+    );
     _worldCamera->setCameraFlag(CameraFlag::USER1);
     _worldCamera->setPositionZ(1.0f);
     viewLookAt(eye);
@@ -342,25 +421,27 @@ void GameScene::createWorldCamera(Vec2 eye)
 
 void GameScene::onViewZoom(float times, Vec2 center)
 {
-    Vec2 eye = _worldCamera->getPosition();
-    Vec2 offs = eye - center;
     float scaleBy = powf(_viewZoomFactor, times);
-    _viewZoom *= scaleBy;
-    offs *= scaleBy;
-    Vec2 eyeNew = center + offs;
-    _worldCamera->removeFromParent();
-    createWorldCamera(eyeNew);
+    viewZoom(scaleBy, center);
 }
 
 void GameScene::onViewRotate(float times, Vec2 center)
 {
-    Vec2 eye = _worldCamera->getPosition();
-    Vec2 offs = eye - center;
-    float rotateBy = times * _viewRotationFactor;
-    _viewRotation += rotateBy;
-    offs = offs.rotate(Vec2::forAngle(rotateBy));
-    Vec2 eyeNew = center + offs;
-    viewLookAt(eyeNew);
+    if (_viewSurfaceId) {
+        return; // Rotation in surface view is disabled
+    }
+    viewRotate(times * _viewRotationFactor, center);
+}
+
+bool GameScene::onViewFollowQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, void* userdata)
+{
+    UNUSED(pworld);
+    UNUSED(userdata);
+    ObjTag tag(shape.getBody()->getNode()->getTag());
+    if (tag.type() == ObjType::Astro) {
+        _viewSurfaceId = tag.id();
+    }
+    return true;
 }
 
 Vec2 GameScene::screen2world(Vec2 s)
@@ -386,3 +467,4 @@ void GameScene::createKeyHoldHandler()
 bool GameScene::isKeyHeld(EventKeyboard::KeyCode code) {
     return _keyHold.count(code);
 }
+

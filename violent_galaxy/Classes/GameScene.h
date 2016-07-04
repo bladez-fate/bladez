@@ -84,7 +84,7 @@ public:
 private: // Initialization
     GameScene() {}
     virtual bool init() override;
-    void createWorld(cocos2d::Scene* scene, cc::PhysicsWorld* pworld);
+    void createWorld(cc::Scene* scene, cc::PhysicsWorld* pworld);
     void createKeyHoldHandler();
 private: // Keyboard
     bool isKeyHeld(cc::EventKeyboard::KeyCode code);
@@ -95,18 +95,27 @@ private: // Mouse
     void onMouseUp(cc::Event *event);
     void onMouseScroll(cc::Event *event);
 private: // View
-    void createWorldCamera(cocos2d::Vec2 eye);
+    void createWorldCamera(cc::Vec2 eye);
+    cc::Vec2 viewCenter() const;
+    void viewEyeAt(cc::Vec2 eye);
     void viewLookAt(cc::Vec2 eye);
+    void viewCenterAt(cc::Vec2 center);
+    void viewZoom(float scaleBy, cc::Vec2 center);
+    void viewRotate(float rotateBy, cc::Vec2 center);
+    void viewSurface(cc::Vec2 p, bool zoomIfRequired);
     void onViewPan(cc::Vec2 loc);
     void onViewPanStop();
-    void onViewZoom(float times, cocos2d::Vec2 center);
-    void onViewRotate(float times, cocos2d::Vec2 center);
+    void onViewZoom(float times, cc::Vec2 center);
+    void onViewRotate(float times, cc::Vec2 center);
+    bool onViewFollowQueryPoint(cc::PhysicsWorld& pworld, cc::PhysicsShape& shape, void* userdata);
     cc::Vec2 screen2world(cc::Vec2 s);
     bool _viewPanEnabled = false;
     cc::Vec2 _viewPanLastLoc;
     float _viewZoom = 10.0f;
     float _viewRotation = M_PI_2;
     cc::Camera* _worldCamera = nullptr;
+    cc::Vec2 _worldCameraSize;
+    Id _viewSurfaceId = 0;
     static constexpr float _viewZoomFactor = 1.1f; // zoom per one scroll
     static constexpr float _viewRotationFactor = 1e-1f; // radians per one scroll
     static constexpr float _viewNearPlane = 1.0f;
