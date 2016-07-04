@@ -23,7 +23,7 @@ Planet::Planet()
 {
     // Generate mountains
     for (int i = 0; i < 100; i++) {
-        float height = random<float>(100.0, 1000.0);
+        float height = random<float>(100.0, 400.0);
         float slope = random<float>(1.0, 10.0);
         float width = std::min(180.0, slope * height / 100.0);
         float latitude = random<float>(0.0, 360.0);
@@ -43,6 +43,9 @@ Planet::Planet()
 bool Planet::init(GameScene* game)
 {
     _coreRadius = 8000;
+    _surfAltitude = 100;
+    _atmoAltitude = 1500;
+    _spacAltitude = 4000;
     fillCrust();
     AstroObj::init(game);
     return true;
@@ -79,6 +82,26 @@ PhysicsBody* Planet::createBody()
 
 void Planet::draw()
 {
+    // Draw atmosphere gradient: core:red --> surf:cyan --> atmo:blue --> spac:transparent
+    Color4F coreCol = Color4F::RED;
+    Color4F surfCol = Color4F(0.0, 0.5, 0.9, 1.0);
+    Color4F atmoCol = Color4F(0.0, 0.1, 0.9, 1.0);
+    Color4F spacCol = Color4F::BLACK; // TODO: transparent?
+    auto prev = _segments.begin() + (_segments.size() - 1); // forward iter to last element
+    for (auto i = _segments.begin(), e = _segments.end(); i != e; ++i) {
+        float r1 = _coreRadius;
+        float r2 = r1 + _surfAltitude;
+        float r3 = r1 + _atmoAltitude;
+        float r4 = r1 + _spacAltitude;
+        float a1 = _segments.angle(prev);
+        float a2 = _segments.angle(i);
+        drawAtmoCell(r1, r2, a1, a2, coreCol, surfCol);
+        drawAtmoCell(r2, r3, a1, a2, surfCol, atmoCol);
+        drawAtmoCell(r3, r4, a1, a2, atmoCol, spacCol);
+        prev = i;
+    }
+
+    // Draw crust
     Vec2 vert[3];
     vert[2] = Vec2::ZERO;
     Vec2 c1 = _crust.back();
@@ -91,14 +114,21 @@ void Planet::draw()
 
 //    node()->drawSolidPoly(_crust.data(), _crust.size(), Color4F::GREEN);
 //    node()->drawSolidCircle(Vec2::ZERO, _coreRadius, 0, 360, Color4F::GREEN);
+
+    // Some big stuff inside for decoration and to see rotation
     node()->drawSolidCircle(Vec2(_coreRadius*0.6, 0), _coreRadius*0.3, 0, 48, Color4F(1.0f, 1.0f, 0.0f, 1.0f));
     node()->drawSolidCircle(Vec2(0, _coreRadius*0.6), _coreRadius*0.3, 0, 48, Color4F(1.0f, 0.6f, 0.0f, 1.0f));
     node()->drawSolidCircle(Vec2(-_coreRadius*0.3, -_coreRadius*0.3), _coreRadius*0.4, 0, 48, Color4F(0.8f, 1.0f, 0.0f, 1.0f));
-//    node()->drawSolidRect(
-//        Vec2(-radius/10, 0),
-//        Vec2(radius/10, 9*radius/10),
-//        Color4F::YELLOW
-//    );
+}
+
+void Planet::drawAtmoCell(float r1, float r2, float a1, float a2, Color4F r1col, Color4F r2col)
+{
+    Vec2 v11(r1 * cosf(a1), r1 * sinf(a1));
+    Vec2 v12(r1 * cosf(a2), r1 * sinf(a2));
+    Vec2 v21(r2 * cosf(a1), r2 * sinf(a1));
+    Vec2 v22(r2 * cosf(a2), r2 * sinf(a2));
+    node()->drawTriangleGradient(v11, v21, v12, r1col, r2col, r1col);
+    node()->drawTriangleGradient(v12, v21, v22, r1col, r2col, r2col);
 }
 
 void Planet::fillCrust()

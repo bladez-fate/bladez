@@ -271,6 +271,8 @@ public:
      */
     void drawTriangle(const Vec2 &p1, const Vec2 &p2, const Vec2 &p3, const Color4F &color);
 
+    void drawTriangleGradient(const Vec2 &p1, const Vec2 &p2, const Vec2 &p3, const Color4F &c1, const Color4F &c2, const Color4F &c3);
+
     /** draw a quadratic bezier curve with color and number of segments, use drawQuadBezier instead.
      *
      * @param from The origin of the bezier path.

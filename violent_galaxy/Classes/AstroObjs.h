@@ -27,11 +27,15 @@ protected:
     cc::Node* createNodes() override;
     cc::PhysicsBody* createBody() override;
     void draw() override;
+    void drawAtmoCell(float r1, float r2, float a1, float a2, cc::Color4F r1col, cc::Color4F r2col);
     void fillCrust();
 protected:
     cc::DrawNode* node() { return static_cast<cc::DrawNode*>(_rootNode); }
     cc::PhysicsBody* _body = nullptr;
     float _coreRadius;
+    float _surfAltitude;
+    float _atmoAltitude;
+    float _spacAltitude;
     AngularVec<Segment> _segments;
     std::vector<cc::Vec2> _crust;
 };

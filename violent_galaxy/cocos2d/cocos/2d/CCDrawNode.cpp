@@ -904,8 +904,25 @@ void DrawNode::drawTriangle(const Vec2 &p1, const Vec2 &p2, const Vec2 &p3, cons
 
     Color4B col = Color4B(color);
     V2F_C4B_T2F a = {Vec2(p1.x, p1.y), col, Tex2F(0.0, 0.0) };
-    V2F_C4B_T2F b = {Vec2(p2.x, p2.y), col, Tex2F(0.0,  0.0) };
-    V2F_C4B_T2F c = {Vec2(p3.x, p3.y), col, Tex2F(0.0,  0.0) };
+    V2F_C4B_T2F b = {Vec2(p2.x, p2.y), col, Tex2F(0.0, 0.0) };
+    V2F_C4B_T2F c = {Vec2(p3.x, p3.y), col, Tex2F(0.0, 0.0) };
+
+    V2F_C4B_T2F_Triangle *triangles = (V2F_C4B_T2F_Triangle *)(_buffer + _bufferCount);
+    V2F_C4B_T2F_Triangle triangle = {a, b, c};
+    triangles[0] = triangle;
+
+    _bufferCount += vertex_count;
+    _dirty = true;
+}
+
+void DrawNode::drawTriangleGradient(const Vec2& p1, const Vec2& p2, const Vec2& p3, const Color4F& c1, const Color4F& c2, const Color4F& c3)
+{
+    unsigned int vertex_count = 3;
+    ensureCapacity(vertex_count);
+
+    V2F_C4B_T2F a = {Vec2(p1.x, p1.y), Color4B(c1), Tex2F(0.0, 0.0) };
+    V2F_C4B_T2F b = {Vec2(p2.x, p2.y), Color4B(c2), Tex2F(0.0, 0.0) };
+    V2F_C4B_T2F c = {Vec2(p3.x, p3.y), Color4B(c3), Tex2F(0.0, 0.0) };
 
     V2F_C4B_T2F_Triangle *triangles = (V2F_C4B_T2F_Triangle *)(_buffer + _bufferCount);
     V2F_C4B_T2F_Triangle triangle = {a, b, c};

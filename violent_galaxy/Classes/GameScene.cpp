@@ -13,6 +13,8 @@ void GameScene::updateUnitVelocityOnSurface(cpBody* body, float dt)
     CCASSERT(unit, "unit has been already destroyed");
     if (unit->surfaceId) {
         if (AstroObj* surface = _objs->getByIdAs<AstroObj>(unit->surfaceId)) {
+            // TODO[serxa]: calculate normal force using astroobj's gravity and apply
+            // force of friction (rolling resistance) instead of this:
             float w_surf = surface->getNode()->getPhysicsBody()->getAngularVelocity();
             body->w -= (body->w - w_surf) * (1 - cpfpow(0.1, dt));
         } else {
@@ -27,7 +29,7 @@ Scene* GameScene::createScene()
 {
     // 'scene' is an autorelease object
     auto scene = Scene::createWithPhysics();
-//    scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+//    scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL, (unsigned short)CameraFlag::USER1);
     scene->getPhysicsWorld()->setGravity(Vec2::ZERO);
 
     auto ffield = PhysicsForceField::create();

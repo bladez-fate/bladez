@@ -77,6 +77,7 @@ struct CC_DLL Color3B
     static const Color3B BLUE;
     static const Color3B GREEN;
     static const Color3B RED;
+    static const Color3B CYAN;
     static const Color3B MAGENTA;
     static const Color3B BLACK;
     static const Color3B ORANGE;
@@ -119,6 +120,7 @@ struct CC_DLL Color4B
     static const Color4B BLUE;
     static const Color4B GREEN;
     static const Color4B RED;
+    static const Color4B CYAN;
     static const Color4B MAGENTA;
     static const Color4B BLACK;
     static const Color4B ORANGE;
@@ -159,6 +161,7 @@ struct CC_DLL Color4F
     static const Color4F BLUE;
     static const Color4F GREEN;
     static const Color4F RED;
+    static const Color4F CYAN;
     static const Color4F MAGENTA;
     static const Color4F BLACK;
     static const Color4F ORANGE;
