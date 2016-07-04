@@ -310,7 +310,7 @@ public:
     * This physics world will draw shapes and joints by DrawNode according to mask.
     * @param mask Mask has four value:DEBUGDRAW_NONE, DEBUGDRAW_SHAPE, DEBUGDRAW_JOINT, DEBUGDRAW_CONTACT and DEBUGDRAW_ALL, default is DEBUGDRAW_NONE
     */
-    void setDebugDrawMask(int mask);
+    void setDebugDrawMask(int mask, unsigned short cameraMask = 0);
 
     /**
     * Get the debug draw mask.
@@ -318,7 +318,9 @@ public:
     * @return An integer number.
     */
     inline int getDebugDrawMask() { return _debugDrawMask; }
-    
+
+    inline int getDebugDrawCameraMask() { return _debugDrawCameraMask; }
+
     /**
      * To control the step of physics.
      *
@@ -392,7 +394,8 @@ protected:
     bool _autoStep;
     DrawNode* _debugDraw;
     int _debugDrawMask;
-    
+    unsigned short _debugDrawCameraMask;
+
     EventDispatcher* _eventDispatcher;
 
     Vector<PhysicsBody*> _delayAddBodies;

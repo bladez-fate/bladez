@@ -37,6 +37,7 @@
 
 #include "2d/CCDrawNode.h"
 #include "2d/CCScene.h"
+#include "2d/CCCamera.h"
 #include "base/CCDirector.h"
 #include "base/CCEventDispatcher.h"
 #include "base/CCEventCustom.h"
@@ -293,6 +294,7 @@ void PhysicsWorld::debugDraw()
     {
         _debugDraw->clear();
         cpSpaceDebugDraw(_cpSpace, &drawOptions);
+        _debugDraw->setCameraMask(_debugDrawCameraMask);
     }
 }
 
@@ -810,7 +812,7 @@ void PhysicsWorld::removeAllBodies()
     _bodies.clear();
 }
 
-void PhysicsWorld::setDebugDrawMask(int mask)
+void PhysicsWorld::setDebugDrawMask(int mask, unsigned short cameraMask)
 {
     if (mask == DEBUGDRAW_NONE)
     {
@@ -819,6 +821,9 @@ void PhysicsWorld::setDebugDrawMask(int mask)
     }
     
     _debugDrawMask = mask;
+    if (cameraMask) {
+        _debugDrawCameraMask = cameraMask;
+    }
 }
 
 void PhysicsWorld::setForceField(PhysicsForceField* forceField)
@@ -984,6 +989,7 @@ PhysicsWorld::PhysicsWorld()
 , _autoStep(true)
 , _debugDraw(nullptr)
 , _debugDrawMask(DEBUGDRAW_NONE)
+, _debugDrawCameraMask((unsigned short)CameraFlag::DEFAULT)
 , _eventDispatcher(nullptr)
 {
     
