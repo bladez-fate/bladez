@@ -100,7 +100,10 @@ bool ColonyShip::onContactAstroObj(ContactInfo& cinfo)
                 cpVect va = cpBodyGetVelocityAtWorldPoint(arb->body_a, cps.points[i].pointA);
                 cpVect vb = cpBodyGetVelocityAtWorldPoint(arb->body_b, cps.points[i].pointB);
                 cpVect rv = cpvsub(va, vb);
-                if (cpvlengthsq(rv) > 1e-6) {
+                cpFloat wa = cpBodyGetAngularVelocity(arb->body_a);
+                cpFloat wb = cpBodyGetAngularVelocity(arb->body_b);
+                cpFloat rw = wa - wb;
+                if (cpvlengthsq(rv) > 1e-6 || fabs(rw) > 0.5) {
                     moving = true;
                     break;
                 }
