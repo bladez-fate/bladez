@@ -111,6 +111,8 @@ public:
      */
     inline bool isZero() const;
 
+    inline bool isSmall() const;
+
     /**
      * Indicates whether this vector contains all ones.
      *

@@ -56,6 +56,11 @@ inline bool Vec2::isZero() const
     return x == 0.0f && y == 0.0f;
 }
 
+bool Vec2::isSmall() const
+{
+    return x < MATH_TOLERANCE && y < MATH_TOLERANCE && x > -MATH_TOLERANCE && y > -MATH_TOLERANCE;
+}
+
 bool Vec2::isOne() const
 {
     return x == 1.0f && y == 1.0f;
