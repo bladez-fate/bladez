@@ -51,22 +51,26 @@ static void internalBodyUpdateVelocity(cpBody *body, cpVect gravity, cpFloat dam
     if(cpBodyGetType(body) == CP_BODY_TYPE_KINEMATIC) return;
     
     cpAssertSoft(body->m > 0.0f && body->i > 0.0f, "Body's mass and moment must be positive to simulate. (Mass: %f Moment: f)", body->m, body->i);
-    
-    // Apply custom forces and torques
-    cocos2d::PhysicsBody *physicsBody = static_cast<cocos2d::PhysicsBody*>(body->userData);
-    if (physicsBody->hasUpdateVelocityFunc()) {
-        physicsBody->applyUpdateVelocityFunc(body, dt);
-    }
     cpVect acc = cpvmult(body->f, body->m_inv);
 
-    // Apply force fields
-    cocos2d::PhysicsWorld* world = physicsBody->getWorld();
-    cocos2d::PhysicsForceField* ff = world->getForceField();
-    if (ff) {
-        acc = cpvadd(acc, ff->getGravity(cpBodyGetPosition(body)));
-    }
-    if (physicsBody->isGravityEnabled()) {
-        acc = cpvadd(acc, gravity);
+
+    cocos2d::PhysicsBody *physicsBody = static_cast<cocos2d::PhysicsBody*>(body->userData);
+    if (cocos2d::PhysicsWorld* world = physicsBody->getWorld()) {
+        // Apply custom forces and torques
+        if (physicsBody->hasUpdateVelocityFunc()) {
+            physicsBody->applyUpdateVelocityFunc(body, dt);
+        }
+
+        // Apply force fields
+        cocos2d::PhysicsForceField* ff = world->getForceField();
+        if (ff) {
+            acc = cpvadd(acc, ff->getGravity(cpBodyGetPosition(body)));
+        }
+        if (physicsBody->isGravityEnabled()) {
+            acc = cpvadd(acc, gravity);
+        }
+    } else {
+        // Body is already removed from world
     }
 
     body->v = cpvadd(cpvmult(body->v, damping), cpvmult(acc, dt));

@@ -1,4 +1,5 @@
 #include "Units.h"
+#include "Projectiles.h"
 #include "GameScene.h"
 #include "chipmunk/chipmunk_private.h"
 
@@ -150,6 +151,17 @@ bool ColonyShip::onContactAstroObj(ContactInfo& cinfo)
 //    return true;
 //}
 
+void Tank::shoot()
+{
+    Projectile* proj = Shell::create(_game);
+    Vec2 localBegin = _gunBegin;
+    Vec2 localEnd = _gunBegin + _gunLength * Vec2(cosf(_angle), sinf(_angle));
+    Vec2 begin = _body->local2World(localBegin);
+    Vec2 end = _body->local2World(localEnd);
+    proj->setPosition(end);
+    proj->getNode()->getPhysicsBody()->applyImpulse((end - begin).getNormalized() * _power);
+}
+
 bool Tank::init(GameScene* game)
 {
     _size = 20;
@@ -176,6 +188,7 @@ bool Tank::init(GameScene* game)
     _gunLength = gunLength * scale;
 
     _angle = 60 * (M_PI/180);
+    _power = 4;
 
     Unit::init(game);
 
@@ -194,6 +207,8 @@ PhysicsBody* Tank::createBody()
         gUnitMaterial,
         _offs
     );
+    _body->setMass(1.0);
+    _body->setMoment(200.0);
     return _body;
 }
 

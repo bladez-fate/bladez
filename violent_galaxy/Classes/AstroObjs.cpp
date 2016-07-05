@@ -15,7 +15,7 @@ bool AstroObj::init(GameScene* game)
 
 ObjType AstroObj::getObjType()
 {
-    return ObjType::Astro;
+    return ObjType::AstroObj;
 }
 
 Planet::Planet()

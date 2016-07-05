@@ -40,3 +40,4 @@ constexpr int gMatterBitmask = 0x1;
 
 extern const cc::PhysicsMaterial gPlanetMaterial;
 extern const cc::PhysicsMaterial gUnitMaterial;
+extern const cc::PhysicsMaterial gProjectileMaterial;

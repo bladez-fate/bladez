@@ -56,6 +56,7 @@ public:
 class Tank : public Unit {
 public:
     OBJ_CREATE_FUNC(Tank);
+    void shoot();
 protected:
     Tank() {}
     virtual bool init(GameScene* game) override;
@@ -75,4 +76,5 @@ protected:
     cc::Vec2 _gunBegin;
     float _gunLength;
     float _angle;
+    float _power;
 };

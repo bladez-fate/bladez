@@ -23,9 +23,10 @@
 
 enum class ObjType : ui8 {
     Unknown = 0,
-    Unit = 1,
-    Astro = 2,
-    Player = 3,
+    Player = 1,
+    AstroObj = 2,
+    Unit = 3,
+    Projectile = 4,
 };
 
 class ObjTag {

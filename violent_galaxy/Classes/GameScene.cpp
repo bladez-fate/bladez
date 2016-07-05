@@ -1,4 +1,5 @@
 #include "GameScene.h"
+#include "Projectiles.h"
 #include "SimpleAudioEngine.h"
 #include "chipmunk/chipmunk_private.h"
 
@@ -147,6 +148,13 @@ void GameScene::createWorld(Scene* scene, PhysicsWorld* pworld)
         case EventKeyboard::KeyCode::KEY_A:
             body->applyTorque(t);
             break;
+        case EventKeyboard::KeyCode::KEY_SPACE:
+            for (auto& kv : *_objs) {
+                if (auto tank = dynamic_cast<Tank*>(kv.second)) {
+                    tank->shoot();
+                }
+            }
+            break;
         case EventKeyboard::KeyCode::KEY_S:
             body->applyTorque(-t);
             break;
@@ -208,18 +216,28 @@ bool GameScene::dispatchContact(PhysicsContact& contact,
     auto nodeB = contact.getShapeB()->getBody()->getNode();
 
     if (!nodeA || !nodeB) {
-        return false; // avoid contact handling after destruction
+        return false; // avoid contact handling after node destruction
     }
 
     ContactInfo cinfo(this, contact, preSolve, postSolve);
 
-    if (cinfo.thisTag.type() == ObjType::Unit && cinfo.thatTag.type() == ObjType::Astro) {
-        return onContactUnitAstroObj(cinfo);
+    if (!cinfo.thisObj || !cinfo.thatObj) {
+        return false; // avoid contact handling after obj destruction
     }
-    if (cinfo.thisTag.type() == ObjType::Astro && cinfo.thatTag.type() == ObjType::Unit) {
-        cinfo.swap();
-        return onContactUnitAstroObj(cinfo);
-    }
+
+#define VG_CHECKCOLLISION(x, y) \
+    if (cinfo.thisTag.type() == ObjType::x && cinfo.thatTag.type() == ObjType::y) { \
+        return onContact ## x ## y (cinfo); \
+    } \
+    if (cinfo.thisTag.type() == ObjType::y && cinfo.thatTag.type() == ObjType::x) { \
+        cinfo.swap(); \
+        return onContact ## x ## y(cinfo); \
+    } \
+    /**/
+    VG_CHECKCOLLISION(Unit, AstroObj);
+    VG_CHECKCOLLISION(Projectile, AstroObj);
+    VG_CHECKCOLLISION(Projectile, Unit);
+#undef VG_CHECKCOLLISION
 
     return true;
 }
@@ -253,6 +271,18 @@ bool GameScene::onContactUnitAstroObj(ContactInfo& cinfo)
         unit->onContactAstroObj(cinfo);
     }
     return true;
+}
+
+bool GameScene::onContactProjectileAstroObj(ContactInfo& cinfo)
+{
+    Projectile* proj = static_cast<Projectile*>(cinfo.thisObj);
+    return proj->onContactAstroObj(cinfo);
+}
+
+bool GameScene::onContactProjectileUnit(ContactInfo& cinfo)
+{
+    Projectile* proj = static_cast<Projectile*>(cinfo.thisObj);
+    return proj->onContactUnit(cinfo);
 }
 
 void GameScene::initMouse()
@@ -475,7 +505,7 @@ bool GameScene::onViewFollowQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape
     UNUSED(pworld);
     UNUSED(userdata);
     ObjTag tag(shape.getBody()->getNode()->getTag());
-    if (tag.type() == ObjType::Astro) {
+    if (tag.type() == ObjType::AstroObj) {
         _viewSurfaceId = tag.id();
     }
     return true;

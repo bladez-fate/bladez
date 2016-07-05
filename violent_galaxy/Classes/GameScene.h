@@ -9,17 +9,28 @@
 template <class Id, class T>
 class Storage : public cc::Ref {
 public:
+    using Map = cc::Map<Id, T*>;
+    using iterator = typename Map::iterator;
+    using const_iterator = typename Map::const_iterator;
+public:
+    iterator begin() { return _map.begin(); }
+    iterator end() { return _map.end(); }
+    const_iterator begin() const { return _map.begin(); }
+    const_iterator end() const { return _map.end(); }
+    const_iterator cbegin() const { return _map.cbegin(); }
+    const_iterator cend() const { return _map.cend(); }
+
     void add(T* t)
     {
         t->setId(++_lastId);
-        CCASSERT(_storage.find(t->getId()) == _storage.end(), "storage id duplicate");
-        _storage.insert(t->getId(), t);
+        CCASSERT(_map.find(t->getId()) == _map.end(), "storage id duplicate");
+        _map.insert(t->getId(), t);
     }
 
     T* getById(Id id)
     {
-        auto iter = _storage.find(id);
-        if (iter == _storage.end()) {
+        auto iter = _map.find(id);
+        if (iter == _map.end()) {
             return nullptr;
         }
         T* unit = iter->second;
@@ -34,24 +45,24 @@ public:
 
     T* releaseById(Id id)
     {
-        auto iter = _storage.find(id);
-        if (iter == _storage.end()) {
+        auto iter = _map.find(id);
+        if (iter == _map.end()) {
             return nullptr;
         }
         T* t = iter->second;
         t->retain();
-        _storage.erase(iter);
+        _map.erase(iter);
         t->autorelease();
         return t;
     }
 
     void remove(T* t)
     {
-        auto iter = _storage.find(t->getId());
-        if (iter == _storage.end()) {
+        auto iter = _map.find(t->getId());
+        if (iter == _map.end()) {
             return;
         }
-        _storage.erase(iter);
+        _map.erase(iter);
     }
 
     void release(T* t)
@@ -65,7 +76,7 @@ private:
     bool init() { return true; }
 private:
     Id _lastId = 0;
-    cc::Map<Id, T*> _storage;
+    Map _map;
 };
 
 using ObjStorage = Storage<Id, Obj>;
@@ -136,6 +147,8 @@ public: // Collisions
                          cc::PhysicsContactPreSolve* preSolve,
                          const cc::PhysicsContactPostSolve* postSolve);
     bool onContactUnitAstroObj(ContactInfo& cinfo);
+    bool onContactProjectileAstroObj(ContactInfo& cinfo);
+    bool onContactProjectileUnit(ContactInfo& cinfo);
     void updateUnitVelocityOnSurface(cpBody* body, float dt);
 private:
     cc::PhysicsWorld* _pworld = nullptr;
