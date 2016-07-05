@@ -27,7 +27,7 @@ public:
             CCASSERT(a >= 0, "angle is still negtive");
         }
         i64 ai = (i64)floorf(a / _astep) % this->size();
-        CCASSERT(ai >= 0 && ai < this->size(), "angle rounding internal error");
+        CCASSERT(ai >= 0 && ai < (i64)this->size(), "angle rounding internal error");
         return this->begin() + ai;
     }
 

@@ -45,7 +45,7 @@ bool Planet::init(GameScene* game)
     _coreRadius = 8000;
     _surfAltitude = 100;
     _atmoAltitude = 1500;
-    _spacAltitude = 4000;
+    _spacAltitude = 6000;
     fillCrust();
     AstroObj::init(game);
     return true;

@@ -90,24 +90,29 @@ private: // Keyboard
     bool isKeyHeld(cc::EventKeyboard::KeyCode code);
     std::map<cc::EventKeyboard::KeyCode, std::chrono::high_resolution_clock::time_point> _keyHold;
 private: // Mouse
+    void initMouse();
     void onMouseMove(cc::Event *event);
     void onMouseDown(cc::Event *event);
     void onMouseUp(cc::Event *event);
-    void onMouseScroll(cc::Event *event);
+    void onMouseWheel(cc::Event *event);
+    cc::Vec2 _mouseLastLoc;
 private: // View
+    void initWorldView();
     void createWorldCamera(cc::Vec2 eye);
     cc::Vec2 viewCenter() const;
     void viewEyeAt(cc::Vec2 eye);
-    void viewLookAt(cc::Vec2 eye);
+    void viewLookAt(cc::Vec2 eye, bool continuos);
     void viewCenterAt(cc::Vec2 center);
     void viewZoom(float scaleBy, cc::Vec2 center);
     void viewRotate(float rotateBy, cc::Vec2 center);
-    void viewSurface(cc::Vec2 p, bool zoomIfRequired);
-    void onViewPan(cc::Vec2 loc);
+    void viewSurface(cc::Vec2 center, cocos2d::Vec2 prevCenter, bool continuos, bool zoomIfRequired);
+    void onViewPan(cc::Vec2 screenLoc);
     void onViewPanStop();
+    void onViewScroll(cc::Vec2 screenDir);
     void onViewZoom(float times, cc::Vec2 center);
     void onViewRotate(float times, cc::Vec2 center);
     bool onViewFollowQueryPoint(cc::PhysicsWorld& pworld, cc::PhysicsShape& shape, void* userdata);
+    void onViewTimer(float dt);
     cc::Vec2 screen2world(cc::Vec2 s);
     bool _viewPanEnabled = false;
     cc::Vec2 _viewPanLastLoc;
@@ -116,10 +121,12 @@ private: // View
     cc::Camera* _worldCamera = nullptr;
     cc::Vec2 _worldCameraSize;
     Id _viewSurfaceId = 0;
-    static constexpr float _viewZoomFactor = 1.1f; // zoom per one scroll
-    static constexpr float _viewRotationFactor = 1e-1f; // radians per one scroll
+    static constexpr float _viewScrollFactor = 1000.0f; // worldlength per second per viewzoom
+    static constexpr float _viewZoomFactor = 1.1f; // zoom per one wheel scroll
+    static constexpr float _viewRotationFactor = 1e-1f; // radians per one wheel scroll
     static constexpr float _viewNearPlane = 1.0f;
     static constexpr float _viewFarPlane = 1000.0f;
+    static constexpr float _viewTimerIntervalSec = 0.02;
 public: // Collisions
     bool onContactBegin(cc::PhysicsContact& contact);
     bool onContactPreSolve(cc::PhysicsContact& contact, cc::PhysicsContactPreSolve& solve);
