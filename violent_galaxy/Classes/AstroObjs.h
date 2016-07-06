@@ -21,6 +21,7 @@ public:
     };
 public:
     OBJ_CREATE_FUNC(Planet);
+    float getSize() override;
     const AngularVec<Segment>& segments() const { return _segments; }
     cc::Vec2 polar2local(float r, float a);
     cc::Vec2 polar2world(float r, float a);

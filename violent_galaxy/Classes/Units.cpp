@@ -54,6 +54,11 @@ bool ColonyShip::init(GameScene* game)
     return true;
 }
 
+float ColonyShip::getSize()
+{
+    return _radius;
+}
+
 Node* ColonyShip::createNodes()
 {
     return DrawNode::create();
@@ -128,28 +133,10 @@ bool ColonyShip::onContactAstroObj(ContactInfo& cinfo)
     return true;
 }
 
-//bool Spaceport::init(GameScene* game)
-//{
-//    _rootNode = DrawNode::create();
-//    cc::Size size(20, 20);
-//    node()->drawSolidCircle(Vec2::ZERO, size.width/2, 0, 12, Color4F::WHITE);
-//    node()->drawSolidRect(
-//        Vec2(-size.width/2, -size.height/2),
-//        Vec2( size.width/2,  0),
-//        Color4F::WHITE
-//    );
-
-//    _body = PhysicsBody::createBox(
-//        size,
-//        gUnitMaterial,
-//        Vec2::ZERO
-//    );
-//    _rootNode->setPhysicsBody(_body);
-
-//    Unit::init(game);
-
-//    return true;
-//}
+float Tank::getSize()
+{
+    return _size;
+}
 
 void Tank::shoot()
 {
@@ -222,3 +209,4 @@ void Tank::draw()
     node()->drawSolidPoly(_base, sizeof(_base)/sizeof(*_base), Color4F::WHITE);
     node()->drawSolidPoly(_head, sizeof(_head)/sizeof(*_head), Color4F::BLUE);
 }
+

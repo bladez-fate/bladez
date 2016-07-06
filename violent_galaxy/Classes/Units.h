@@ -25,6 +25,7 @@ protected:
 class ColonyShip : public Unit {
 public:
     OBJ_CREATE_FUNC(ColonyShip);
+    float getSize() override;
     virtual bool onContactAstroObj(ContactInfo& cinfo) override;
 protected:
     ColonyShip() {}
@@ -40,22 +41,10 @@ public:
     float _radius;
 };
 
-//class Spaceport : public Unit {
-//public:
-//    OBJ_CREATE_FUNC(Spaceport);
-//protected:
-//    Spaceport() {}
-//    virtual bool init(GameScene* game) override;
-//    cc::Node* createNodes() override;
-//    void draw() override;
-//protected:
-//    cc::DrawNode* node() { return static_cast<cc::DrawNode*>(_rootNode); }
-//    cc::PhysicsBody* _body = nullptr;
-//};
-
 class Tank : public Unit {
 public:
     OBJ_CREATE_FUNC(Tank);
+    float getSize() override;
     void shoot();
 protected:
     Tank() {}

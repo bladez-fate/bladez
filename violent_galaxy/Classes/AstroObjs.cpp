@@ -40,6 +40,11 @@ Planet::Planet()
     }
 }
 
+float Planet::getSize()
+{
+    return _coreRadius * 1.5;
+}
+
 Vec2 Planet::polar2local(float r, float a)
 {
     return r * Vec2::forAngle(a);

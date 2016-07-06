@@ -17,6 +17,11 @@ void Obj::destroy()
     CCLOG("OBJ DESTROY id# %d", (int)_id);
 }
 
+void Obj::update(float delta)
+{
+    // override me
+}
+
 
 bool VisualObj::init(GameScene* game)
 {
@@ -28,7 +33,7 @@ bool VisualObj::init(GameScene* game)
     snprintf(buf, sizeof(buf), "%s#%d", typeid(this).name(), (int)_id);
     _rootNode->setName(buf);
     _rootNode->setTag(ObjTag(getObjType(), _id));
-    _rootNode->setCameraMask((unsigned short)CameraFlag::USER1);
+    _rootNode->setCameraMask((unsigned short)gWorldCameraFlag);
 
     if (auto body = createBody()) {
         _rootNode->setPhysicsBody(body);

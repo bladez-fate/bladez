@@ -91,9 +91,10 @@ public:
     cc::PhysicsWorld* physicsWorld() { return _pworld; }
 public:
     void menuCloseCallback(cc::Ref* pSender);
-private: // Initialization
+private: // Scene
     GameScene() {}
     virtual bool init() override;
+    void update(float delta) override;
 private: // World
     void createWorld(cc::Scene* scene, cc::PhysicsWorld* pworld);
     cc::PhysicsWorld* _pworld = nullptr;
@@ -129,24 +130,34 @@ private: // View
     void onViewZoom(float times, cc::Vec2 center);
     void onViewRotate(float times, cc::Vec2 center);
     void onViewTimer(float dt);
+public:
     cc::Vec2 screen2world(cc::Vec2 s);
+    float getViewZoom() const { return _viewZoom; }
+private:
     bool _viewPanEnabled = false;
     cc::Vec2 _viewPanLastLoc;
-    float _viewZoom = 1.0f;
+    float _viewZoom = 1.0f; // world length per screen pixel
     float _viewRotation = M_PI_2;
     cc::Camera* _worldCamera = nullptr;
     cc::Vec2 _worldCameraSize;
     Id _viewSurfaceId = 0;
     static constexpr float _viewScrollFactor = 1000.0f; // worldlength per second per viewzoom
     static constexpr float _viewZoomFactor = 1.1f; // zoom per one wheel scroll
+    static constexpr float _viewZoomMin = 1e-1f;
+    static constexpr float _viewZoomMax = 1e+5f;
     static constexpr float _viewRotationFactor = 1e-1f; // radians per one wheel scroll
     static constexpr float _viewNearPlane = 1.0f;
     static constexpr float _viewFarPlane = 1000.0f;
     static constexpr float _viewTimerIntervalSec = 0.02;
 private: // Players
     void initPlayers();
+    void playerUpdate(float delta);
+public:
     void addPlayer(Player* player);
-    void activatePlayer(Player* player);
+private:
+    void playerActivate(Player* player);
+    void playerSelect(cc::Vec2 p, bool add, bool all);
+    bool onSelectQueryPoint(cc::PhysicsWorld& pworld, cc::PhysicsShape& shape, void* userdata, bool add, bool all);
     Player* _activePlayer = nullptr;
     using Players = std::vector<Player*>;
     Players _players;

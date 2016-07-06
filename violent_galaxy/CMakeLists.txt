@@ -131,6 +131,7 @@ set(GAME_SRC
   Classes/GameScene.cpp
   Classes/Obj.cpp
   Classes/Physics.cpp
+  Classes/Player.cpp
   Classes/Projectiles.cpp
   Classes/Units.cpp
   ${PLATFORM_SPECIFIC_SRC}
@@ -143,6 +144,7 @@ set(GAME_HEADERS
   Classes/GameScene.h
   Classes/Obj.h
   Classes/Physics.h
+  Classes/Player.h
   Classes/Projectiles.h
   Classes/RadialGrid.h
   Classes/Units.h

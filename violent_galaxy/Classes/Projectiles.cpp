@@ -72,3 +72,8 @@ void Shell::draw()
 {
     node()->drawSolidCircle(Vec2::ZERO, _size, 0, 4, Color4F::WHITE);
 }
+
+float Shell::getSize()
+{
+    return _size;
+}

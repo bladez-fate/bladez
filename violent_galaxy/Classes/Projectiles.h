@@ -26,6 +26,7 @@ protected:
 class Shell : public Projectile {
 public:
     OBJ_CREATE_FUNC(Shell);
+    float getSize() override;
 protected:
     Shell() {}
     virtual bool init(GameScene* game) override;

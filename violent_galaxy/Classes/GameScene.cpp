@@ -10,7 +10,7 @@ Scene* GameScene::createScene()
 {
     // 'scene' is an autorelease object
     auto scene = Scene::createWithPhysics();
-//    scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL, (unsigned short)CameraFlag::USER1);
+//    scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL, (unsigned short)gWorldCameraFlag);
     scene->getPhysicsWorld()->setGravity(Vec2::ZERO);
 
     auto ffield = PhysicsForceField::create();
@@ -54,8 +54,15 @@ bool GameScene::init()
 //    addChild(label, 1);
 
     _objs = ObjStorage::create();
+    scheduleUpdate();
 
     return true;
+}
+
+void GameScene::update(float delta)
+{
+    Layer::update(delta);
+    playerUpdate(delta);
 }
 
 
@@ -141,15 +148,24 @@ void GameScene::onMouseDown(Event* event)
 void GameScene::onMouseUp(Event *event)
 {
     EventMouse* e = (EventMouse*)event;
+    Vec2 p = e->getLocationInView();
+    Vec2 pw = screen2world(p);
     if (e->getMouseButton() == 0) {
-        auto cs = ColonyShip::create(this);
-        cs->setPosition(screen2world(e->getLocationInView()));
-        cs->onLandCreate = [](GameScene* game) {
-            return Tank::create(game);
-        };
+        if (isKeyHeld(EventKeyboard::KeyCode::KEY_C)) {
+            auto cs = ColonyShip::create(this);
+            cs->setPosition(pw);
+            cs->onLandCreate = [](GameScene* game) {
+                return Tank::create(game);
+            };
+        } else {
+            playerSelect(pw,
+                isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT),
+                isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)
+            );
+        }
     } else if (e->getMouseButton() == 1) {
         if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
-            viewFollow(screen2world(e->getLocationInView()));
+            viewFollow(pw);
         }
     } else if (e->getMouseButton() == 2) {
         onViewPanStop();
@@ -183,7 +199,7 @@ void GameScene::createWorldCamera(Vec2 eye)
         _worldCameraSize.x, _worldCameraSize.y,
         _viewNearPlane, _viewFarPlane
     );
-    _worldCamera->setCameraFlag(CameraFlag::USER1);
+    _worldCamera->setCameraFlag(gWorldCameraFlag);
     _worldCamera->setPositionZ(1.0f);
     viewLookAt(eye, false);
     addChild(_worldCamera);
@@ -219,8 +235,9 @@ void GameScene::viewZoom(float scaleBy, Vec2 center)
 {
     Vec2 eye = _worldCamera->getPosition();
     Vec2 offs = eye - center;
-    _viewZoom *= scaleBy;
-    offs *= scaleBy;
+    offs *= 1.0f/_viewZoom;
+    _viewZoom = clampf(_viewZoom * scaleBy, _viewZoomMin, _viewZoomMax);
+    offs *= _viewZoom;
     Vec2 eyeNew = center + offs;
     _worldCamera->removeFromParent();
     createWorldCamera(eyeNew);
@@ -353,14 +370,14 @@ void GameScene::onViewTimer(float dt)
     float marginLeft = 5.0, marginRight = 5.0, marginTop = 50.0, marginBottom = 5.0;
     Vec2 screenDir;
     if (_mouseLastLoc.x <= marginLeft) {
-        screenDir = Vec2(-1.0, 0.0);
+        screenDir += Vec2(-1.0, 0.0);
     } else if (_mouseLastLoc.x >= s.width - marginRight) {
-        screenDir = Vec2(1.0, 0.0);
+        screenDir += Vec2(1.0, 0.0);
     }
     if (_mouseLastLoc.y <= marginBottom) {
-        screenDir = Vec2(0.0, -1.0);
+        screenDir += Vec2(0.0, -1.0);
     } else if (_mouseLastLoc.y >= s.height - marginTop) {
-        screenDir = Vec2(0.0, 1.0);
+        screenDir += Vec2(0.0, 1.0);
     }
     if (screenDir != Vec2::ZERO) {
         onViewScroll(dt * screenDir);
@@ -377,15 +394,58 @@ void GameScene::initPlayers()
 {
 }
 
+void GameScene::playerUpdate(float delta)
+{
+    for (Player* player : _players) {
+        player->update(delta);
+    }
+}
+
 void GameScene::addPlayer(Player* player)
 {
     _players.push_back(player);
     player->playerId = _players.size();
 }
 
-void GameScene::activatePlayer(Player* player)
+void GameScene::playerActivate(Player* player)
 {
+    if (player == _activePlayer) {
+        return;
+    }
+    if (_activePlayer) {
+        _activePlayer->drawSelection(false);
+    }
     _activePlayer = player;
+    if (_activePlayer) {
+        _activePlayer->drawSelection(true);
+    }
+}
+
+void GameScene::playerSelect(Vec2 p, bool add, bool all)
+{
+    if (!_activePlayer) {
+        return;
+    }
+    _pworld->queryPoint(
+        CC_CALLBACK_3(GameScene::onSelectQueryPoint, this, add, all),
+        p, nullptr
+    );
+}
+
+bool GameScene::onSelectQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, void* userdata, bool add, bool all)
+{
+    UNUSED(pworld);
+    UNUSED(userdata);
+    UNUSED(all);
+    ObjTag tag(shape.getBody()->getNode()->getTag());
+    if (tag.type() == ObjType::Unit) {
+        if (add) {
+            _activePlayer->selectAdd(tag.id());
+        } else {
+            _activePlayer->select(tag.id());
+        }
+    }
+    return false;
 }
 
 void GameScene::initCollisions()
@@ -533,17 +593,11 @@ void GameScene::initGalaxy()
     Vec2 start = pl->geogr2world(startLng, startAlt);
     viewFollow(start, pl);
 
-
-//    auto pl = Planet::create(this);
-//    pl->setPosition(Vec2(s.width/2 + o.x, s.height*1/4 + o.y));
-//    pl->getNode()->getPhysicsBody()->applyImpulse(Vec2(4e7,0));
-//    pl->getNode()->getPhysicsBody()->applyTorque(5e8);
-
-
-//    auto pl2 = Planet::create(this);
-//    pl2->setPosition(Vec2(s.width/2 + o.x, s.height*3/4 + o.y));
-//    pl2->getNode()->getPhysicsBody()->applyImpulse(Vec2(-4e7,0));
-//    pl2->getNode()->getPhysicsBody()->applyTorque(-5e8);
+    // Player
+    auto player = Player::create(this);
+    player->name = "Player1";
+    player->color = Color4F::RED;
+    playerActivate(player);
 
     auto keyboardListener = EventListenerKeyboard::create();
     keyboardListener->onKeyPressed = [=](EventKeyboard::KeyCode keyCode, Event* event) {

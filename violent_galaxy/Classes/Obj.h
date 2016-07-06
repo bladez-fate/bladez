@@ -77,6 +77,7 @@ protected:
     Obj() {}
     virtual bool init(GameScene* game);
     virtual void destroy();
+    virtual void update(float delta);
 protected:
     Id _id;
     GameScene* _game;
@@ -86,6 +87,7 @@ class VisualObj : public Obj {
 public:
     cc::Node* getNode() { return _rootNode; }
     void setPosition(const cc::Vec2& position);
+    virtual float getSize() = 0;
 protected:
     VisualObj() {}
     bool init(GameScene* game) override;
