@@ -5,27 +5,6 @@
 
 USING_NS_CC;
 
-void GameScene::updateUnitVelocityOnSurface(cpBody* body, float dt)
-{
-    cc::PhysicsBody* unitBody = static_cast<cc::PhysicsBody*>(body->userData);
-    cc::Node* unitNode = unitBody->getNode();
-    ObjTag tag(unitNode->getTag());
-    Unit* unit = _objs->getByIdAs<Unit>(tag.id());
-    CCASSERT(unit, "unit has been already destroyed");
-    if (unit->surfaceId) {
-        if (AstroObj* surface = _objs->getByIdAs<AstroObj>(unit->surfaceId)) {
-            // TODO[fate]: calculate normal force using astroobj's gravity and apply
-            // force of friction (rolling resistance) instead of this:
-            float w_surf = surface->getNode()->getPhysicsBody()->getAngularVelocity();
-            body->w -= (body->w - w_surf) * (1 - cpfpow(0.1, dt));
-        } else {
-            // surface aobj was destroyed
-            unit->surfaceId = 0;
-            unitBody->resetUpdateVelocityFunc();
-        }
-    }
-}
-
 Scene* GameScene::createScene()
 {
     // 'scene' is an autorelease object
@@ -47,44 +26,27 @@ Scene* GameScene::createScene()
     return scene;
 }
 
-void GameScene::addPlayer(Player* player)
-{
-    _players.push_back(player);
-    player->playerId = _players.size();
-}
-
-// on "init" you need to initialize your instance
 bool GameScene::init()
 {
-    //////////////////////////////
-    // 1. super init first
-    if ( !Layer::init() )
-    {
+    if (!Layer::init()) {
         return false;
     }
     
-    auto visibleSize = Director::getInstance()->getVisibleSize();
-    Vec2 origin = Director::getInstance()->getVisibleOrigin();
+    auto s = Director::getInstance()->getVisibleSize();
+    Vec2 o = Director::getInstance()->getVisibleOrigin();
 
-    /////////////////////////////
-    // 2. add a menu item with "X" image, which is clicked to quit the program
-    //    you may modify it.
-
-    // add a "close" icon to exit the progress. it's an autorelease object
     auto closeItem = MenuItemImage::create(
-                                           "CloseNormal.png",
-                                           "CloseSelected.png",
-                                           CC_CALLBACK_1(GameScene::menuCloseCallback, this));
-    
-    closeItem->setPosition(Vec2(origin.x + visibleSize.width - closeItem->getContentSize().width/2 ,
-                                origin.y + closeItem->getContentSize().height/2));
+        "CloseNormal.png",
+        "CloseSelected.png",
+        CC_CALLBACK_1(GameScene::menuCloseCallback, this)
+    );
+    closeItem->setPosition(Vec2(o.x + s.width - closeItem->getContentSize().width/2 ,
+                                o.y + closeItem->getContentSize().height/2));
 
-    // create menu, it's an autorelease object
-    auto menu = Menu::create(closeItem, NULL);
-    menu->setPosition(Vec2::ZERO);
-    this->addChild(menu, 1);
+//    auto menu = Menu::create(closeItem, NULL);
+//    menu->setPosition(Vec2::ZERO);
+//    this->addChild(menu, 1);
 
-    // create and initialize a label
 //    auto label = Label::createWithTTF("Level 1", "fonts/Marker Felt.ttf", 24);
 //    label->setPosition(Vec2(origin.x + visibleSize.width/2,
 //                            origin.y + visibleSize.height - label->getContentSize().height));
@@ -107,182 +69,39 @@ void GameScene::menuCloseCallback(Ref* pSender)
 
 void GameScene::createWorld(Scene* scene, PhysicsWorld* pworld)
 {
-    auto s = Director::getInstance()->getVisibleSize();
-    Vec2 o = Director::getInstance()->getVisibleOrigin();
-
-    // Initialize world view
-    initWorldView();
-
     _pworld = pworld;
     pworld->setSpeed(1.0);
 
-    auto pl = Planet::create(this);
-    pl->setPosition(Vec2(s.width/2 + o.x, s.height/2 + o.y));
+    initWorldView();
+    initGalaxy();
+    initCollisions();
 
-//    auto pl = Planet::create(this);
-//    pl->setPosition(Vec2(s.width/2 + o.x, s.height*1/4 + o.y));
-//    pl->getNode()->getPhysicsBody()->applyImpulse(Vec2(4e7,0));
-//    pl->getNode()->getPhysicsBody()->applyTorque(5e8);
-
-
-//    auto pl2 = Planet::create(this);
-//    pl2->setPosition(Vec2(s.width/2 + o.x, s.height*3/4 + o.y));
-//    pl2->getNode()->getPhysicsBody()->applyImpulse(Vec2(-4e7,0));
-//    pl2->getNode()->getPhysicsBody()->applyTorque(-5e8);
-
-    auto contactListener = EventListenerPhysicsContact::create();
-    contactListener->onContactBegin = CC_CALLBACK_1(GameScene::onContactBegin, this);
-    contactListener->onContactPreSolve = CC_CALLBACK_2(GameScene::onContactPreSolve, this);
-    contactListener->onContactPostSolve = CC_CALLBACK_2(GameScene::onContactPostSolve, this);
-    contactListener->onContactSeparate = CC_CALLBACK_1(GameScene::onContactSeparate, this);
-    _eventDispatcher->addEventListenerWithSceneGraphPriority(contactListener, this);
-
+    initPlayers();
     initMouse();
+    initKeyboard();
+}
 
-    auto keyboardListener = EventListenerKeyboard::create();
-    keyboardListener->onKeyPressed = [=](EventKeyboard::KeyCode keyCode, Event* event) {
-        float t = 1e8;
-        float j = 1e7;
-        auto body = pl->getNode()->getPhysicsBody();
-        switch (keyCode) {
-        case EventKeyboard::KeyCode::KEY_A:
-            body->applyTorque(t);
-            break;
-        case EventKeyboard::KeyCode::KEY_SPACE:
-            for (auto& kv : *_objs) {
-                if (auto tank = dynamic_cast<Tank*>(kv.second)) {
-                    tank->shoot();
-                }
-            }
-            break;
-        case EventKeyboard::KeyCode::KEY_S:
-            body->applyTorque(-t);
-            break;
-        case EventKeyboard::KeyCode::KEY_LEFT_ARROW:
-            body->applyImpulse(body->world2Local(Vec2(-j, 0)));
-            break;
-        case EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
-            body->applyImpulse(body->world2Local(Vec2(j, 0)));
-            break;
-        case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
-            body->applyImpulse(body->world2Local(Vec2(0, -j)));
-            break;
-        case EventKeyboard::KeyCode::KEY_UP_ARROW:
-            body->applyImpulse(body->world2Local(Vec2(0, j)));
-            break;
-        case EventKeyboard::KeyCode::KEY_Q:
-            if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
-                menuCloseCallback(this);
-            }
-            break;
-        default:
-            break;
-        }
-    };
-    _eventDispatcher->addEventListenerWithFixedPriority(keyboardListener, 1);
-
+void GameScene::initKeyboard()
+{
     createKeyHoldHandler();
 }
 
-bool GameScene::onContactBegin(PhysicsContact& contact)
+void GameScene::createKeyHoldHandler()
 {
-//    CCLOG("onContactBegin: ");
-    return dispatchContact(contact, nullptr, nullptr);
-}
-
-bool GameScene::onContactPreSolve(PhysicsContact& contact, PhysicsContactPreSolve& solve)
-{
-//    CCLOG("onContactPreSolve: fr# %f re# %f v# %f", solve.getFriction(), solve.getRestitution(), solve.getSurfaceVelocity().length());
-    return dispatchContact(contact, &solve, nullptr);
-}
-
-void GameScene::onContactPostSolve(PhysicsContact& contact, const PhysicsContactPostSolve& solve)
-{
-    //CCLOG("onContactPostSolve: fr# %f re# %f v# %f", solve.getFriction(), solve.getRestitution(), solve.getSurfaceVelocity().length());
-    dispatchContact(contact, nullptr, &solve);
-}
-
-void GameScene::onContactSeparate(PhysicsContact& contact)
-{
-//    CCLOG("onContactSeparate: ");
-    dispatchContact(contact, nullptr, nullptr);
-}
-
-bool GameScene::dispatchContact(PhysicsContact& contact,
-                                PhysicsContactPreSolve* preSolve,
-                                const PhysicsContactPostSolve* postSolve)
-{
-    auto nodeA = contact.getShapeA()->getBody()->getNode();
-    auto nodeB = contact.getShapeB()->getBody()->getNode();
-
-    if (!nodeA || !nodeB) {
-        return false; // avoid contact handling after node destruction
-    }
-
-    ContactInfo cinfo(this, contact, preSolve, postSolve);
-
-    if (!cinfo.thisObj || !cinfo.thatObj) {
-        return false; // avoid contact handling after obj destruction
-    }
-
-#define VG_CHECKCOLLISION(x, y) \
-    if (cinfo.thisTag.type() == ObjType::x && cinfo.thatTag.type() == ObjType::y) { \
-        return onContact ## x ## y (cinfo); \
-    } \
-    if (cinfo.thisTag.type() == ObjType::y && cinfo.thatTag.type() == ObjType::x) { \
-        cinfo.swap(); \
-        return onContact ## x ## y(cinfo); \
-    } \
-    /**/
-    VG_CHECKCOLLISION(Unit, AstroObj);
-    VG_CHECKCOLLISION(Projectile, AstroObj);
-    VG_CHECKCOLLISION(Projectile, Unit);
-#undef VG_CHECKCOLLISION
-
-    return true;
-}
-
-bool GameScene::onContactUnitAstroObj(ContactInfo& cinfo)
-{
-    Unit* unit = static_cast<Unit*>(cinfo.thisObj);
-    AstroObj* aobj = static_cast<AstroObj*>(cinfo.thatObj);
-    switch (cinfo.contact.getEventCode()) {
-    case PhysicsContact::EventCode::NONE:
-        break;
-    case PhysicsContact::EventCode::BEGIN:
-        if (unit->surfaceId && unit->surfaceId != aobj->getId()) {
-            // TODO[fate]: double contact with astro obj -- destroy unit
-            return false;
+    auto eventListener = EventListenerKeyboard::create();
+    eventListener->onKeyPressed = [=](EventKeyboard::KeyCode keyCode, Event* event) {
+        if (_keyHold.find(keyCode) == _keyHold.end()) {
+            _keyHold[keyCode] = std::chrono::high_resolution_clock::now();
         }
-        unit->surfaceId = aobj->getId();
-        cinfo.thisBody->setUpdateVelocityFunc(CC_CALLBACK_2(GameScene::updateUnitVelocityOnSurface, this));
-        break;
-    case PhysicsContact::EventCode::PRESOLVE:
-        break;
-    case PhysicsContact::EventCode::POSTSOLVE:
-        break;
-    case PhysicsContact::EventCode::SEPARATE:
-        unit->surfaceId = 0;
-        cinfo.thisBody->resetUpdateVelocityFunc();
-        break;
-    }
-
-    if (unit->listenContactAstroObj) {
-        unit->onContactAstroObj(cinfo);
-    }
-    return true;
+    };
+    eventListener->onKeyReleased = [=](EventKeyboard::KeyCode keyCode, Event* event) {
+        _keyHold.erase(keyCode);
+    };
+    this->_eventDispatcher->addEventListenerWithSceneGraphPriority(eventListener, this);
 }
 
-bool GameScene::onContactProjectileAstroObj(ContactInfo& cinfo)
-{
-    Projectile* proj = static_cast<Projectile*>(cinfo.thisObj);
-    return proj->onContactAstroObj(cinfo);
-}
-
-bool GameScene::onContactProjectileUnit(ContactInfo& cinfo)
-{
-    Projectile* proj = static_cast<Projectile*>(cinfo.thisObj);
-    return proj->onContactUnit(cinfo);
+bool GameScene::isKeyHeld(EventKeyboard::KeyCode code) {
+    return _keyHold.count(code);
 }
 
 void GameScene::initMouse()
@@ -537,20 +356,212 @@ Vec2 GameScene::screen2world(Vec2 s)
     return Vec2(w.x, w.y);
 }
 
-void GameScene::createKeyHoldHandler()
+void GameScene::initPlayers()
 {
-    auto eventListener = EventListenerKeyboard::create();
-    eventListener->onKeyPressed = [=](EventKeyboard::KeyCode keyCode, Event* event) {
-        if (_keyHold.find(keyCode) == _keyHold.end()) {
-            _keyHold[keyCode] = std::chrono::high_resolution_clock::now();
-        }
-    };
-    eventListener->onKeyReleased = [=](EventKeyboard::KeyCode keyCode, Event* event) {
-        _keyHold.erase(keyCode);
-    };
-    this->_eventDispatcher->addEventListenerWithSceneGraphPriority(eventListener, this);
 }
 
-bool GameScene::isKeyHeld(EventKeyboard::KeyCode code) {
-    return _keyHold.count(code);
+void GameScene::addPlayer(Player* player)
+{
+    _players.push_back(player);
+    player->playerId = _players.size();
+}
+
+void GameScene::activatePlayer(Player* player)
+{
+    _activePlayer = player;
+}
+
+void GameScene::initCollisions()
+{
+    auto contactListener = EventListenerPhysicsContact::create();
+    contactListener->onContactBegin = CC_CALLBACK_1(GameScene::onContactBegin, this);
+    contactListener->onContactPreSolve = CC_CALLBACK_2(GameScene::onContactPreSolve, this);
+    contactListener->onContactPostSolve = CC_CALLBACK_2(GameScene::onContactPostSolve, this);
+    contactListener->onContactSeparate = CC_CALLBACK_1(GameScene::onContactSeparate, this);
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(contactListener, this);
+}
+
+
+bool GameScene::onContactBegin(PhysicsContact& contact)
+{
+//    CCLOG("onContactBegin: ");
+    return dispatchContact(contact, nullptr, nullptr);
+}
+
+bool GameScene::onContactPreSolve(PhysicsContact& contact, PhysicsContactPreSolve& solve)
+{
+//    CCLOG("onContactPreSolve: fr# %f re# %f v# %f", solve.getFriction(), solve.getRestitution(), solve.getSurfaceVelocity().length());
+    return dispatchContact(contact, &solve, nullptr);
+}
+
+void GameScene::onContactPostSolve(PhysicsContact& contact, const PhysicsContactPostSolve& solve)
+{
+    //CCLOG("onContactPostSolve: fr# %f re# %f v# %f", solve.getFriction(), solve.getRestitution(), solve.getSurfaceVelocity().length());
+    dispatchContact(contact, nullptr, &solve);
+}
+
+void GameScene::onContactSeparate(PhysicsContact& contact)
+{
+//    CCLOG("onContactSeparate: ");
+    dispatchContact(contact, nullptr, nullptr);
+}
+
+bool GameScene::dispatchContact(PhysicsContact& contact,
+                                PhysicsContactPreSolve* preSolve,
+                                const PhysicsContactPostSolve* postSolve)
+{
+    auto nodeA = contact.getShapeA()->getBody()->getNode();
+    auto nodeB = contact.getShapeB()->getBody()->getNode();
+
+    if (!nodeA || !nodeB) {
+        return false; // avoid contact handling after node destruction
+    }
+
+    ContactInfo cinfo(this, contact, preSolve, postSolve);
+
+    if (!cinfo.thisObj || !cinfo.thatObj) {
+        return false; // avoid contact handling after obj destruction
+    }
+
+#define VG_CHECKCOLLISION(x, y) \
+    if (cinfo.thisTag.type() == ObjType::x && cinfo.thatTag.type() == ObjType::y) { \
+        return onContact ## x ## y (cinfo); \
+    } \
+    if (cinfo.thisTag.type() == ObjType::y && cinfo.thatTag.type() == ObjType::x) { \
+        cinfo.swap(); \
+        return onContact ## x ## y(cinfo); \
+    } \
+    /**/
+    VG_CHECKCOLLISION(Unit, AstroObj);
+    VG_CHECKCOLLISION(Projectile, AstroObj);
+    VG_CHECKCOLLISION(Projectile, Unit);
+#undef VG_CHECKCOLLISION
+
+    return true;
+}
+
+bool GameScene::onContactUnitAstroObj(ContactInfo& cinfo)
+{
+    Unit* unit = static_cast<Unit*>(cinfo.thisObj);
+    AstroObj* aobj = static_cast<AstroObj*>(cinfo.thatObj);
+    switch (cinfo.contact.getEventCode()) {
+    case PhysicsContact::EventCode::NONE:
+        break;
+    case PhysicsContact::EventCode::BEGIN:
+        if (unit->surfaceId && unit->surfaceId != aobj->getId()) {
+            // TODO[fate]: double contact with astro obj -- destroy unit
+            return false;
+        }
+        unit->surfaceId = aobj->getId();
+        cinfo.thisBody->setUpdateVelocityFunc(CC_CALLBACK_2(GameScene::updateUnitVelocityOnSurface, this));
+        break;
+    case PhysicsContact::EventCode::PRESOLVE:
+        break;
+    case PhysicsContact::EventCode::POSTSOLVE:
+        break;
+    case PhysicsContact::EventCode::SEPARATE:
+        unit->surfaceId = 0;
+        cinfo.thisBody->resetUpdateVelocityFunc();
+        break;
+    }
+
+    if (unit->listenContactAstroObj) {
+        unit->onContactAstroObj(cinfo);
+    }
+    return true;
+}
+
+bool GameScene::onContactProjectileAstroObj(ContactInfo& cinfo)
+{
+    Projectile* proj = static_cast<Projectile*>(cinfo.thisObj);
+    return proj->onContactAstroObj(cinfo);
+}
+
+bool GameScene::onContactProjectileUnit(ContactInfo& cinfo)
+{
+    Projectile* proj = static_cast<Projectile*>(cinfo.thisObj);
+    return proj->onContactUnit(cinfo);
+}
+
+void GameScene::updateUnitVelocityOnSurface(cpBody* body, float dt)
+{
+    cc::PhysicsBody* unitBody = static_cast<cc::PhysicsBody*>(body->userData);
+    cc::Node* unitNode = unitBody->getNode();
+    ObjTag tag(unitNode->getTag());
+    Unit* unit = _objs->getByIdAs<Unit>(tag.id());
+    CCASSERT(unit, "unit has been already destroyed");
+    if (unit->surfaceId) {
+        if (AstroObj* surface = _objs->getByIdAs<AstroObj>(unit->surfaceId)) {
+            // TODO[fate]: calculate normal force using astroobj's gravity and apply
+            // force of friction (rolling resistance) instead of this:
+            float w_surf = surface->getNode()->getPhysicsBody()->getAngularVelocity();
+            body->w -= (body->w - w_surf) * (1 - cpfpow(0.1, dt));
+        } else {
+            // surface aobj was destroyed
+            unit->surfaceId = 0;
+            unitBody->resetUpdateVelocityFunc();
+        }
+    }
+}
+
+void GameScene::initGalaxy()
+{
+    auto s = Director::getInstance()->getVisibleSize();
+    Vec2 o = Director::getInstance()->getVisibleOrigin();
+
+    auto pl = Planet::create(this);
+    pl->setPosition(Vec2(s.width/2 + o.x, s.height/2 + o.y));
+
+//    auto pl = Planet::create(this);
+//    pl->setPosition(Vec2(s.width/2 + o.x, s.height*1/4 + o.y));
+//    pl->getNode()->getPhysicsBody()->applyImpulse(Vec2(4e7,0));
+//    pl->getNode()->getPhysicsBody()->applyTorque(5e8);
+
+
+//    auto pl2 = Planet::create(this);
+//    pl2->setPosition(Vec2(s.width/2 + o.x, s.height*3/4 + o.y));
+//    pl2->getNode()->getPhysicsBody()->applyImpulse(Vec2(-4e7,0));
+//    pl2->getNode()->getPhysicsBody()->applyTorque(-5e8);
+
+    auto keyboardListener = EventListenerKeyboard::create();
+    keyboardListener->onKeyPressed = [=](EventKeyboard::KeyCode keyCode, Event* event) {
+        float t = 1e8;
+        float j = 1e7;
+        auto body = pl->getNode()->getPhysicsBody();
+        switch (keyCode) {
+        case EventKeyboard::KeyCode::KEY_A:
+            body->applyTorque(t);
+            break;
+        case EventKeyboard::KeyCode::KEY_SPACE:
+            for (auto& kv : *_objs) {
+                if (auto tank = dynamic_cast<Tank*>(kv.second)) {
+                    tank->shoot();
+                }
+            }
+            break;
+        case EventKeyboard::KeyCode::KEY_S:
+            body->applyTorque(-t);
+            break;
+        case EventKeyboard::KeyCode::KEY_LEFT_ARROW:
+            body->applyImpulse(body->world2Local(Vec2(-j, 0)));
+            break;
+        case EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
+            body->applyImpulse(body->world2Local(Vec2(j, 0)));
+            break;
+        case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
+            body->applyImpulse(body->world2Local(Vec2(0, -j)));
+            break;
+        case EventKeyboard::KeyCode::KEY_UP_ARROW:
+            body->applyImpulse(body->world2Local(Vec2(0, j)));
+            break;
+        case EventKeyboard::KeyCode::KEY_Q:
+            if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
+                menuCloseCallback(this);
+            }
+            break;
+        default:
+            break;
+        }
+    };
+    _eventDispatcher->addEventListenerWithFixedPriority(keyboardListener, 1);
 }

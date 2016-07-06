@@ -89,15 +89,18 @@ public:
 
     ObjStorage* objs() { return _objs.get(); }
     cc::PhysicsWorld* physicsWorld() { return _pworld; }
-    void addPlayer(Player* player);
 public:
     void menuCloseCallback(cc::Ref* pSender);
 private: // Initialization
     GameScene() {}
     virtual bool init() override;
+private: // World
     void createWorld(cc::Scene* scene, cc::PhysicsWorld* pworld);
-    void createKeyHoldHandler();
+    cc::PhysicsWorld* _pworld = nullptr;
+    cc::RefPtr<ObjStorage> _objs;
 private: // Keyboard
+    void initKeyboard();
+    void createKeyHoldHandler();
     bool isKeyHeld(cc::EventKeyboard::KeyCode code);
     std::map<cc::EventKeyboard::KeyCode, std::chrono::high_resolution_clock::time_point> _keyHold;
 private: // Mouse
@@ -138,7 +141,15 @@ private: // View
     static constexpr float _viewNearPlane = 1.0f;
     static constexpr float _viewFarPlane = 1000.0f;
     static constexpr float _viewTimerIntervalSec = 0.02;
+private: // Players
+    void initPlayers();
+    void addPlayer(Player* player);
+    void activatePlayer(Player* player);
+    Player* _activePlayer = nullptr;
+    using Players = std::vector<Player*>;
+    Players _players;
 public: // Collisions
+    void initCollisions();
     bool onContactBegin(cc::PhysicsContact& contact);
     bool onContactPreSolve(cc::PhysicsContact& contact, cc::PhysicsContactPreSolve& solve);
     void onContactPostSolve(cc::PhysicsContact& contact, const cc::PhysicsContactPostSolve& solve);
@@ -150,9 +161,6 @@ public: // Collisions
     bool onContactProjectileAstroObj(ContactInfo& cinfo);
     bool onContactProjectileUnit(ContactInfo& cinfo);
     void updateUnitVelocityOnSurface(cpBody* body, float dt);
-private:
-    cc::PhysicsWorld* _pworld = nullptr;
-    cc::RefPtr<ObjStorage> _objs;
-    using Players = std::vector<Player*>;
-    Players _players;
+public: // Galaxy
+    void initGalaxy();
 };
