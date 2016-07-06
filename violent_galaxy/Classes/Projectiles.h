@@ -21,6 +21,7 @@ protected:
     bool init(GameScene* game) override;
 protected:
     Player* _player;
+    cc::PhysicsBody* _body = nullptr;
 };
 
 class Shell : public Projectile {
@@ -35,7 +36,6 @@ protected:
     void draw() override;
 protected:
     cc::DrawNode* node() { return static_cast<cc::DrawNode*>(_rootNode); }
-    cc::PhysicsBody* _body = nullptr;
     float _size;
 };
 

@@ -142,11 +142,50 @@ void Tank::shoot()
 {
     Projectile* proj = Shell::create(_game);
     Vec2 localBegin = _gunBegin;
-    Vec2 localEnd = _gunBegin + _gunLength * Vec2(cosf(_angle), sinf(_angle));
+    Vec2 localEnd = _gunBegin + _gunLength * Vec2::forAngle(CC_DEGREES_TO_RADIANS(_angle));
     Vec2 begin = _body->local2World(localBegin);
     Vec2 end = _body->local2World(localEnd);
     proj->setPosition(end);
-    proj->getNode()->getPhysicsBody()->applyImpulse((end - begin).getNormalized() * _power);
+    Vec2 j = (end - begin).getNormalized() * _power;
+    proj->getNode()->getPhysicsBody()->applyImpulse(j);
+    _body->applyImpulse(_body->world2Local(Vec2::ZERO) - _body->world2Local(j));
+}
+
+void Tank::subAngle()
+{
+    _angle = clampf(_angle - _angleStep, _angleMin, _angleMax);
+    draw();
+}
+
+void Tank::addAngle()
+{
+    _angle = clampf(_angle + _angleStep, _angleMin, _angleMax);
+    draw();
+}
+
+void Tank::subPower()
+{
+    _power = clampf(_power - _powerStep, _powerMin, _powerMax);
+}
+
+void Tank::addPower()
+{
+    _power = clampf(_power + _powerStep, _powerMin, _powerMax);
+}
+
+void Tank::moveLeft()
+{
+    move(Vec2(-1, 0));
+}
+
+void Tank::moveRight()
+{
+    move(Vec2(1, 0));
+}
+
+void Tank::move(Vec2 dir)
+{
+    _body->applyImpulse(dir.getNormalized() * _moveImpulse);
 }
 
 bool Tank::init(GameScene* game)
@@ -174,8 +213,16 @@ bool Tank::init(GameScene* game)
     _offs = offs * scale;
     _gunLength = gunLength * scale;
 
-    _angle = 60 * (M_PI/180);
-    _power = 4;
+    _angleMin = 0;
+    _angleMax = 180 - _angleMin;
+    _angleStep = 1;
+    _powerMin = 1;
+    _powerMax = 20;
+    _powerStep = 1;
+    _moveImpulse = 0; // TODO[fate]: replace with surface velocity
+
+    _angle = 60;
+    _power = _powerMax;
 
     Unit::init(game);
 
@@ -201,12 +248,13 @@ PhysicsBody* Tank::createBody()
 
 void Tank::draw()
 {
+    node()->clear();
     node()->drawSegment(
         _gunBegin,
-        _gunBegin + _gunLength * Vec2(cosf(_angle), sinf(_angle)),
-        1, Color4F::BLUE
+        _gunBegin + _gunLength * Vec2::forAngle(CC_DEGREES_TO_RADIANS(_angle)),
+        1, Color4F::YELLOW
     );
     node()->drawSolidPoly(_base, sizeof(_base)/sizeof(*_base), Color4F::WHITE);
-    node()->drawSolidPoly(_head, sizeof(_head)/sizeof(*_head), Color4F::BLUE);
+    node()->drawSolidPoly(_head, sizeof(_head)/sizeof(*_head), Color4F::YELLOW);
 }
 

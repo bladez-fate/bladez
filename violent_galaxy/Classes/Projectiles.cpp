@@ -40,7 +40,16 @@ bool Projectile::onContactUnit(ContactInfo& cinfo)
 
 void Projectile::hit(Unit* unit)
 {
-
+    if (auto node = unit->getNode()) {
+        if (auto hitBody = node->getPhysicsBody()) {
+            Vec2 j = _body->getVelocity() * _body->getMass();
+            j *= 10; // Amplify impulse
+            hitBody->applyImpulse(
+                hitBody->world2Local(j) - hitBody->world2Local(Vec2::ZERO),
+                hitBody->world2Local(_body->getPosition())
+            );
+        }
+    }
 }
 
 void Projectile::setPlayer(Player* player)
@@ -63,7 +72,7 @@ Node* Shell::createNodes()
 PhysicsBody* Shell::createBody()
 {
     _body = PhysicsBody::createCircle(_size, gProjectileMaterial);
-    _body->setMass(0.01);
+    _body->setMass(0.05);
     _body->setMoment(2.0);
     return _body;
 }

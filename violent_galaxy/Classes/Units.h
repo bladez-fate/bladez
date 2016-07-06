@@ -46,6 +46,13 @@ public:
     OBJ_CREATE_FUNC(Tank);
     float getSize() override;
     void shoot();
+    void subAngle();
+    void addAngle();
+    void subPower();
+    void addPower();
+    void moveLeft();
+    void moveRight();
+    void move(cc::Vec2 dir);
 protected:
     Tank() {}
     virtual bool init(GameScene* game) override;
@@ -66,4 +73,12 @@ protected:
     float _gunLength;
     float _angle;
     float _power;
+
+    float _angleMin;
+    float _angleMax;
+    float _angleStep;
+    float _powerMin;
+    float _powerMax;
+    float _powerStep;
+    float _moveImpulse;
 };

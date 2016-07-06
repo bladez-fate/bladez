@@ -92,6 +92,19 @@ void GameScene::createWorld(Scene* scene, PhysicsWorld* pworld)
 void GameScene::initKeyboard()
 {
     createKeyHoldHandler();
+    auto keyboardListener = EventListenerKeyboard::create();
+    keyboardListener->onKeyPressed = [=](EventKeyboard::KeyCode keyCode, Event* event) {
+        switch (keyCode) {
+        case EventKeyboard::KeyCode::KEY_Q:
+            if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
+                menuCloseCallback(this);
+            }
+            break;
+        default:
+            break;
+        }
+    };
+    _eventDispatcher->addEventListenerWithFixedPriority(keyboardListener, 1);
 }
 
 void GameScene::createKeyHoldHandler()
@@ -601,42 +614,72 @@ void GameScene::initGalaxy()
 
     auto keyboardListener = EventListenerKeyboard::create();
     keyboardListener->onKeyPressed = [=](EventKeyboard::KeyCode keyCode, Event* event) {
-        float t = 1e8;
-        float j = 1e7;
-        auto body = pl->getNode()->getPhysicsBody();
-        switch (keyCode) {
-        case EventKeyboard::KeyCode::KEY_A:
-            body->applyTorque(t);
-            break;
-        case EventKeyboard::KeyCode::KEY_SPACE:
-            for (auto& kv : *_objs) {
-                if (auto tank = dynamic_cast<Tank*>(kv.second)) {
-                    tank->shoot();
+//        float t = 1e8;
+//        float j = 1e7;
+//        auto body = pl->getNode()->getPhysicsBody();
+//        switch (keyCode) {
+//        case EventKeyboard::KeyCode::KEY_A:
+//            body->applyTorque(t);
+//            break;
+//        case EventKeyboard::KeyCode::KEY_S:
+//            body->applyTorque(-t);
+//            break;
+//        case EventKeyboard::KeyCode::KEY_LEFT_ARROW:
+//            body->applyImpulse(body->world2Local(Vec2(-j, 0)));
+//            break;
+//        case EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
+//            body->applyImpulse(body->world2Local(Vec2(j, 0)));
+//            break;
+//        case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
+//            body->applyImpulse(body->world2Local(Vec2(0, -j)));
+//            break;
+//        case EventKeyboard::KeyCode::KEY_UP_ARROW:
+//            body->applyImpulse(body->world2Local(Vec2(0, j)));
+//            break;
+//        case EventKeyboard::KeyCode::KEY_Q:
+//            if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
+//                menuCloseCallback(this);
+//            }
+//            break;
+//        default:
+//            break;
+//        }
+        if (_activePlayer) {
+            for (Id id : _activePlayer->selected) {
+                if (auto obj = objs()->getById(id)) {
+                    if (auto tank = dynamic_cast<Tank*>(obj)) {
+                        int repeat = isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT)? 10: 1;
+                        while (repeat--) {
+                            switch (keyCode) {
+                            case EventKeyboard::KeyCode::KEY_SPACE:
+                                tank->shoot();
+                                repeat = 0;
+                                break;
+                            case EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
+                                tank->subAngle();
+                                break;
+                            case EventKeyboard::KeyCode::KEY_LEFT_ARROW:
+                                tank->addAngle();
+                                break;
+                            case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
+                                tank->subPower();
+                                break;
+                            case EventKeyboard::KeyCode::KEY_UP_ARROW:
+                                tank->addPower();
+                                break;
+                            case EventKeyboard::KeyCode::KEY_A:
+                                tank->moveLeft();
+                                break;
+                            case EventKeyboard::KeyCode::KEY_D:
+                                tank->moveRight();
+                                break;
+                            default:
+                                break;
+                            }
+                        }
+                    }
                 }
             }
-            break;
-        case EventKeyboard::KeyCode::KEY_S:
-            body->applyTorque(-t);
-            break;
-        case EventKeyboard::KeyCode::KEY_LEFT_ARROW:
-            body->applyImpulse(body->world2Local(Vec2(-j, 0)));
-            break;
-        case EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
-            body->applyImpulse(body->world2Local(Vec2(j, 0)));
-            break;
-        case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
-            body->applyImpulse(body->world2Local(Vec2(0, -j)));
-            break;
-        case EventKeyboard::KeyCode::KEY_UP_ARROW:
-            body->applyImpulse(body->world2Local(Vec2(0, j)));
-            break;
-        case EventKeyboard::KeyCode::KEY_Q:
-            if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
-                menuCloseCallback(this);
-            }
-            break;
-        default:
-            break;
         }
     };
     _eventDispatcher->addEventListenerWithFixedPriority(keyboardListener, 1);
