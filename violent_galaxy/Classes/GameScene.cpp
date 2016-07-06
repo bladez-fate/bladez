@@ -1,7 +1,8 @@
 #include "GameScene.h"
+#include <base/ccRandom.h>
+#include <chipmunk/chipmunk_private.h>
+#include <SimpleAudioEngine.h>
 #include "Projectiles.h"
-#include "SimpleAudioEngine.h"
-#include "chipmunk/chipmunk_private.h"
 
 USING_NS_CC;
 
@@ -148,12 +149,7 @@ void GameScene::onMouseUp(Event *event)
         };
     } else if (e->getMouseButton() == 1) {
         if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
-            Vec2 p = screen2world(e->getLocationInView());
-            _pworld->queryPoint(
-                CC_CALLBACK_3(GameScene::onViewFollowQueryPoint, this),
-                p, nullptr
-            );
-            viewSurface(p, Vec2::ZERO, false, true);
+            viewFollow(screen2world(e->getLocationInView()));
         }
     } else if (e->getMouseButton() == 2) {
         onViewPanStop();
@@ -282,6 +278,38 @@ void GameScene::viewSurface(Vec2 center, Vec2 prevCenter, bool continuos, bool z
     _viewSurfaceId = 0;
 }
 
+void GameScene::viewFollow(Vec2 p)
+{
+    _pworld->queryPoint(
+        CC_CALLBACK_3(GameScene::onViewFollowQueryPoint, this),
+        p, nullptr
+    );
+    viewSurface(p, Vec2::ZERO, false, true);
+}
+
+void GameScene::viewFollow(Vec2 p, Obj* obj)
+{
+    if (obj) {
+        if (obj->getObjType() == ObjType::AstroObj) {
+            _viewSurfaceId = obj->getId();
+            viewSurface(p, Vec2::ZERO, false, true);
+        }
+    } else {
+        _viewSurfaceId = 0;
+    }
+}
+
+bool GameScene::onViewFollowQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, void* userdata)
+{
+    UNUSED(pworld);
+    UNUSED(userdata);
+    ObjTag tag(shape.getBody()->getNode()->getTag());
+    if (tag.type() == ObjType::AstroObj) {
+        _viewSurfaceId = tag.id();
+    }
+    return true;
+}
+
 void GameScene::onViewPan(Vec2 screenLoc)
 {
     if (!_viewPanEnabled) {
@@ -317,17 +345,6 @@ void GameScene::onViewRotate(float times, Vec2 center)
         return; // Rotation in surface view is disabled
     }
     viewRotate(times * _viewRotationFactor, center);
-}
-
-bool GameScene::onViewFollowQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, void* userdata)
-{
-    UNUSED(pworld);
-    UNUSED(userdata);
-    ObjTag tag(shape.getBody()->getNode()->getTag());
-    if (tag.type() == ObjType::AstroObj) {
-        _viewSurfaceId = tag.id();
-    }
-    return true;
 }
 
 void GameScene::onViewTimer(float dt)
@@ -506,11 +523,16 @@ void GameScene::updateUnitVelocityOnSurface(cpBody* body, float dt)
 
 void GameScene::initGalaxy()
 {
-    auto s = Director::getInstance()->getVisibleSize();
-    Vec2 o = Director::getInstance()->getVisibleOrigin();
-
     auto pl = Planet::create(this);
-    pl->setPosition(Vec2(s.width/2 + o.x, s.height/2 + o.y));
+    pl->setPosition(Vec2::ZERO);
+
+    // Starting location
+    float startLng = random<float>(0.0, 360.0);
+    auto seg = pl->segments().locateLng(startLng);
+    float startAlt = seg->altitude;
+    Vec2 start = pl->geogr2world(startLng, startAlt);
+    viewFollow(start, pl);
+
 
 //    auto pl = Planet::create(this);
 //    pl->setPosition(Vec2(s.width/2 + o.x, s.height*1/4 + o.y));

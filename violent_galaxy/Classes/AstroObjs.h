@@ -21,6 +21,11 @@ public:
     };
 public:
     OBJ_CREATE_FUNC(Planet);
+    const AngularVec<Segment>& segments() const { return _segments; }
+    cc::Vec2 polar2local(float r, float a);
+    cc::Vec2 polar2world(float r, float a);
+    cc::Vec2 geogr2local(float lng, float alt);
+    cc::Vec2 geogr2world(float lng, float alt);
 protected:
     Planet();
     virtual bool init(GameScene* game) override;

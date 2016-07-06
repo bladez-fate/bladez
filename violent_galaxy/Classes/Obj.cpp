@@ -47,5 +47,8 @@ void VisualObj::destroy()
 void VisualObj::setPosition(const Vec2& position)
 {
     _rootNode->setPosition(position);
+    if (auto body = _rootNode->getPhysicsBody()) {
+        body->setPosition(position.x, position.y);
+    }
 }
 

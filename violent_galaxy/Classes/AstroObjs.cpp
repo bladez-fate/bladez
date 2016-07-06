@@ -26,9 +26,9 @@ Planet::Planet()
         float height = random<float>(100.0, 400.0);
         float slope = random<float>(1.0, 10.0);
         float width = std::min(180.0, slope * height / 100.0);
-        float latitude = random<float>(0.0, 360.0);
+        float longitude = random<float>(0.0, 360.0);
         for (size_t i = 0; i < width; i++) {
-            Segment& s = *_segments.locate(CC_DEGREES_TO_RADIANS(latitude + i));
+            Segment& s = *_segments.locate(CC_DEGREES_TO_RADIANS(longitude + i));
             float x = 0;
             if (i < width/2) {
                 x = i * 2 / width;
@@ -38,6 +38,26 @@ Planet::Planet()
             s.altitude += x * height;
         }
     }
+}
+
+Vec2 Planet::polar2local(float r, float a)
+{
+    return r * Vec2::forAngle(a);
+}
+
+Vec2 Planet::polar2world(float r, float a)
+{
+    return _body->local2World(polar2local(r, a));
+}
+
+Vec2 Planet::geogr2local(float lng, float alt)
+{
+    return (alt + _coreRadius) * Vec2::forAngle(CC_DEGREES_TO_RADIANS(lng));
+}
+
+Vec2 Planet::geogr2world(float lng, float alt)
+{
+    return _body->local2World(geogr2local(lng, alt));
 }
 
 bool Planet::init(GameScene* game)
@@ -58,14 +78,14 @@ Node* Planet::createNodes()
 
 PhysicsBody* Planet::createBody()
 {
-    PhysicsBody* body = PhysicsBody::create();
+    _body = PhysicsBody::create();
     Vec2 vert[3];
     vert[2] = Vec2::ZERO;
     Vec2 c1 = _crust.back();
     for (Vec2& c2 : _crust) {
         vert[0] = c1;
         vert[1] = c2;
-        body->addShape(PhysicsShapePolygon::create(vert, 3, gPlanetMaterial), false);
+        _body->addShape(PhysicsShapePolygon::create(vert, 3, gPlanetMaterial), false);
         c1 = c2;
     }
 //    PhysicsBody* body = PhysicsBody::createCircle(
@@ -73,19 +93,17 @@ PhysicsBody* Planet::createBody()
 //        gPlanetMaterial,
 //        Vec2::ZERO
 //    );
-    body->setMass(1e10);
-    body->setMoment(1e12);
-    return body;
+    _body->setMass(1e10);
+    _body->setMoment(1e12);
+    return _body;
 }
-
-
 
 void Planet::draw()
 {
-    // Draw atmosphere gradient: core:red --> surf:cyan --> atmo:blue --> spac:transparent
+    // Draw atmosphere gradient
     Color4F coreCol = Color4F::RED;
     Color4F surfCol = Color4F(0.0, 0.5, 0.9, 1.0);
-    Color4F atmoCol = Color4F(0.0, 0.1, 0.9, 1.0);
+    Color4F atmoCol = Color4F(0.0, 0.2, 0.8, 1.0);
     Color4F spacCol = Color4F::BLACK; // TODO: transparent?
     auto prev = _segments.begin() + (_segments.size() - 1); // forward iter to last element
     for (auto i = _segments.begin(), e = _segments.end(); i != e; ++i) {

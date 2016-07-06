@@ -31,6 +31,21 @@ public:
         return this->begin() + ai;
     }
 
+    ConstIterator locate(float a) const
+    {
+        return const_cast<AngularVec*>(this)->locate(a);
+    }
+
+    Iterator locateLng(float lng)
+    {
+        return locate(CC_DEGREES_TO_RADIANS(lng));
+    }
+
+    ConstIterator locateLng(float lng) const
+    {
+        return const_cast<AngularVec*>(this)->locateLng(lng);
+    }
+
     float angle(Iterator i) const
     {
         return (i - this->begin()) * _astep;
@@ -40,7 +55,6 @@ public:
     {
         return (i - this->begin()) * _astep;
     }
-
 private:
     float _astep;
 };

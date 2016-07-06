@@ -1,5 +1,5 @@
 #include "Physics.h"
-#include "chipmunk/chipmunk_private.h"
+#include <chipmunk/chipmunk_private.h>
 #include "GameScene.h"
 
 ContactInfo::ContactInfo(GameScene* game, cocos2d::PhysicsContact& contact_,

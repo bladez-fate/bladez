@@ -1,7 +1,7 @@
 #include "Units.h"
 #include "Projectiles.h"
 #include "GameScene.h"
-#include "chipmunk/chipmunk_private.h"
+#include <chipmunk/chipmunk_private.h>
 
 USING_NS_CC;
 
