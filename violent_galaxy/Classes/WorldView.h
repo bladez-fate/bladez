@@ -9,33 +9,41 @@ public:
     void init(GameScene* game);
     void update(float delta);
 
-    void zoom(float scaleBy, cc::Vec2 center);
-    void rotate(float rotateBy, cc::Vec2 center);
+    void zoom(float scaleBy, cc::Vec2 zoomTo);
+    void rotate(float rotateBy, cc::Vec2 axis);
     void scroll(cc::Vec2 screenDir);
     void follow(cc::Vec2 p);
     void follow(cc::Vec2 p, Obj* obj);
 
-    cc::Vec2 getCenter() const;
     bool isSurfaceView() const { return _surfaceId; }
     cc::Vec2 screen2world(cc::Vec2 s);
     float getZoom() const { return _state.zoom; }
 private:
     void createWorldCamera(cc::Vec2 eye);
-    void eyeAt(cc::Vec2 eye);
-    void lookAt(cc::Vec2 eye, bool continuos);
+    void lookAt(cc::Vec2 center, bool continuos);
     void centerAt(cc::Vec2 center);
     void surfaceView(cc::Vec2 center, cocos2d::Vec2 prevCenter, bool continuos, bool zoomIfRequired);
     bool onFollowQueryPoint(cc::PhysicsWorld& pworld, cc::PhysicsShape& shape, void* userdata);
 private:
     GameScene* _game;
     cc::Camera* _camera = nullptr;
-    cc::Vec2 _cameraSize;
 
     // Camera positioning and orientation
     struct State {
-        cc::Vec2 eye;
+        cc::Vec2 center;
+        cc::Vec2 size;
         float zoom = 1.0f; // world length per screen pixel
         float rotation = M_PI_2;
+
+        cc::Vec2 getEye() const
+        {
+            return center - (size / 2.0).rotate(cc::Vec2::forAngle(rotation - M_PI_2));
+        }
+
+        cc::Vec3 getUp() const
+        {
+            return cc::Vec3(cosf(rotation), sinf(rotation), 0.0f);
+        }
     };
 
     State _state;

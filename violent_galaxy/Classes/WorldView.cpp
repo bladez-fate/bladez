@@ -14,30 +14,30 @@ void WorldView::update(float delta)
 
 }
 
-void WorldView::zoom(float scaleBy, Vec2 center)
+void WorldView::zoom(float scaleBy, Vec2 zoomTo)
 {
-    Vec2 offs = _state.eye - center;
+    Vec2 offs = _state.center - zoomTo;
     offs *= 1.0f/_state.zoom;
     _state.zoom = clampf(_state.zoom * scaleBy, _zoomMin, _zoomMax);
     offs *= _state.zoom;
-    Vec2 eyeNew = center + offs;
+    Vec2 centerNew = zoomTo + offs;
     _camera->removeFromParent();
-    createWorldCamera(eyeNew);
+    createWorldCamera(centerNew);
 }
 
-void WorldView::rotate(float rotateBy, Vec2 center)
+void WorldView::rotate(float rotateBy, Vec2 axis)
 {
-    Vec2 offs = _state.eye - center;
+    Vec2 offs = _state.center - axis;
     _state.rotation += rotateBy;
     offs = offs.rotate(Vec2::forAngle(rotateBy));
-    Vec2 eyeNew = center + offs;
-    lookAt(eyeNew, false);
+    Vec2 centerNew = axis + offs;
+    lookAt(centerNew, false);
 }
 
 void WorldView::scroll(Vec2 screenDir)
 {
-    Vec2 eye = _state.eye + screen2world(screenDir) - screen2world(Vec2::ZERO);
-    lookAt(eye, true);
+    Vec2 center = _state.center + screen2world(screenDir) - screen2world(Vec2::ZERO);
+    lookAt(center, true);
 }
 
 void WorldView::follow(Vec2 p)
@@ -61,50 +61,42 @@ void WorldView::follow(Vec2 p, Obj* obj)
     }
 }
 
-Vec2 WorldView::getCenter() const
-{
-    return _state.eye + (_cameraSize / 2.0).rotate(Vec2::forAngle(_state.rotation - M_PI_2));
-}
-
 Vec2 WorldView::screen2world(Vec2 s)
 {
     Vec3 w = _camera->unprojectGL(Vec3(s.x, s.y, 0.0f));
     return Vec2(w.x, w.y);
 }
 
-void WorldView::createWorldCamera(Vec2 eye)
+void WorldView::createWorldCamera(Vec2 center)
 {
     auto s = Director::getInstance()->getVisibleSize();
-    _cameraSize = Vec2(s.width * _state.zoom, s.height * _state.zoom);
+    _state.size = Vec2(s.width * _state.zoom, s.height * _state.zoom);
     _camera = Camera::createOrthographic(
-        _cameraSize.x, _cameraSize.y,
+        _state.size.x, _state.size.y,
         _nearPlane, _farPlane
     );
     _camera->setCameraFlag(gWorldCameraFlag);
     _camera->setPositionZ(1.0f);
-    lookAt(eye, false);
+
+    lookAt(center, false);
     _game->addChild(_camera);
 }
 
-void WorldView::eyeAt(Vec2 eye)
+void WorldView::lookAt(Vec2 center, bool continuos)
 {
-    _state.eye = eye;
-    _camera->setPosition(_state.eye);
-    _camera->lookAt(Vec3(_state.eye.x, _state.eye.y, 0.0f), Vec3(cosf(_state.rotation), sinf(_state.rotation), 0.0f));
-}
-
-void WorldView::lookAt(Vec2 eye, bool continuos)
-{
-    Vec2 prevCenter = getCenter();
-    eyeAt(eye);
+    Vec2 prevCenter = _state.center;
+    centerAt(center);
     if (_surfaceId) {
-        surfaceView(getCenter(), prevCenter, continuos, false);
+        surfaceView(_state.center, prevCenter, continuos, false);
     }
 }
 
 void WorldView::centerAt(Vec2 center)
 {
-    eyeAt(center - (_cameraSize/2.0).rotate(Vec2::forAngle(_state.rotation - M_PI_2)));
+    _state.center = center;
+    Vec2 eye = _state.getEye();
+    _camera->setPosition(eye);
+    _camera->lookAt(Vec3(eye.x, eye.y, 0.0f), _state.getUp());
 }
 
 void WorldView::surfaceView(Vec2 center, Vec2 prevCenter, bool continuos, bool zoomIfRequired)
@@ -132,7 +124,7 @@ void WorldView::surfaceView(Vec2 center, Vec2 prevCenter, bool continuos, bool z
         if (up.isSmall()) {
             centerAt(center);
         } else {
-            float ratio = up.length() / (_cameraSize.y / 2.0);
+            float ratio = up.length() / (_state.size.y / 2.0);
             bool zoomRequired = ratio < 1.0;
             if (zoomRequired && zoomIfRequired) {
                 float scaleBy = ratio / 2;
