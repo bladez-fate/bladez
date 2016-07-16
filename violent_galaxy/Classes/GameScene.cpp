@@ -64,7 +64,7 @@ void GameScene::update(float delta)
     Layer::update(delta);
     playerUpdate(delta);
     keyboardUpdate(delta);
-    viewUpdate(delta);
+    view.update(delta);
 }
 
 
@@ -82,7 +82,7 @@ void GameScene::createWorld(Scene* scene, PhysicsWorld* pworld)
     _pworld = pworld;
     pworld->setSpeed(1.0);
 
-    initWorldView();
+    view.init(this);
     initGalaxy();
     initCollisions();
 
@@ -157,6 +157,7 @@ void GameScene::initMouse()
     mouseListener->onMouseDown = CC_CALLBACK_1(GameScene::onMouseDown, this);
     mouseListener->onMouseScroll = CC_CALLBACK_1(GameScene::onMouseWheel, this);
     _eventDispatcher->addEventListenerWithFixedPriority(mouseListener, 1);
+    this->schedule(schedule_selector(GameScene::onMouseTimer), _mouseTimerIntervalSec);
 }
 
 void GameScene::onMouseMove(Event* event)
@@ -164,7 +165,7 @@ void GameScene::onMouseMove(Event* event)
     EventMouse* e = (EventMouse*)event;
     Vec2 screenLoc = e->getLocationInView();
     if (e->getMouseButton() == 2) {
-        onViewPan(screenLoc);
+        view.onPan(screenLoc);
     }
 
     _mouseLastLoc = screenLoc;
@@ -175,7 +176,7 @@ void GameScene::onMouseDown(Event* event)
 {
     EventMouse* e = (EventMouse*)event;
     if (e->getMouseButton() == 2) {
-        onViewPan(e->getLocationInView());
+       view.onPan(e->getLocationInView());
     }
 //    CCLOG("MOUSEDOWN button# %d", e->getMouseButton());
 }
@@ -184,7 +185,7 @@ void GameScene::onMouseUp(Event *event)
 {
     EventMouse* e = (EventMouse*)event;
     Vec2 p = e->getLocationInView();
-    Vec2 pw = screen2world(p);
+    Vec2 pw = view.screen2world(p);
     if (e->getMouseButton() == 0) {
         if (isKeyHeld(EventKeyboard::KeyCode::KEY_C)) {
             auto dc = DropCapsid::create(this);
@@ -218,10 +219,10 @@ void GameScene::onMouseUp(Event *event)
         }
     } else if (e->getMouseButton() == 1) {
         if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
-            viewFollow(pw);
+            view.follow(pw);
         }
     } else if (e->getMouseButton() == 2) {
-        onViewPanStop();
+        view.onPanStop();
     }
 //    CCLOG("MOUSEUP button# %d", e->getMouseButton());
 }
@@ -230,202 +231,15 @@ void GameScene::onMouseWheel(Event* event)
 {
     EventMouse* e = (EventMouse*)event;
     if (e->getScrollY() != 0.0) {
-        onViewZoom(e->getScrollY(), screen2world(e->getLocationInView()));
+        view.onZoom(e->getScrollY(), view.screen2world(e->getLocationInView()));
     }
     if (e->getScrollX() != 0.0) {
-        onViewRotate(-e->getScrollX(), screen2world(e->getLocationInView()));
+        view.onRotate(-e->getScrollX(), view.screen2world(e->getLocationInView()));
     }
     CCLOG("MOUSEWHEEL button# %d scrollX# %f scrollY# %f", e->getMouseButton(), e->getScrollX(), e->getScrollY());
 }
 
-void GameScene::initWorldView()
-{
-    createWorldCamera(Vec2::ZERO);
-    this->schedule(schedule_selector(GameScene::onViewTimer), _viewTimerIntervalSec);
-}
-
-void GameScene::viewUpdate(float delta)
-{
-
-}
-
-void GameScene::createWorldCamera(Vec2 eye)
-{
-    auto s = Director::getInstance()->getVisibleSize();
-    _worldCameraSize = Vec2(s.width * _viewZoom, s.height * _viewZoom);
-    _worldCamera = Camera::createOrthographic(
-        _worldCameraSize.x, _worldCameraSize.y,
-        _viewNearPlane, _viewFarPlane
-    );
-    _worldCamera->setCameraFlag(gWorldCameraFlag);
-    _worldCamera->setPositionZ(1.0f);
-    viewLookAt(eye, false);
-    addChild(_worldCamera);
-}
-
-Vec2 GameScene::viewCenter() const
-{
-    Vec2 eye = _worldCamera->getPosition();
-    return eye + (_worldCameraSize / 2.0).rotate(Vec2::forAngle(_viewRotation - M_PI_2));
-}
-
-void GameScene::viewEyeAt(Vec2 eye)
-{
-    _worldCamera->setPosition(eye);
-    _worldCamera->lookAt(Vec3(eye.x, eye.y, 0.0f), Vec3(cosf(_viewRotation), sinf(_viewRotation), 0.0f));
-}
-
-void GameScene::viewLookAt(Vec2 eye, bool continuos)
-{
-    Vec2 prevCenter = viewCenter();
-    viewEyeAt(eye);
-    if (_viewSurfaceId) {
-        viewSurface(viewCenter(), prevCenter, continuos, false);
-    }
-}
-
-void GameScene::viewCenterAt(Vec2 center)
-{
-    viewEyeAt(center - (_worldCameraSize/2.0).rotate(Vec2::forAngle(_viewRotation - M_PI_2)));
-}
-
-void GameScene::viewZoom(float scaleBy, Vec2 center)
-{
-    Vec2 eye = _worldCamera->getPosition();
-    Vec2 offs = eye - center;
-    offs *= 1.0f/_viewZoom;
-    _viewZoom = clampf(_viewZoom * scaleBy, _viewZoomMin, _viewZoomMax);
-    offs *= _viewZoom;
-    Vec2 eyeNew = center + offs;
-    _worldCamera->removeFromParent();
-    createWorldCamera(eyeNew);
-}
-
-void GameScene::viewRotate(float rotateBy, Vec2 center)
-{
-    Vec2 eye = _worldCamera->getPosition();
-    Vec2 offs = eye - center;
-    _viewRotation += rotateBy;
-    offs = offs.rotate(Vec2::forAngle(rotateBy));
-    Vec2 eyeNew = center + offs;
-    viewLookAt(eyeNew, false);
-}
-
-void GameScene::viewSurface(Vec2 center, Vec2 prevCenter, bool continuos, bool zoomIfRequired)
-{
-    if (!_viewSurfaceId) {
-        return;
-    }
-    if (AstroObj* aobj = _objs->getByIdAs<AstroObj>(_viewSurfaceId)) {
-        if (continuos) {
-            // For enforcing constant altitude during horizontal scrolling
-            Vec2 prevUp = prevCenter - aobj->getNode()->getPosition();
-            if (!prevUp.isSmall()) {
-                Vec2 delta = center - prevCenter;
-                Vec2 upNormal = prevUp.getNormalized();
-                Vec2 delta1 = delta.unrotate(upNormal);
-                float rb = prevUp.length();
-                float r = rb + delta1.x;
-                float a = delta1.y / rb; // We assume that angle is small
-                Vec2 newUp1 = r * Vec2::forAngle(a);
-                Vec2 newUp = newUp1.rotate(upNormal);
-                center = newUp + aobj->getNode()->getPosition();
-            }
-        }
-        Vec2 up = center - aobj->getNode()->getPosition();
-        if (up.isSmall()) {
-            viewCenterAt(center);
-        } else {
-            float ratio = up.length() / (_worldCameraSize.y / 2.0);
-            bool zoomRequired = ratio < 1.0;
-            if (zoomRequired && zoomIfRequired) {
-                float scaleBy = ratio / 2;
-                viewZoom(scaleBy, center);
-                zoomRequired = false;
-            }
-            if (!zoomRequired) {
-                _viewRotation = up.getAngle();
-                viewCenterAt(center);
-                return;
-            }
-        }
-    }
-    _viewSurfaceId = 0;
-}
-
-void GameScene::viewFollow(Vec2 p)
-{
-    _pworld->queryPoint(
-        CC_CALLBACK_3(GameScene::onViewFollowQueryPoint, this),
-        p, nullptr
-    );
-    viewSurface(p, Vec2::ZERO, false, true);
-}
-
-void GameScene::viewFollow(Vec2 p, Obj* obj)
-{
-    if (obj) {
-        if (obj->getObjType() == ObjType::AstroObj) {
-            _viewSurfaceId = obj->getId();
-            viewSurface(p, Vec2::ZERO, false, true);
-        }
-    } else {
-        _viewSurfaceId = 0;
-    }
-}
-
-bool GameScene::onViewFollowQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, void* userdata)
-{
-    UNUSED(pworld);
-    UNUSED(userdata);
-    ObjTag tag(shape.getBody()->getNode()->getTag());
-    if (tag.type() == ObjType::AstroObj) {
-        _viewSurfaceId = tag.id();
-    }
-    if (tag.type() == ObjType::Unit || tag.type() == ObjType::AstroObj) {
-        _viewFollowId = tag.id();
-    }
-    return true;
-}
-
-void GameScene::onViewPan(Vec2 screenLoc)
-{
-    if (!_viewPanEnabled) {
-        _viewPanLastLoc = screenLoc;
-        _viewPanEnabled = true;
-    }
-    Vec2 eye = _worldCamera->getPosition() - screen2world(screenLoc) + screen2world(_viewPanLastLoc);
-    _viewPanLastLoc = screenLoc;
-    viewLookAt(Vec2(eye.x, eye.y), true);
-}
-
-void GameScene::onViewPanStop()
-{
-    _viewPanEnabled = false;
-}
-
-void GameScene::onViewScroll(Vec2 screenDir)
-{
-    Vec2 eyePrev = _worldCamera->getPosition();
-    Vec2 eye = eyePrev + screen2world(screenDir * _viewScrollFactor) - screen2world(Vec2::ZERO);
-    viewLookAt(Vec2(eye.x, eye.y), true);
-}
-
-void GameScene::onViewZoom(float times, Vec2 center)
-{
-    float scaleBy = powf(_viewZoomFactor, times);
-    viewZoom(scaleBy, center);
-}
-
-void GameScene::onViewRotate(float times, Vec2 center)
-{
-    if (_viewSurfaceId) {
-        return; // Rotation in surface view is disabled
-    }
-    viewRotate(times * _viewRotationFactor, center);
-}
-
-void GameScene::onViewTimer(float dt)
+void GameScene::onMouseTimer(float dt)
 {
     auto s = Director::getInstance()->getVisibleSize();
     float marginLeft = 5.0, marginRight = 5.0, marginTop = 50.0, marginBottom = 5.0;
@@ -441,14 +255,8 @@ void GameScene::onViewTimer(float dt)
         screenDir += Vec2(0.0, 1.0);
     }
     if (screenDir != Vec2::ZERO) {
-        onViewScroll(dt * screenDir);
+        view.onScroll(dt * screenDir);
     }
-}
-
-Vec2 GameScene::screen2world(Vec2 s)
-{
-    Vec3 w = _worldCamera->unprojectGL(Vec3(s.x, s.y, 0.0f));
-    return Vec2(w.x, w.y);
 }
 
 void GameScene::initPlayers()
@@ -652,7 +460,7 @@ void GameScene::initGalaxy()
     auto seg = pl->segments().locateLng(startLng);
     float startAlt = seg->altitude;
     Vec2 start = pl->geogr2world(startLng, startAlt);
-    viewFollow(start, pl);
+    view.follow(start, pl);
 
     // Player
     auto player = Player::create(this);

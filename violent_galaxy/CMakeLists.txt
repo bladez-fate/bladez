@@ -134,6 +134,7 @@ set(GAME_SRC
   Classes/Player.cpp
   Classes/Projectiles.cpp
   Classes/Units.cpp
+  Classes/WorldView.cpp
   ${PLATFORM_SPECIFIC_SRC}
 )
 
@@ -148,6 +149,7 @@ set(GAME_HEADERS
   Classes/Projectiles.h
   Classes/RadialGrid.h
   Classes/Units.h
+  Classes/WorldView.h
   ${PLATFORM_SPECIFIC_HEADERS}
 )
 

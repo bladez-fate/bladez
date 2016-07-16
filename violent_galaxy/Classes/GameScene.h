@@ -5,6 +5,7 @@
 #include "Units.h"
 #include "AstroObjs.h"
 #include "Player.h"
+#include "WorldView.h"
 
 template <class Id, class T>
 class Storage : public cc::Ref {
@@ -111,47 +112,11 @@ private: // Mouse
     void onMouseDown(cc::Event *event);
     void onMouseUp(cc::Event *event);
     void onMouseWheel(cc::Event *event);
+    void onMouseTimer(float dt);
     cc::Vec2 _mouseLastLoc;
-private: // View
-    void initWorldView();
-    void viewUpdate(float delta);
-    void createWorldCamera(cc::Vec2 eye);
-    cc::Vec2 viewCenter() const;
-    void viewEyeAt(cc::Vec2 eye);
-    void viewLookAt(cc::Vec2 eye, bool continuos);
-    void viewCenterAt(cc::Vec2 center);
-    void viewZoom(float scaleBy, cc::Vec2 center);
-    void viewRotate(float rotateBy, cc::Vec2 center);
-    void viewSurface(cc::Vec2 center, cocos2d::Vec2 prevCenter, bool continuos, bool zoomIfRequired);
-    void viewFollow(cc::Vec2 p);
-    void viewFollow(cc::Vec2 p, Obj* obj);
-    bool onViewFollowQueryPoint(cc::PhysicsWorld& pworld, cc::PhysicsShape& shape, void* userdata);
-    void onViewPan(cc::Vec2 screenLoc);
-    void onViewPanStop();
-    void onViewScroll(cc::Vec2 screenDir);
-    void onViewZoom(float times, cc::Vec2 center);
-    void onViewRotate(float times, cc::Vec2 center);
-    void onViewTimer(float dt);
-public:
-    cc::Vec2 screen2world(cc::Vec2 s);
-    float getViewZoom() const { return _viewZoom; }
-private:
-    bool _viewPanEnabled = false;
-    cc::Vec2 _viewPanLastLoc;
-    float _viewZoom = 1.0f; // world length per screen pixel
-    float _viewRotation = M_PI_2;
-    cc::Camera* _worldCamera = nullptr;
-    cc::Vec2 _worldCameraSize;
-    Id _viewSurfaceId = 0;
-    Id _viewFollowId = 0;
-    static constexpr float _viewScrollFactor = 1000.0f; // worldlength per second per viewzoom
-    static constexpr float _viewZoomFactor = 1.1f; // zoom per one wheel scroll
-    static constexpr float _viewZoomMin = 1e-1f;
-    static constexpr float _viewZoomMax = 1e+5f;
-    static constexpr float _viewRotationFactor = 1e-1f; // radians per one wheel scroll
-    static constexpr float _viewNearPlane = 1.0f;
-    static constexpr float _viewFarPlane = 1000.0f;
-    static constexpr float _viewTimerIntervalSec = 0.02;
+    static constexpr float _mouseTimerIntervalSec = 0.02;
+public: // View
+    WorldView view;
 private: // Players
     void initPlayers();
     void playerUpdate(float delta);
