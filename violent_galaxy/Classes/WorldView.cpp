@@ -14,6 +14,64 @@ void WorldView::update(float delta)
 
 }
 
+void WorldView::zoom(float scaleBy, Vec2 center)
+{
+    Vec2 offs = _eye - center;
+    offs *= 1.0f/_zoom;
+    _zoom = clampf(_zoom * scaleBy, _zoomMin, _zoomMax);
+    offs *= _zoom;
+    Vec2 eyeNew = center + offs;
+    _camera->removeFromParent();
+    createWorldCamera(eyeNew);
+}
+
+void WorldView::rotate(float rotateBy, Vec2 center)
+{
+    Vec2 offs = _eye - center;
+    _rotation += rotateBy;
+    offs = offs.rotate(Vec2::forAngle(rotateBy));
+    Vec2 eyeNew = center + offs;
+    lookAt(eyeNew, false);
+}
+
+void WorldView::scroll(Vec2 screenDir)
+{
+    Vec2 eye = _eye + screen2world(screenDir) - screen2world(Vec2::ZERO);
+    lookAt(eye, true);
+}
+
+void WorldView::follow(Vec2 p)
+{
+    _game->physicsWorld()->queryPoint(
+        CC_CALLBACK_3(WorldView::onFollowQueryPoint, this),
+        p, nullptr
+    );
+    surfaceView(p, Vec2::ZERO, false, true);
+}
+
+void WorldView::follow(Vec2 p, Obj* obj)
+{
+    if (obj) {
+        if (obj->getObjType() == ObjType::AstroObj) {
+            _surfaceId = obj->getId();
+            surfaceView(p, Vec2::ZERO, false, true);
+        }
+    } else {
+        _surfaceId = 0;
+    }
+}
+
+Vec2 WorldView::getCenter() const
+{
+    return _eye + (_cameraSize / 2.0).rotate(Vec2::forAngle(_rotation - M_PI_2));
+}
+
+Vec2 WorldView::screen2world(Vec2 s)
+{
+    Vec3 w = _camera->unprojectGL(Vec3(s.x, s.y, 0.0f));
+    return Vec2(w.x, w.y);
+}
+
 void WorldView::createWorldCamera(Vec2 eye)
 {
     auto s = Director::getInstance()->getVisibleSize();
@@ -26,11 +84,6 @@ void WorldView::createWorldCamera(Vec2 eye)
     _camera->setPositionZ(1.0f);
     lookAt(eye, false);
     _game->addChild(_camera);
-}
-
-Vec2 WorldView::getCenter() const
-{
-    return _eye + (_cameraSize / 2.0).rotate(Vec2::forAngle(_rotation - M_PI_2));
 }
 
 void WorldView::eyeAt(Vec2 eye)
@@ -52,26 +105,6 @@ void WorldView::lookAt(Vec2 eye, bool continuos)
 void WorldView::centerAt(Vec2 center)
 {
     eyeAt(center - (_cameraSize/2.0).rotate(Vec2::forAngle(_rotation - M_PI_2)));
-}
-
-void WorldView::zoom(float scaleBy, Vec2 center)
-{
-    Vec2 offs = _eye - center;
-    offs *= 1.0f/_zoom;
-    _zoom = clampf(_zoom * scaleBy, _zoomMin, _zoomMax);
-    offs *= _zoom;
-    Vec2 eyeNew = center + offs;
-    _camera->removeFromParent();
-    createWorldCamera(eyeNew);
-}
-
-void WorldView::rotate(float rotateBy, Vec2 center)
-{
-    Vec2 offs = _eye - center;
-    _rotation += rotateBy;
-    offs = offs.rotate(Vec2::forAngle(rotateBy));
-    Vec2 eyeNew = center + offs;
-    lookAt(eyeNew, false);
 }
 
 void WorldView::surfaceView(Vec2 center, Vec2 prevCenter, bool continuos, bool zoomIfRequired)
@@ -116,27 +149,6 @@ void WorldView::surfaceView(Vec2 center, Vec2 prevCenter, bool continuos, bool z
     _surfaceId = 0;
 }
 
-void WorldView::follow(Vec2 p)
-{
-    _game->physicsWorld()->queryPoint(
-        CC_CALLBACK_3(WorldView::onFollowQueryPoint, this),
-        p, nullptr
-    );
-    surfaceView(p, Vec2::ZERO, false, true);
-}
-
-void WorldView::follow(Vec2 p, Obj* obj)
-{
-    if (obj) {
-        if (obj->getObjType() == ObjType::AstroObj) {
-            _surfaceId = obj->getId();
-            surfaceView(p, Vec2::ZERO, false, true);
-        }
-    } else {
-        _surfaceId = 0;
-    }
-}
-
 bool WorldView::onFollowQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, void* userdata)
 {
     UNUSED(pworld);
@@ -149,16 +161,4 @@ bool WorldView::onFollowQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, vo
         _followId = tag.id();
     }
     return true;
-}
-
-void WorldView::scroll(Vec2 screenDir)
-{
-    Vec2 eye = _eye + screen2world(screenDir) - screen2world(Vec2::ZERO);
-    lookAt(eye, true);
-}
-
-Vec2 WorldView::screen2world(Vec2 s)
-{
-    Vec3 w = _camera->unprojectGL(Vec3(s.x, s.y, 0.0f));
-    return Vec2(w.x, w.y);
 }
