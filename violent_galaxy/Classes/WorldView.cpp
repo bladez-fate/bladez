@@ -30,14 +30,14 @@ void WorldView::createWorldCamera(Vec2 eye)
 
 Vec2 WorldView::getCenter() const
 {
-    Vec2 eye = _camera->getPosition();
-    return eye + (_cameraSize / 2.0).rotate(Vec2::forAngle(_rotation - M_PI_2));
+    return _eye + (_cameraSize / 2.0).rotate(Vec2::forAngle(_rotation - M_PI_2));
 }
 
 void WorldView::eyeAt(Vec2 eye)
 {
-    _camera->setPosition(eye);
-    _camera->lookAt(Vec3(eye.x, eye.y, 0.0f), Vec3(cosf(_rotation), sinf(_rotation), 0.0f));
+    _eye = eye;
+    _camera->setPosition(_eye);
+    _camera->lookAt(Vec3(_eye.x, _eye.y, 0.0f), Vec3(cosf(_rotation), sinf(_rotation), 0.0f));
 }
 
 void WorldView::lookAt(Vec2 eye, bool continuos)
@@ -56,8 +56,7 @@ void WorldView::centerAt(Vec2 center)
 
 void WorldView::zoom(float scaleBy, Vec2 center)
 {
-    Vec2 eye = _camera->getPosition();
-    Vec2 offs = eye - center;
+    Vec2 offs = _eye - center;
     offs *= 1.0f/_zoom;
     _zoom = clampf(_zoom * scaleBy, _zoomMin, _zoomMax);
     offs *= _zoom;
@@ -68,8 +67,7 @@ void WorldView::zoom(float scaleBy, Vec2 center)
 
 void WorldView::rotate(float rotateBy, Vec2 center)
 {
-    Vec2 eye = _camera->getPosition();
-    Vec2 offs = eye - center;
+    Vec2 offs = _eye - center;
     _rotation += rotateBy;
     offs = offs.rotate(Vec2::forAngle(rotateBy));
     Vec2 eyeNew = center + offs;
@@ -159,9 +157,9 @@ void WorldView::onPan(Vec2 screenLoc)
         _panLastLoc = screenLoc;
         _panEnabled = true;
     }
-    Vec2 eye = _camera->getPosition() - screen2world(screenLoc) + screen2world(_panLastLoc);
+    Vec2 eye = _eye - screen2world(screenLoc) + screen2world(_panLastLoc);
     _panLastLoc = screenLoc;
-    lookAt(Vec2(eye.x, eye.y), true);
+    lookAt(eye, true);
 }
 
 void WorldView::onPanStop()
@@ -171,9 +169,8 @@ void WorldView::onPanStop()
 
 void WorldView::onScroll(Vec2 screenDir)
 {
-    Vec2 eyePrev = _camera->getPosition();
-    Vec2 eye = eyePrev + screen2world(screenDir * _scrollFactor) - screen2world(Vec2::ZERO);
-    lookAt(Vec2(eye.x, eye.y), true);
+    Vec2 eye = _eye + screen2world(screenDir * _scrollFactor) - screen2world(Vec2::ZERO);
+    lookAt(eye, true);
 }
 
 void WorldView::onZoom(float times, Vec2 center)
@@ -195,4 +192,3 @@ Vec2 WorldView::screen2world(Vec2 s)
     Vec3 w = _camera->unprojectGL(Vec3(s.x, s.y, 0.0f));
     return Vec2(w.x, w.y);
 }
-

@@ -36,6 +36,7 @@ private:
     float _rotation = M_PI_2;
     cc::Camera* _camera = nullptr;
     cc::Vec2 _cameraSize;
+    cc::Vec2 _eye;
     Id _surfaceId = 0;
     Id _followId = 0;
     static constexpr float _scrollFactor = 1000.0f; // worldlength per second per viewzoom
