@@ -151,25 +151,9 @@ bool WorldView::onFollowQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, vo
     return true;
 }
 
-void WorldView::onPan(Vec2 screenLoc)
-{
-    if (!_panEnabled) {
-        _panLastLoc = screenLoc;
-        _panEnabled = true;
-    }
-    Vec2 eye = _eye - screen2world(screenLoc) + screen2world(_panLastLoc);
-    _panLastLoc = screenLoc;
-    lookAt(eye, true);
-}
-
-void WorldView::onPanStop()
-{
-    _panEnabled = false;
-}
-
 void WorldView::onScroll(Vec2 screenDir)
 {
-    Vec2 eye = _eye + screen2world(screenDir * _scrollFactor) - screen2world(Vec2::ZERO);
+    Vec2 eye = _eye + screen2world(screenDir) - screen2world(Vec2::ZERO);
     lookAt(eye, true);
 }
 

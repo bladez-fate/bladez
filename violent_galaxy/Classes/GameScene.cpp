@@ -165,7 +165,7 @@ void GameScene::onMouseMove(Event* event)
     EventMouse* e = (EventMouse*)event;
     Vec2 screenLoc = e->getLocationInView();
     if (e->getMouseButton() == 2) {
-        view.onPan(screenLoc);
+        mousePan(screenLoc);
     }
 
     _mouseLastLoc = screenLoc;
@@ -176,7 +176,7 @@ void GameScene::onMouseDown(Event* event)
 {
     EventMouse* e = (EventMouse*)event;
     if (e->getMouseButton() == 2) {
-       view.onPan(e->getLocationInView());
+       mousePan(e->getLocationInView());
     }
 //    CCLOG("MOUSEDOWN button# %d", e->getMouseButton());
 }
@@ -222,7 +222,7 @@ void GameScene::onMouseUp(Event *event)
             view.follow(pw);
         }
     } else if (e->getMouseButton() == 2) {
-        view.onPanStop();
+        mousePanStop();
     }
 //    CCLOG("MOUSEUP button# %d", e->getMouseButton());
 }
@@ -255,8 +255,23 @@ void GameScene::onMouseTimer(float dt)
         screenDir += Vec2(0.0, 1.0);
     }
     if (screenDir != Vec2::ZERO) {
-        view.onScroll(dt * screenDir);
+        view.onScroll(dt * _mouseScrollFactor * screenDir);
     }
+}
+
+void GameScene::mousePan(Vec2 screenLoc)
+{
+    if (!_mousePanEnabled) {
+        _mousePanLastLoc = screenLoc;
+        _mousePanEnabled = true;
+    }
+    view.onScroll(_mousePanLastLoc - screenLoc);
+    _mousePanLastLoc = screenLoc;
+}
+
+void GameScene::mousePanStop()
+{
+    _mousePanEnabled = false;
 }
 
 void GameScene::initPlayers()

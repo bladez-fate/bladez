@@ -113,8 +113,13 @@ private: // Mouse
     void onMouseUp(cc::Event *event);
     void onMouseWheel(cc::Event *event);
     void onMouseTimer(float dt);
+    void mousePan(cc::Vec2 screenLoc);
+    void mousePanStop();
     cc::Vec2 _mouseLastLoc;
+    bool _mousePanEnabled = false;
+    cc::Vec2 _mousePanLastLoc;
     static constexpr float _mouseTimerIntervalSec = 0.02;
+    static constexpr float _mouseScrollFactor = 1000.0f; // worldlength per second per viewzoom
 public: // View
     WorldView view;
 private: // Players

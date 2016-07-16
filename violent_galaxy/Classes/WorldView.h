@@ -19,8 +19,6 @@ public:
     void follow(cc::Vec2 p);
     void follow(cc::Vec2 p, Obj* obj);
     bool onFollowQueryPoint(cc::PhysicsWorld& pworld, cc::PhysicsShape& shape, void* userdata);
-    void onPan(cc::Vec2 screenLoc);
-    void onPanStop();
     void onScroll(cc::Vec2 screenDir);
     void onZoom(float times, cc::Vec2 center);
     void onRotate(float times, cc::Vec2 center);
@@ -30,8 +28,6 @@ public:
     float getZoom() const { return _zoom; }
 private:
     GameScene* _game;
-    bool _panEnabled = false;
-    cc::Vec2 _panLastLoc;
     float _zoom = 1.0f; // world length per screen pixel
     float _rotation = M_PI_2;
     cc::Camera* _camera = nullptr;
@@ -39,7 +35,6 @@ private:
     cc::Vec2 _eye;
     Id _surfaceId = 0;
     Id _followId = 0;
-    static constexpr float _scrollFactor = 1000.0f; // worldlength per second per viewzoom
     static constexpr float _zoomFactor = 1.1f; // zoom per one wheel scroll
     static constexpr float _zoomMin = 1e-1f;
     static constexpr float _zoomMax = 1e+5f;
