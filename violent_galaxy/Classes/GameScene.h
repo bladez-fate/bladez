@@ -101,6 +101,7 @@ private: // World
     cc::RefPtr<ObjStorage> _objs;
 private: // Keyboard
     void initKeyboard();
+    void keyboardUpdate(float delta);
     void createKeyHoldHandler();
     bool isKeyHeld(cc::EventKeyboard::KeyCode code);
     std::map<cc::EventKeyboard::KeyCode, std::chrono::high_resolution_clock::time_point> _keyHold;
@@ -113,6 +114,7 @@ private: // Mouse
     cc::Vec2 _mouseLastLoc;
 private: // View
     void initWorldView();
+    void viewUpdate(float delta);
     void createWorldCamera(cc::Vec2 eye);
     cc::Vec2 viewCenter() const;
     void viewEyeAt(cc::Vec2 eye);
@@ -141,6 +143,7 @@ private:
     cc::Camera* _worldCamera = nullptr;
     cc::Vec2 _worldCameraSize;
     Id _viewSurfaceId = 0;
+    Id _viewFollowId = 0;
     static constexpr float _viewScrollFactor = 1000.0f; // worldlength per second per viewzoom
     static constexpr float _viewZoomFactor = 1.1f; // zoom per one wheel scroll
     static constexpr float _viewZoomMin = 1e-1f;

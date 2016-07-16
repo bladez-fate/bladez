@@ -63,6 +63,8 @@ void GameScene::update(float delta)
 {
     Layer::update(delta);
     playerUpdate(delta);
+    keyboardUpdate(delta);
+    viewUpdate(delta);
 }
 
 
@@ -105,6 +107,26 @@ void GameScene::initKeyboard()
         }
     };
     _eventDispatcher->addEventListenerWithFixedPriority(keyboardListener, 1);
+}
+
+void GameScene::keyboardUpdate(float delta)
+{
+    if (_activePlayer) {
+        for (Id id : _activePlayer->selected) {
+            if (auto obj = objs()->getById(id)) {
+                if (auto tank = dynamic_cast<Tank*>(obj)) {
+                    if (isKeyHeld(EventKeyboard::KeyCode::KEY_UP_ARROW)) {
+                        tank->upAngle(delta);
+                    }
+                    if (isKeyHeld(EventKeyboard::KeyCode::KEY_DOWN_ARROW)) {
+                        tank->downAngle(delta);
+                    }
+                    tank->moveLeft(isKeyHeld(EventKeyboard::KeyCode::KEY_LEFT_ARROW));
+                    tank->moveRight(isKeyHeld(EventKeyboard::KeyCode::KEY_RIGHT_ARROW));
+                }
+            }
+        }
+    }
 }
 
 void GameScene::createKeyHoldHandler()
@@ -165,11 +187,29 @@ void GameScene::onMouseUp(Event *event)
     Vec2 pw = screen2world(p);
     if (e->getMouseButton() == 0) {
         if (isKeyHeld(EventKeyboard::KeyCode::KEY_C)) {
-            auto cs = ColonyShip::create(this);
-            cs->setPosition(pw);
-            cs->onLandCreate = [](GameScene* game) {
+            auto dc = DropCapsid::create(this);
+            dc->setPosition(pw);
+            dc->onLandCreate = [](GameScene* game) {
                 return Tank::create(game);
             };
+        } else if (isKeyHeld(EventKeyboard::KeyCode::KEY_V)) {
+            auto ss = SpaceStation::create(this);
+            ss->setPosition(pw);
+            for (auto kv : *_objs) {
+                if (AstroObj* ao = dynamic_cast<AstroObj*>(kv.second)) {
+                    PhysicsBody* gsource = ao->getNode()->getPhysicsBody();
+                    Vec2 p = ss->getNode()->getPhysicsBody()->getPosition();
+                    Vec2 o = gsource->getPosition();
+                    Vec2 g = _pworld->getForceField()->getBodyGravity(gsource, p);
+                    Vec2 r = p - o;
+                    // For orbital velocity: g = v*v/r  =>  v = sqrt(g*r)
+                    float v = sqrtf(g.length() * r.length());
+                    ss->getNode()->getPhysicsBody()->setVelocity(
+                        v * r.getNormalized().rotate(Vec2::forAngle(M_PI_2))
+                    );
+                    break; // TODO[fate]: find nearest planet
+                }
+            }
         } else {
             playerSelect(pw,
                 isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT),
@@ -202,6 +242,11 @@ void GameScene::initWorldView()
 {
     createWorldCamera(Vec2::ZERO);
     this->schedule(schedule_selector(GameScene::onViewTimer), _viewTimerIntervalSec);
+}
+
+void GameScene::viewUpdate(float delta)
+{
+
 }
 
 void GameScene::createWorldCamera(Vec2 eye)
@@ -336,6 +381,9 @@ bool GameScene::onViewFollowQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape
     ObjTag tag(shape.getBody()->getNode()->getTag());
     if (tag.type() == ObjType::AstroObj) {
         _viewSurfaceId = tag.id();
+    }
+    if (tag.type() == ObjType::Unit || tag.type() == ObjType::AstroObj) {
+        _viewFollowId = tag.id();
     }
     return true;
 }
@@ -655,23 +703,11 @@ void GameScene::initGalaxy()
                                 tank->shoot();
                                 repeat = 0;
                                 break;
-                            case EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
-                                tank->subAngle();
-                                break;
-                            case EventKeyboard::KeyCode::KEY_LEFT_ARROW:
-                                tank->addAngle();
-                                break;
-                            case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
-                                tank->subPower();
-                                break;
-                            case EventKeyboard::KeyCode::KEY_UP_ARROW:
+                            case EventKeyboard::KeyCode::KEY_A:
                                 tank->addPower();
                                 break;
-                            case EventKeyboard::KeyCode::KEY_A:
-                                tank->moveLeft();
-                                break;
-                            case EventKeyboard::KeyCode::KEY_D:
-                                tank->moveRight();
+                            case EventKeyboard::KeyCode::KEY_Z:
+                                tank->subPower();
                                 break;
                             default:
                                 break;

@@ -8,6 +8,7 @@
 
 #include "base/CCRef.h"
 #include "base/CCVector.h"
+#include "math/Vec2.h"
 
 NS_CC_BEGIN
 
@@ -23,11 +24,15 @@ public:
     void addGravitySource(PhysicsBody* body);
 
     cpVect getGravity(cpVect p);
+    cpVect getBodyGravity(PhysicsBody* body, cpVect p);
+    Vec2 getBodyGravity(PhysicsBody* body, Vec2 p);
 
     float getGravityConstant() { return _gravityConstant; }
     void setGravityConstant(float value);
 
     CREATE_FUNC(PhysicsForceField);
+private:
+    void addBodyField(cpVect p, PhysicsBody* body, cpVect& ret);
 private:
     Vector<PhysicsBody*> _gravitySources;
     float _gravityConstant;

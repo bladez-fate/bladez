@@ -244,6 +244,16 @@ void PhysicsShape::setRestitution(float restitution)
     }
 }
 
+void PhysicsShape::setSurfaceVelocity(Vec2 sv)
+{
+    _surfaceV = sv;
+
+    for (cpShape* shape : _cpShapes)
+    {
+        cpShapeSetSurfaceVelocity(shape, cpv(sv.x, sv.y));
+    }
+}
+
 void PhysicsShape::setFriction(float friction)
 {
     _material.friction = friction;

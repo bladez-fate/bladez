@@ -192,6 +192,22 @@ public:
     inline float getFriction() const { return _material.friction; }
     
     /**
+     * Set this shape's surface velocity.
+     *
+     * It will change the shape's friction.
+     *
+     * @param friction A vector.
+     */
+    void setSurfaceVelocity(Vec2 sv);
+    
+    /**
+     * Get this shape's surface velocity.
+     *
+     * @return A vector.
+     */
+    inline Vec2 getSurfaceVelocity() const { return _surfaceV; }
+
+    /**
      * Set this shape's friction.
      *
      * It will change the shape's friction.
@@ -199,7 +215,7 @@ public:
      * @param friction A float number.
      */
     void setFriction(float friction);
-    
+
     /**
      * Get this shape's PhysicsMaterial object.
      *
@@ -357,6 +373,7 @@ protected:
     float _newScaleX;
     float _newScaleY;
     PhysicsMaterial _material;
+    Vec2 _surfaceV;
     int _tag;
     int    _categoryBitmask;
     int    _collisionBitmask;

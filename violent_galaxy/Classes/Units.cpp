@@ -46,57 +46,54 @@ ObjType Unit::getObjType()
     return ObjType::Unit;
 }
 
-bool ColonyShip::init(GameScene* game)
+bool DropCapsid::init(GameScene* game)
 {
-    _radius = 10;
+    _size = 20;
     Unit::init(game);
     listenContactAstroObj = true;
     return true;
 }
 
-float ColonyShip::getSize()
+float DropCapsid::getSize()
 {
-    return _radius;
+    return _size;
 }
 
-Node* ColonyShip::createNodes()
+Node* DropCapsid::createNodes()
 {
     return DrawNode::create();
 }
 
-PhysicsBody* ColonyShip::createBody()
+PhysicsBody* DropCapsid::createBody()
 {
     _body = PhysicsBody::createCircle(
-        _radius,
+        _size / 2,
         gUnitMaterial,
         Vec2::ZERO
     );
-//    _body = PhysicsBody::createBox(
-//        Size(2*radius, 2*radius),
-//        gUnitMaterial,
-//        Vec2::ZERO
-//    );
-    _body->setMass(1.0);
-    _body->setMoment(200.0);
+    _body->setMass(1.1);
+    _body->setMoment(210.0);
     return _body;
 }
 
-void ColonyShip::draw()
+void DropCapsid::draw()
 {
-    node()->drawSolidCircle(Vec2::ZERO, _radius, 0, 12, Color4F::WHITE);
+    node()->clear();
+    float r = _size / 2;
+    node()->drawSolidCircle(Vec2::ZERO, r, 0, 12, Color4F::WHITE);
     node()->drawSolidRect(
-        Vec2(-_radius/10, -9*_radius/10),
-        Vec2( _radius/10,  9*_radius/10),
+        Vec2(-r/10, -9*r/10),
+        Vec2( r/10,  9*r/10),
         Color4F::BLUE
     );
     node()->drawSolidRect(
-        Vec2(-9*_radius/10, -_radius/10),
-        Vec2( 9*_radius/10,  _radius/10),
+        Vec2(-9*r/10, -r/10),
+        Vec2( 9*r/10,  r/10),
         Color4F::BLUE
     );
 }
 
-bool ColonyShip::onContactAstroObj(ContactInfo& cinfo)
+bool DropCapsid::onContactAstroObj(ContactInfo& cinfo)
 {
     if (cinfo.contact.getEventCode() == PhysicsContact::EventCode::POSTSOLVE) {
         if (cpArbiter* arb = static_cast<cpArbiter*>(cinfo.contact.getContactInfo())) {
@@ -117,13 +114,6 @@ bool ColonyShip::onContactAstroObj(ContactInfo& cinfo)
             if (!moving) {
                 auto created = onLandCreate(_game);
                 replaceWith(created);
-
-                // FIXME: this is sometimes up side down
-//                float normal = cpvtoangle(cinfo.swapped? cps.normal: cpvneg(cps.normal));
-//                float rotation = normal - M_PI_2;
-//                created->getNode()->getPhysicsBody()->setRotation(rotation / (M_PI / 180.0));
-//                CCLOG("rotation# %f normal x# %f y# %f", rotation, cps.normal.x, cps.normal.y);
-
                 float up = (cinfo.thisBody->getPosition() - cinfo.thatBody->getPosition()).getAngle()  / (M_PI / 180.0);
                 created->getNode()->getPhysicsBody()->setRotation(90 - up);
                 CCLOG("LANDING up# %f", up);
@@ -151,15 +141,15 @@ void Tank::shoot()
     _body->applyImpulse(_body->world2Local(Vec2::ZERO) - _body->world2Local(j));
 }
 
-void Tank::subAngle()
+void Tank::upAngle(float dt)
 {
-    _angle = clampf(_angle - _angleStep, _angleMin, _angleMax);
+    _angle = clampf(_angle + _angleStep * dt, _angleMin, _angleMax);
     draw();
 }
 
-void Tank::addAngle()
+void Tank::downAngle(float dt)
 {
-    _angle = clampf(_angle + _angleStep, _angleMin, _angleMax);
+    _angle = clampf(_angle - _angleStep * dt, _angleMin, _angleMax);
     draw();
 }
 
@@ -173,19 +163,30 @@ void Tank::addPower()
     _power = clampf(_power + _powerStep, _powerMin, _powerMax);
 }
 
-void Tank::moveLeft()
+void Tank::moveLeft(bool go)
 {
-    move(Vec2(-1, 0));
+    _movingLeft = go;
+    move();
 }
 
-void Tank::moveRight()
+void Tank::moveRight(bool go)
 {
-    move(Vec2(1, 0));
+    _movingRight = go;
+    move();
 }
 
-void Tank::move(Vec2 dir)
+void Tank::move()
 {
-    _body->applyImpulse(dir.getNormalized() * _moveImpulse);
+    if (_movingLeft ^ _movingRight) {
+        Vec2 xdir = _body->local2World(Vec2::UNIT_X) - _body->local2World(Vec2::ZERO);
+        if (_movingRight) {
+            _track->setSurfaceVelocity(-_targetV * xdir);
+        } else {
+            _track->setSurfaceVelocity(-_targetV * -xdir);
+        }
+    } else {
+        _track->setSurfaceVelocity(Vec2::ZERO);
+    }
 }
 
 bool Tank::init(GameScene* game)
@@ -215,14 +216,14 @@ bool Tank::init(GameScene* game)
 
     _angleMin = 0;
     _angleMax = 180 - _angleMin;
-    _angleStep = 1;
+    _angleStep = 90;
     _powerMin = 1;
     _powerMax = 20;
     _powerStep = 1;
-    _moveImpulse = 0; // TODO[fate]: replace with surface velocity
 
     _angle = 60;
     _power = _powerMax;
+    _targetV = 100;
 
     Unit::init(game);
 
@@ -236,13 +237,21 @@ Node* Tank::createNodes()
 
 PhysicsBody* Tank::createBody()
 {
-    _body = PhysicsBody::createBox(
-        _bb,
+    _body = PhysicsBody::create(1.0, 200.0);
+    float r = _bb.width * 0.1;
+    auto hull = PhysicsShapeBox::create(
+        Size(_bb.width - 2*r, _bb.height * 0.9 - 2*r),
         gUnitMaterial,
-        _offs
+        _offs + Vec2(0, _bb.height * 0.05),
+        r
     );
-    _body->setMass(1.0);
-    _body->setMoment(200.0);
+    _track = PhysicsShapeBox::create(
+        Size(_bb.width * 0.8, _bb.height * 0.1),
+        gUnitMaterial,
+        _offs + Vec2(0, -_bb.height * 0.45)
+     );
+    _body->addShape(hull, false);
+    _body->addShape(_track, false);
     return _body;
 }
 
@@ -258,3 +267,51 @@ void Tank::draw()
     node()->drawSolidPoly(_head, sizeof(_head)/sizeof(*_head), Color4F::YELLOW);
 }
 
+
+bool SpaceStation::init(GameScene* game)
+{
+    _size = 100;
+    Unit::init(game);
+    return true;
+}
+
+Node* SpaceStation::createNodes()
+{
+    return DrawNode::create();
+}
+
+PhysicsBody* SpaceStation::createBody()
+{
+    _body = PhysicsBody::create(50.0, 10000.0);
+    auto hull = PhysicsShapeCircle::create(
+        _size / 2,
+        gUnitMaterial
+    );
+    _body->addShape(hull, false);
+    return _body;
+}
+
+void SpaceStation::draw()
+{
+    node()->clear();
+    float r = _size / 2;
+    Color4F darkGray(0.3f, 0.3f, 0.3f, 1.0f);
+    node()->drawSolidCircle(Vec2::ZERO, r*1.05, 0, 12, darkGray);
+    node()->drawSolidCircle(Vec2::ZERO, r, 0, 12, Color4F::GRAY);
+    node()->drawSolidRect(
+        Vec2(-7*r/10, 4*r/10),
+        Vec2( 7*r/10, 6*r/10),
+        darkGray
+    );
+    node()->drawTriangleGradient(
+        Vec2(-7*r/10, -6*r/10),
+        Vec2( 7*r/10, -6*r/10),
+        Vec2(      0,  r),
+        Color4F::GRAY, Color4F::GRAY, Color4F::BLUE
+    );
+}
+
+float SpaceStation::getSize()
+{
+    return _size;
+}

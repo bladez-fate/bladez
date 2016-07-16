@@ -22,13 +22,13 @@ protected:
     Player* _player;
 };
 
-class ColonyShip : public Unit {
+class DropCapsid : public Unit {
 public:
-    OBJ_CREATE_FUNC(ColonyShip);
+    OBJ_CREATE_FUNC(DropCapsid);
     float getSize() override;
     virtual bool onContactAstroObj(ContactInfo& cinfo) override;
 protected:
-    ColonyShip() {}
+    DropCapsid() {}
     bool init(GameScene* game) override;
     cc::Node* createNodes() override;
     cc::PhysicsBody* createBody() override;
@@ -38,7 +38,7 @@ protected:
     cc::PhysicsBody* _body = nullptr;
 public:
     std::function<Unit*(GameScene*)> onLandCreate;
-    float _radius;
+    float _size;
 };
 
 class Tank : public Unit {
@@ -46,13 +46,13 @@ public:
     OBJ_CREATE_FUNC(Tank);
     float getSize() override;
     void shoot();
-    void subAngle();
-    void addAngle();
+    void upAngle(float dt);
+    void downAngle(float dt);
     void subPower();
     void addPower();
-    void moveLeft();
-    void moveRight();
-    void move(cc::Vec2 dir);
+    void moveLeft(bool go);
+    void moveRight(bool go);
+    void move();
 protected:
     Tank() {}
     virtual bool init(GameScene* game) override;
@@ -62,6 +62,7 @@ protected:
 protected:
     cc::DrawNode* node() { return static_cast<cc::DrawNode*>(_rootNode); }
     cc::PhysicsBody* _body = nullptr;
+    cc::PhysicsShape* _track = nullptr;
 
     float _size;
 
@@ -73,6 +74,9 @@ protected:
     float _gunLength;
     float _angle;
     float _power;
+    float _targetV;
+    bool _movingLeft = false;
+    bool _movingRight = false;
 
     float _angleMin;
     float _angleMax;
@@ -80,5 +84,21 @@ protected:
     float _powerMin;
     float _powerMax;
     float _powerStep;
-    float _moveImpulse;
+};
+
+class SpaceStation : public Unit {
+public:
+    OBJ_CREATE_FUNC(SpaceStation);
+    float getSize() override;
+protected:
+    SpaceStation() {}
+    virtual bool init(GameScene* game) override;
+    cc::Node* createNodes() override;
+    cc::PhysicsBody* createBody() override;
+    void draw() override;
+protected:
+    cc::DrawNode* node() { return static_cast<cc::DrawNode*>(_rootNode); }
+    cc::PhysicsBody* _body = nullptr;
+
+    float _size;
 };
