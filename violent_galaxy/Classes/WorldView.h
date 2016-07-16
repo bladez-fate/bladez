@@ -19,10 +19,9 @@ public:
     void follow(cc::Vec2 p);
     void follow(cc::Vec2 p, Obj* obj);
     bool onFollowQueryPoint(cc::PhysicsWorld& pworld, cc::PhysicsShape& shape, void* userdata);
-    void onScroll(cc::Vec2 screenDir);
-    void onZoom(float times, cc::Vec2 center);
-    void onRotate(float times, cc::Vec2 center);
+    void scroll(cc::Vec2 screenDir);
     void onTimer(float dt);
+    bool isSurfaceView() const { return _surfaceId; }
 public:
     cc::Vec2 screen2world(cc::Vec2 s);
     float getZoom() const { return _zoom; }
@@ -35,10 +34,8 @@ private:
     cc::Vec2 _eye;
     Id _surfaceId = 0;
     Id _followId = 0;
-    static constexpr float _zoomFactor = 1.1f; // zoom per one wheel scroll
     static constexpr float _zoomMin = 1e-1f;
     static constexpr float _zoomMax = 1e+5f;
-    static constexpr float _rotationFactor = 1e-1f; // radians per one wheel scroll
     static constexpr float _nearPlane = 1.0f;
     static constexpr float _farPlane = 1000.0f;
 };

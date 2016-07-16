@@ -151,24 +151,10 @@ bool WorldView::onFollowQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, vo
     return true;
 }
 
-void WorldView::onScroll(Vec2 screenDir)
+void WorldView::scroll(Vec2 screenDir)
 {
     Vec2 eye = _eye + screen2world(screenDir) - screen2world(Vec2::ZERO);
     lookAt(eye, true);
-}
-
-void WorldView::onZoom(float times, Vec2 center)
-{
-    float scaleBy = powf(_zoomFactor, times);
-    zoom(scaleBy, center);
-}
-
-void WorldView::onRotate(float times, Vec2 center)
-{
-    if (_surfaceId) {
-        return; // Rotation in surface view is disabled
-    }
-    rotate(times * _rotationFactor, center);
 }
 
 Vec2 WorldView::screen2world(Vec2 s)

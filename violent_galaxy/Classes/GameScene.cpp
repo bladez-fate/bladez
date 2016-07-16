@@ -169,7 +169,6 @@ void GameScene::onMouseMove(Event* event)
     }
 
     _mouseLastLoc = screenLoc;
-//    CCLOG("MOUSEMOVE button# %d scrX# %f scrY# %f", e->getMouseButton(), screenLoc.x, screenLoc.y);
 }
 
 void GameScene::onMouseDown(Event* event)
@@ -178,7 +177,6 @@ void GameScene::onMouseDown(Event* event)
     if (e->getMouseButton() == 2) {
        mousePan(e->getLocationInView());
     }
-//    CCLOG("MOUSEDOWN button# %d", e->getMouseButton());
 }
 
 void GameScene::onMouseUp(Event *event)
@@ -224,19 +222,25 @@ void GameScene::onMouseUp(Event *event)
     } else if (e->getMouseButton() == 2) {
         mousePanStop();
     }
-//    CCLOG("MOUSEUP button# %d", e->getMouseButton());
 }
 
 void GameScene::onMouseWheel(Event* event)
 {
     EventMouse* e = (EventMouse*)event;
     if (e->getScrollY() != 0.0) {
-        view.onZoom(e->getScrollY(), view.screen2world(e->getLocationInView()));
+        view.zoom(
+            powf(_mouseZoomFactor, e->getScrollY()),
+            view.screen2world(e->getLocationInView())
+        );
     }
     if (e->getScrollX() != 0.0) {
-        view.onRotate(-e->getScrollX(), view.screen2world(e->getLocationInView()));
+        if (!view.isSurfaceView()) {
+            view.rotate(
+                -e->getScrollX() * _mouseRotationFactor,
+                view.screen2world(e->getLocationInView())
+            );
+        }
     }
-    CCLOG("MOUSEWHEEL button# %d scrollX# %f scrollY# %f", e->getMouseButton(), e->getScrollX(), e->getScrollY());
 }
 
 void GameScene::onMouseTimer(float dt)
@@ -255,7 +259,7 @@ void GameScene::onMouseTimer(float dt)
         screenDir += Vec2(0.0, 1.0);
     }
     if (screenDir != Vec2::ZERO) {
-        view.onScroll(dt * _mouseScrollFactor * screenDir);
+        view.scroll(dt * _mouseScrollFactor * screenDir);
     }
 }
 
@@ -265,7 +269,7 @@ void GameScene::mousePan(Vec2 screenLoc)
         _mousePanLastLoc = screenLoc;
         _mousePanEnabled = true;
     }
-    view.onScroll(_mousePanLastLoc - screenLoc);
+    view.scroll(_mousePanLastLoc - screenLoc);
     _mousePanLastLoc = screenLoc;
 }
 
@@ -345,25 +349,21 @@ void GameScene::initCollisions()
 
 bool GameScene::onContactBegin(PhysicsContact& contact)
 {
-//    CCLOG("onContactBegin: ");
     return dispatchContact(contact, nullptr, nullptr);
 }
 
 bool GameScene::onContactPreSolve(PhysicsContact& contact, PhysicsContactPreSolve& solve)
 {
-//    CCLOG("onContactPreSolve: fr# %f re# %f v# %f", solve.getFriction(), solve.getRestitution(), solve.getSurfaceVelocity().length());
     return dispatchContact(contact, &solve, nullptr);
 }
 
 void GameScene::onContactPostSolve(PhysicsContact& contact, const PhysicsContactPostSolve& solve)
 {
-    //CCLOG("onContactPostSolve: fr# %f re# %f v# %f", solve.getFriction(), solve.getRestitution(), solve.getSurfaceVelocity().length());
     dispatchContact(contact, nullptr, &solve);
 }
 
 void GameScene::onContactSeparate(PhysicsContact& contact)
 {
-//    CCLOG("onContactSeparate: ");
     dispatchContact(contact, nullptr, nullptr);
 }
 

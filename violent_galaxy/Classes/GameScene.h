@@ -120,6 +120,8 @@ private: // Mouse
     cc::Vec2 _mousePanLastLoc;
     static constexpr float _mouseTimerIntervalSec = 0.02;
     static constexpr float _mouseScrollFactor = 1000.0f; // worldlength per second per viewzoom
+    static constexpr float _mouseZoomFactor = 1.1f; // zoom per one wheel scroll
+    static constexpr float _mouseRotationFactor = 1e-1f; // radians per one wheel scroll
 public: // View
     WorldView view;
 private: // Players
