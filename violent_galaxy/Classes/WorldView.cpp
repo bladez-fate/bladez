@@ -69,10 +69,9 @@ Vec2 WorldView::screen2world(Vec2 s)
 
 void WorldView::createWorldCamera(Vec2 center)
 {
-    auto s = Director::getInstance()->getVisibleSize();
-    _state.size = Vec2(s.width * _state.zoom, s.height * _state.zoom);
+    auto size = _state.getSize();
     _camera = Camera::createOrthographic(
-        _state.size.x, _state.size.y,
+        size.x, size.y,
         _nearPlane, _farPlane
     );
     _camera->setCameraFlag(gWorldCameraFlag);
@@ -124,7 +123,7 @@ void WorldView::surfaceView(Vec2 center, Vec2 prevCenter, bool continuos, bool z
         if (up.isSmall()) {
             centerAt(center);
         } else {
-            float ratio = up.length() / (_state.size.y / 2.0);
+            float ratio = up.length() / (_state.getSize().y / 2.0);
             bool zoomRequired = ratio < 1.0;
             if (zoomRequired && zoomIfRequired) {
                 float scaleBy = ratio / 2;

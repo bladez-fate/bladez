@@ -28,21 +28,31 @@ private:
     GameScene* _game;
     cc::Camera* _camera = nullptr;
 
-    // Camera positioning and orientation
+    // Camera positioning, size and orientation
     struct State {
         cc::Vec2 center;
-        cc::Vec2 size;
         float zoom = 1.0f; // world length per screen pixel
         float rotation = M_PI_2;
 
+        cc::Vec2 getSize() const
+        {
+            cc::Size s = getScreenSize();
+            return cc::Vec2(s.width * zoom, s.height * zoom);
+        }
+
         cc::Vec2 getEye() const
         {
-            return center - (size / 2.0).rotate(cc::Vec2::forAngle(rotation - M_PI_2));
+            return center - (getSize() / 2.0).rotate(cc::Vec2::forAngle(rotation - M_PI_2));
         }
 
         cc::Vec3 getUp() const
         {
             return cc::Vec3(cosf(rotation), sinf(rotation), 0.0f);
+        }
+    private:
+        cc::Size getScreenSize() const
+        {
+            return cc::Director::getInstance()->getVisibleSize();
         }
     };
 
