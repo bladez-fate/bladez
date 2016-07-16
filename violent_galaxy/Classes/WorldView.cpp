@@ -16,10 +16,10 @@ void WorldView::update(float delta)
 
 void WorldView::zoom(float scaleBy, Vec2 center)
 {
-    Vec2 offs = _eye - center;
-    offs *= 1.0f/_zoom;
-    _zoom = clampf(_zoom * scaleBy, _zoomMin, _zoomMax);
-    offs *= _zoom;
+    Vec2 offs = _state.eye - center;
+    offs *= 1.0f/_state.zoom;
+    _state.zoom = clampf(_state.zoom * scaleBy, _zoomMin, _zoomMax);
+    offs *= _state.zoom;
     Vec2 eyeNew = center + offs;
     _camera->removeFromParent();
     createWorldCamera(eyeNew);
@@ -27,8 +27,8 @@ void WorldView::zoom(float scaleBy, Vec2 center)
 
 void WorldView::rotate(float rotateBy, Vec2 center)
 {
-    Vec2 offs = _eye - center;
-    _rotation += rotateBy;
+    Vec2 offs = _state.eye - center;
+    _state.rotation += rotateBy;
     offs = offs.rotate(Vec2::forAngle(rotateBy));
     Vec2 eyeNew = center + offs;
     lookAt(eyeNew, false);
@@ -36,7 +36,7 @@ void WorldView::rotate(float rotateBy, Vec2 center)
 
 void WorldView::scroll(Vec2 screenDir)
 {
-    Vec2 eye = _eye + screen2world(screenDir) - screen2world(Vec2::ZERO);
+    Vec2 eye = _state.eye + screen2world(screenDir) - screen2world(Vec2::ZERO);
     lookAt(eye, true);
 }
 
@@ -63,7 +63,7 @@ void WorldView::follow(Vec2 p, Obj* obj)
 
 Vec2 WorldView::getCenter() const
 {
-    return _eye + (_cameraSize / 2.0).rotate(Vec2::forAngle(_rotation - M_PI_2));
+    return _state.eye + (_cameraSize / 2.0).rotate(Vec2::forAngle(_state.rotation - M_PI_2));
 }
 
 Vec2 WorldView::screen2world(Vec2 s)
@@ -75,7 +75,7 @@ Vec2 WorldView::screen2world(Vec2 s)
 void WorldView::createWorldCamera(Vec2 eye)
 {
     auto s = Director::getInstance()->getVisibleSize();
-    _cameraSize = Vec2(s.width * _zoom, s.height * _zoom);
+    _cameraSize = Vec2(s.width * _state.zoom, s.height * _state.zoom);
     _camera = Camera::createOrthographic(
         _cameraSize.x, _cameraSize.y,
         _nearPlane, _farPlane
@@ -88,9 +88,9 @@ void WorldView::createWorldCamera(Vec2 eye)
 
 void WorldView::eyeAt(Vec2 eye)
 {
-    _eye = eye;
-    _camera->setPosition(_eye);
-    _camera->lookAt(Vec3(_eye.x, _eye.y, 0.0f), Vec3(cosf(_rotation), sinf(_rotation), 0.0f));
+    _state.eye = eye;
+    _camera->setPosition(_state.eye);
+    _camera->lookAt(Vec3(_state.eye.x, _state.eye.y, 0.0f), Vec3(cosf(_state.rotation), sinf(_state.rotation), 0.0f));
 }
 
 void WorldView::lookAt(Vec2 eye, bool continuos)
@@ -104,7 +104,7 @@ void WorldView::lookAt(Vec2 eye, bool continuos)
 
 void WorldView::centerAt(Vec2 center)
 {
-    eyeAt(center - (_cameraSize/2.0).rotate(Vec2::forAngle(_rotation - M_PI_2)));
+    eyeAt(center - (_cameraSize/2.0).rotate(Vec2::forAngle(_state.rotation - M_PI_2)));
 }
 
 void WorldView::surfaceView(Vec2 center, Vec2 prevCenter, bool continuos, bool zoomIfRequired)
@@ -140,7 +140,7 @@ void WorldView::surfaceView(Vec2 center, Vec2 prevCenter, bool continuos, bool z
                 zoomRequired = false;
             }
             if (!zoomRequired) {
-                _rotation = up.getAngle();
+                _state.rotation = up.getAngle();
                 centerAt(center);
                 return;
             }

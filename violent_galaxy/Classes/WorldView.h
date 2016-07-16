@@ -18,7 +18,7 @@ public:
     cc::Vec2 getCenter() const;
     bool isSurfaceView() const { return _surfaceId; }
     cc::Vec2 screen2world(cc::Vec2 s);
-    float getZoom() const { return _zoom; }
+    float getZoom() const { return _state.zoom; }
 private:
     void createWorldCamera(cc::Vec2 eye);
     void eyeAt(cc::Vec2 eye);
@@ -29,12 +29,30 @@ private:
 private:
     GameScene* _game;
     cc::Camera* _camera = nullptr;
-
-    // Camera positioning
     cc::Vec2 _cameraSize;
-    cc::Vec2 _eye;
-    float _zoom = 1.0f; // world length per screen pixel
-    float _rotation = M_PI_2;
+
+    // Camera positioning and orientation
+    struct State {
+        cc::Vec2 eye;
+        float zoom = 1.0f; // world length per screen pixel
+        float rotation = M_PI_2;
+    };
+
+    State _state;
+
+    // Camera actions
+    struct Action {
+        enum class EType : ui32 {
+            Linear,
+            Smooth
+        };
+        EType type;
+        float progress; // from zero (no progress) to 1 (full progress)
+        State source;
+        State target;
+    };
+
+    Action _action;
 
     // Target objects
     Id _surfaceId = 0;
