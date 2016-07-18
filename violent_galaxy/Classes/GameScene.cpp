@@ -217,7 +217,7 @@ void GameScene::onMouseUp(Event *event)
         }
     } else if (e->getMouseButton() == 1) {
         if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
-            view.follow(pw);
+            view.act(view.follow(pw, _mouseFollowDuration));
         }
     } else if (e->getMouseButton() == 2) {
         mousePanStop();
@@ -228,17 +228,19 @@ void GameScene::onMouseWheel(Event* event)
 {
     EventMouse* e = (EventMouse*)event;
     if (e->getScrollY() != 0.0) {
-        view.zoom(
+        view.act(view.zoomTo(
             powf(_mouseZoomFactor, e->getScrollY()),
-            view.screen2world(e->getLocationInView())
-        );
+            view.screen2world(e->getLocationInView()),
+            _mouseViewActionDuration
+        ));
     }
     if (e->getScrollX() != 0.0) {
         if (!view.isSurfaceView()) {
-            view.rotate(
+            view.act(view.rotateAround(
                 -e->getScrollX() * _mouseRotationFactor,
-                view.screen2world(e->getLocationInView())
-            );
+                view.screen2world(e->getLocationInView()),
+                _mouseViewActionDuration
+            ));
         }
     }
 }
@@ -259,7 +261,7 @@ void GameScene::onMouseTimer(float dt)
         screenDir += Vec2(0.0, 1.0);
     }
     if (screenDir != Vec2::ZERO) {
-        view.scroll(dt * _mouseScrollFactor * screenDir);
+        view.act(view.screenScroll(dt * _mouseScrollFactor * screenDir, true, dt));
     }
 }
 
@@ -269,7 +271,7 @@ void GameScene::mousePan(Vec2 screenLoc)
         _mousePanLastLoc = screenLoc;
         _mousePanEnabled = true;
     }
-    view.scroll(_mousePanLastLoc - screenLoc);
+    view.screenScroll(_mousePanLastLoc - screenLoc, true, 0.0f);
     _mousePanLastLoc = screenLoc;
 }
 
@@ -475,7 +477,7 @@ void GameScene::initGalaxy()
     auto seg = pl->segments().locateLng(startLng);
     float startAlt = seg->altitude;
     Vec2 start = pl->geogr2world(startLng, startAlt);
-    view.follow(start, pl);
+    view.act(view.follow(start, pl, 0.0f));
 
     // Player
     auto player = Player::create(this);
