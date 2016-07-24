@@ -98,7 +98,7 @@ void GameScene::initKeyboard()
     keyboardListener->onKeyPressed = [=](EventKeyboard::KeyCode keyCode, Event* event) {
         switch (keyCode) {
         case EventKeyboard::KeyCode::KEY_Q:
-            if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
+            if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL) && isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT)) {
                 menuCloseCallback(this);
             }
             break;
@@ -115,14 +115,14 @@ void GameScene::keyboardUpdate(float delta)
         for (Id id : _activePlayer->selected) {
             if (auto obj = objs()->getById(id)) {
                 if (auto tank = dynamic_cast<Tank*>(obj)) {
-                    if (isKeyHeld(EventKeyboard::KeyCode::KEY_UP_ARROW)) {
+                    if (isKeyHeld(EventKeyboard::KeyCode::KEY_Q)) {
                         tank->upAngle(delta);
                     }
-                    if (isKeyHeld(EventKeyboard::KeyCode::KEY_DOWN_ARROW)) {
+                    if (isKeyHeld(EventKeyboard::KeyCode::KEY_E)) {
                         tank->downAngle(delta);
                     }
-                    tank->moveLeft(isKeyHeld(EventKeyboard::KeyCode::KEY_LEFT_ARROW));
-                    tank->moveRight(isKeyHeld(EventKeyboard::KeyCode::KEY_RIGHT_ARROW));
+                    tank->moveLeft(isKeyHeld(EventKeyboard::KeyCode::KEY_A));
+                    tank->moveRight(isKeyHeld(EventKeyboard::KeyCode::KEY_D));
                 }
             }
         }
@@ -528,10 +528,10 @@ void GameScene::initGalaxy()
                                 tank->shoot();
                                 repeat = 0;
                                 break;
-                            case EventKeyboard::KeyCode::KEY_A:
+                            case EventKeyboard::KeyCode::KEY_W:
                                 tank->addPower();
                                 break;
-                            case EventKeyboard::KeyCode::KEY_Z:
+                            case EventKeyboard::KeyCode::KEY_S:
                                 tank->subPower();
                                 break;
                             default:
