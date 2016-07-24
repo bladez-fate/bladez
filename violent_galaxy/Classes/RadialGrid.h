@@ -18,7 +18,16 @@ public:
     explicit AngularVec(size_t asize)
         : Base(asize)
         , _astep(2 * M_PI / asize)
-    {}
+    {
+        size_t count = 0;
+        for (auto i = Base::begin(), e = Base::end(); i != e; ++i, count++) {
+            i->init(
+                _astep * count, _astep * (count + 1),
+                &*(Base::begin() + (count + 1) % asize),
+                &*(Base::begin() + (count + asize - 1) % asize)
+            );
+        }
+    }
 
     Iterator locate(float a)
     {
@@ -44,16 +53,6 @@ public:
     ConstIterator locateLng(float lng) const
     {
         return const_cast<AngularVec*>(this)->locateLng(lng);
-    }
-
-    float angle(Iterator i) const
-    {
-        return (i - this->begin()) * _astep;
-    }
-
-    float angle(ConstIterator i) const
-    {
-        return (i - this->begin()) * _astep;
     }
 private:
     float _astep;

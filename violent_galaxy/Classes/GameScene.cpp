@@ -475,7 +475,7 @@ void GameScene::initGalaxy()
     // Starting location
     float startLng = random<float>(0.0, 360.0);
     auto seg = pl->segments().locateLng(startLng);
-    float startAlt = seg->altitude;
+    float startAlt = seg->pts.front().altitude;
     Vec2 start = pl->geogr2world(startLng, startAlt);
     view.act(view.follow(start, pl, 0.0f));
 
