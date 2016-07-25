@@ -168,6 +168,9 @@ PhysicsBody* Planet::createBody()
 
 void Planet::draw()
 {
+    node()->clear();
+    node()->setLocalZOrder(-10);
+
     // Draw atmosphere gradient
     Color4F coreCol = Color4F::RED;
     Color4F surfCol = Color4F(0.0, 0.5, 0.9, 1.0);

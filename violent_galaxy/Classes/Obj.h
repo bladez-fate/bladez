@@ -27,6 +27,7 @@ enum class ObjType : ui8 {
     AstroObj = 2,
     Unit = 3,
     Projectile = 4,
+    Building = 5,
 };
 
 class ObjTag {

@@ -127,6 +127,7 @@ endif( WIN32 )
 set(GAME_SRC
   Classes/AppDelegate.cpp
   Classes/AstroObjs.cpp
+  Classes/Buildings.cpp
   Classes/Defs.cpp
   Classes/GameScene.cpp
   Classes/Obj.cpp
@@ -141,6 +142,7 @@ set(GAME_SRC
 set(GAME_HEADERS
   Classes/AppDelegate.h
   Classes/AstroObjs.h
+  Classes/Buildings.h
   Classes/Defs.h
   Classes/GameScene.h
   Classes/Obj.h
@@ -148,6 +150,7 @@ set(GAME_HEADERS
   Classes/Player.h
   Classes/Projectiles.h
   Classes/RadialGrid.h
+  Classes/Resources.h
   Classes/Units.h
   Classes/WorldView.h
   ${PLATFORM_SPECIFIC_HEADERS}

@@ -3,6 +3,7 @@
 #include <chipmunk/chipmunk_private.h>
 #include <SimpleAudioEngine.h>
 #include "Projectiles.h"
+#include "Buildings.h"
 
 USING_NS_CC;
 
@@ -209,6 +210,9 @@ void GameScene::onMouseUp(Event *event)
                     break; // TODO[fate]: find nearest planet
                 }
             }
+        } else if (isKeyHeld(EventKeyboard::KeyCode::KEY_B)) {
+            auto fact = Factory::create(this);
+            fact->setPosition(pw);
         } else {
             playerSelect(pw,
                 isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT),
@@ -348,7 +352,6 @@ void GameScene::initCollisions()
     _eventDispatcher->addEventListenerWithSceneGraphPriority(contactListener, this);
 }
 
-
 bool GameScene::onContactBegin(PhysicsContact& contact)
 {
     return dispatchContact(contact, nullptr, nullptr);
@@ -386,6 +389,15 @@ bool GameScene::dispatchContact(PhysicsContact& contact,
         return false; // avoid contact handling after obj destruction
     }
 
+#define VG_IGNORECOLLISION(x, y) \
+    if (cinfo.thisTag.type() == ObjType::x && cinfo.thatTag.type() == ObjType::y) { \
+        return false; \
+    } \
+    if (cinfo.thisTag.type() == ObjType::y && cinfo.thatTag.type() == ObjType::x) { \
+        cinfo.swap(); \
+        return false; \
+    } \
+    /**/
 #define VG_CHECKCOLLISION(x, y) \
     if (cinfo.thisTag.type() == ObjType::x && cinfo.thatTag.type() == ObjType::y) { \
         return onContact ## x ## y (cinfo); \
@@ -398,6 +410,9 @@ bool GameScene::dispatchContact(PhysicsContact& contact,
     VG_CHECKCOLLISION(Unit, AstroObj);
     VG_CHECKCOLLISION(Projectile, AstroObj);
     VG_CHECKCOLLISION(Projectile, Unit);
+    VG_IGNORECOLLISION(Building, Projectile);
+    VG_IGNORECOLLISION(Building, Unit);
+#undef VG_IGNORECOLLISION
 #undef VG_CHECKCOLLISION
 
     return true;

@@ -36,7 +36,7 @@ struct ContactInfo;
 
 using Id = ui32; // 24 bits max
 
-constexpr int gMatterBitmask = 0x1;
+constexpr int gMatterBitmask = 0x01;
 
 extern const cc::PhysicsMaterial gPlanetMaterial;
 extern const cc::PhysicsMaterial gUnitMaterial;

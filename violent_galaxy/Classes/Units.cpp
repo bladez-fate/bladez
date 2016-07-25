@@ -267,7 +267,6 @@ void Tank::draw()
     node()->drawSolidPoly(_head, sizeof(_head)/sizeof(*_head), Color4F::YELLOW);
 }
 
-
 bool SpaceStation::init(GameScene* game)
 {
     _size = 100;
