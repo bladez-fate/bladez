@@ -213,6 +213,34 @@ void GameScene::onMouseUp(Event *event)
         } else if (isKeyHeld(EventKeyboard::KeyCode::KEY_B)) {
             auto fact = Factory::create(this);
             fact->setPosition(pw);
+            for (auto kv : *_objs) {
+                if (Planet* planet = dynamic_cast<Planet*>(kv.second)) {
+                    auto pb = planet->getNode()->getPhysicsBody();
+
+                    // Set factory orientation upwards
+                    Vec2 rw = pw - pb->getPosition(); // building coords in world frame
+                    float dirw = rw.getAngle();
+                    fact->getNode()->setRotation(
+                        90 - CC_RADIANS_TO_DEGREES(dirw)
+                    );
+
+                    // Create platform body
+                    Vec2 rl = pb->world2Local(pw); // building coords in planet local frame
+                    float dirl = rl.getAngle();
+                    float len = 0.6*fact->getSize(); // half of platform length
+                    Vec2 bldFloor = (rl.length() - fact->getSize()/2) * rl.getNormalized(); // coordinates of building floor in body frame
+                    Vec2 rightEdge(bldFloor + len*Vec2::forAngle(dirl - M_PI_2));
+                    Vec2 leftEdge(bldFloor - len*Vec2::forAngle(dirl - M_PI_2));
+                    float foundationHeight = 50;
+                    planet->addPlatform(Platform(
+                        rightEdge,
+                        leftEdge,
+                        planet->altAng2local(planet->getAltitudeAt(leftEdge.getAngle()) - foundationHeight, leftEdge.getAngle()),
+                        planet->altAng2local(planet->getAltitudeAt(rightEdge.getAngle()) - foundationHeight, rightEdge.getAngle())
+                    ));
+                    break; // TODO[fate]: find nearest planet
+                }
+            }
         } else {
             playerSelect(pw,
                 isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT),
@@ -389,29 +417,36 @@ bool GameScene::dispatchContact(PhysicsContact& contact,
         return false; // avoid contact handling after obj destruction
     }
 
+    CCLOG("COLLISION thisObjType# %d thatObjType# %d thisShapeType# %d thatShapeType# %d",
+          (int)cinfo.thisObjTag.type(), (int)cinfo.thatObjTag.type(),
+          cinfo.thisShapeTag.type<int>(), cinfo.thatShapeTag.type<int>());
+
+#define VG_DEFAULTCOLLISION(x, y)
 #define VG_IGNORECOLLISION(x, y) \
-    if (cinfo.thisTag.type() == ObjType::x && cinfo.thatTag.type() == ObjType::y) { \
+    if (cinfo.thisObjTag.type() == ObjType::x && cinfo.thatObjTag.type() == ObjType::y) { \
         return false; \
     } \
-    if (cinfo.thisTag.type() == ObjType::y && cinfo.thatTag.type() == ObjType::x) { \
+    if (cinfo.thisObjTag.type() == ObjType::y && cinfo.thatObjTag.type() == ObjType::x) { \
         cinfo.swap(); \
         return false; \
     } \
     /**/
 #define VG_CHECKCOLLISION(x, y) \
-    if (cinfo.thisTag.type() == ObjType::x && cinfo.thatTag.type() == ObjType::y) { \
+    if (cinfo.thisObjTag.type() == ObjType::x && cinfo.thatObjTag.type() == ObjType::y) { \
         return onContact ## x ## y (cinfo); \
     } \
-    if (cinfo.thisTag.type() == ObjType::y && cinfo.thatTag.type() == ObjType::x) { \
+    if (cinfo.thisObjTag.type() == ObjType::y && cinfo.thatObjTag.type() == ObjType::x) { \
         cinfo.swap(); \
         return onContact ## x ## y(cinfo); \
     } \
     /**/
-    VG_CHECKCOLLISION(Unit, AstroObj);
-    VG_CHECKCOLLISION(Projectile, AstroObj);
-    VG_CHECKCOLLISION(Projectile, Unit);
-    VG_IGNORECOLLISION(Building, Projectile);
-    VG_IGNORECOLLISION(Building, Unit);
+    VG_CHECKCOLLISION  (Unit,       AstroObj);
+    VG_CHECKCOLLISION  (Projectile, AstroObj);
+    VG_CHECKCOLLISION  (Projectile, Unit);
+    VG_DEFAULTCOLLISION(Building,   AstroObj);
+    VG_IGNORECOLLISION (Building,   Unit);
+    VG_IGNORECOLLISION (Building,   Projectile);
+#undef VG_DEFAULTCOLLISION
 #undef VG_IGNORECOLLISION
 #undef VG_CHECKCOLLISION
 
@@ -422,6 +457,11 @@ bool GameScene::onContactUnitAstroObj(ContactInfo& cinfo)
 {
     Unit* unit = static_cast<Unit*>(cinfo.thisObj);
     AstroObj* aobj = static_cast<AstroObj*>(cinfo.thatObj);
+
+    if (cinfo.thatShapeTag.is(AstroObj::ShapeType::BuildingPlatform)) {
+        return false;
+    }
+
     switch (cinfo.contact.getEventCode()) {
     case PhysicsContact::EventCode::NONE:
         break;
@@ -451,6 +491,10 @@ bool GameScene::onContactUnitAstroObj(ContactInfo& cinfo)
 
 bool GameScene::onContactProjectileAstroObj(ContactInfo& cinfo)
 {
+    if (cinfo.thatShapeTag.is(AstroObj::ShapeType::BuildingPlatform)) {
+        return false;
+    }
+
     Projectile* proj = static_cast<Projectile*>(cinfo.thisObj);
     return proj->onContactAstroObj(cinfo);
 }
@@ -486,6 +530,8 @@ void GameScene::initGalaxy()
 {
     auto pl = Planet::create(this);
     pl->setPosition(Vec2::ZERO);
+    //pl->getNode()->getPhysicsBody()->applyTorque(1e11);
+    //pl->getNode()->getPhysicsBody()->applyImpulse(Vec2(1e11,0.5e11));
 
     // Starting location
     float startLng = random<float>(0.0, 360.0);

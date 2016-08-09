@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Defs.h"
+
 #include <vector>
 #include <base/ccMacros.h>
 
@@ -31,10 +33,7 @@ public:
 
     Iterator locate(float a)
     {
-        if (a < 0) { // Get rid of negative angle (for mod to work right)
-            a -= (2 * M_PI) * floorf(a / (2 * M_PI));
-            CCASSERT(a >= 0, "angle is still negtive");
-        }
+        a = mainAngle(a);
         i64 ai = (i64)floorf(a / _astep) % this->size();
         CCASSERT(ai >= 0 && ai < (i64)this->size(), "angle rounding internal error");
         return this->begin() + ai;

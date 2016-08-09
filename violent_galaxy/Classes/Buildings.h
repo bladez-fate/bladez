@@ -31,6 +31,6 @@ protected:
 protected:
     cc::DrawNode* node() { return static_cast<cc::DrawNode*>(_rootNode); }
     cc::PhysicsBody* _body = nullptr;
-
+    cc::PhysicsShape* _foundation = nullptr; // shape on the astro obj
     float _size;
 };

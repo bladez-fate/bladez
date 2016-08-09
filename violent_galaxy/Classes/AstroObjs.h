@@ -8,6 +8,11 @@
 
 class AstroObj : public VisualObj {
 public:
+    enum class ShapeType : ui8 {
+        Crust = 0,
+        BuildingPlatform = 1,
+    };
+public:
     ObjType getObjType() override;
 protected:
     AstroObj() {}
@@ -75,6 +80,38 @@ struct Segment {
         prev = prev_;
         pts.back().angle = a1;
     }
+
+    float getAltitudeAt(float a) const
+    {
+        a = mainAngle(a);
+        CC_ASSERT(a1 <= a);
+        CC_ASSERT(a <= a2);
+        const GeoPoint* pt1 = &pts.front();
+        const GeoPoint* pt2 = &next->pts.front();
+        for (const GeoPoint& pt : pts) {
+            if (pt.angle < a) { // TODO[fate]: use binary search in vector instead of plain iteration
+                pt1 = &pt;
+            } else {
+                pt2 = &pt;
+            }
+        }
+        float jump = 0;
+        if (pt2->angle < pt1->angle) {
+            jump = 2*M_PI;
+        }
+        CC_ASSERT(pt1->angle <= a);
+        CC_ASSERT(a <= pt2->angle + jump);
+        float alpha = (a - pt1->angle) / (pt2->angle + jump - pt1->angle);
+        return pt1->altitude + alpha * (pt2->altitude - pt1->altitude);
+    }
+};
+
+class Platform {
+public:
+    static constexpr size_t POINTS = 4;
+    cc::PhysicsShape* shape;
+    cc::Vec2 pts[POINTS];
+    Platform(cc::Vec2 pt0, cc::Vec2 pt1, cc::Vec2 pt2, cc::Vec2 pt3);
 };
 
 class Planet : public AstroObj {
@@ -83,9 +120,12 @@ public:
     float getSize() override;
     const AngularVec<Segment>& segments() const { return _segments; }
     cc::Vec2 polar2local(float r, float a);
+    cc::Vec2 altAng2local(float alt, float a);
     cc::Vec2 polar2world(float r, float a);
     cc::Vec2 geogr2local(float lng, float alt);
     cc::Vec2 geogr2world(float lng, float alt);
+    float getAltitudeAt(float a) const;
+    void addPlatform(Platform&& platform);
 protected:
     Planet();
     virtual bool init(GameScene* game) override;
@@ -105,4 +145,5 @@ protected:
     AngularVec<Segment> _segments;
     std::list<Deposit> _deposits;
     std::vector<cc::Vec2> _crust;
+    std::vector<Platform> _platforms;
 };

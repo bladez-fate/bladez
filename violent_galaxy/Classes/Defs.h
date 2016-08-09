@@ -41,5 +41,21 @@ constexpr int gMatterBitmask = 0x01;
 extern const cc::PhysicsMaterial gPlanetMaterial;
 extern const cc::PhysicsMaterial gUnitMaterial;
 extern const cc::PhysicsMaterial gProjectileMaterial;
+extern const cc::PhysicsMaterial gBuildingMaterial;
+extern const cc::PhysicsMaterial gPlatformMaterial;
 
 extern const cc::CameraFlag gWorldCameraFlag;
+
+
+// TODO[fate]: move to some sort of util
+// Returns x = a + 2*pi*n, where n is integer and x is in [0; 2*pi)
+inline float mainAngle(float a)
+{
+    if (a < 0 || a >= 2 * M_PI) {
+        a -= (2 * M_PI) * floorf(a / (2 * M_PI));
+        CCASSERT(a >= 0, "angle is still negative");
+        CCASSERT(a < 2 * M_PI , "angle is still above 2*pi");
+    }
+    return a;
+}
+

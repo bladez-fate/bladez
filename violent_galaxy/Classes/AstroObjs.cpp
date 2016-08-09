@@ -113,6 +113,11 @@ Vec2 Planet::polar2local(float r, float a)
     return r * Vec2::forAngle(a);
 }
 
+Vec2 Planet::altAng2local(float alt, float a)
+{
+    return (alt + _coreRadius) * Vec2::forAngle(a);
+}
+
 Vec2 Planet::polar2world(float r, float a)
 {
     return _body->local2World(polar2local(r, a));
@@ -126,6 +131,21 @@ Vec2 Planet::geogr2local(float lng, float alt)
 Vec2 Planet::geogr2world(float lng, float alt)
 {
     return _body->local2World(geogr2local(lng, alt));
+}
+
+float Planet::getAltitudeAt(float a) const
+{
+    return _segments.locate(a)->getAltitudeAt(a);
+}
+
+void Planet::addPlatform(Platform&& platform)
+{
+    platform.shape->setTag(ShapeTag(AstroObj::ShapeType::BuildingPlatform, _id));
+    platform.shape->setContactTestBitmask(gMatterBitmask);
+
+    _body->addShape(platform.shape, false);
+    _platforms.push_back(platform);
+    draw();
 }
 
 bool Planet::init(GameScene* game)
@@ -188,6 +208,11 @@ void Planet::draw()
         drawAtmoCell(r2, r3, a1, a2, surfCol, atmoCol);
         drawAtmoCell(r3, r4, a1, a2, atmoCol, spacCol);
         prev = i;
+    }
+
+    // Draw platforms
+    for (Platform& platform : _platforms) {
+        node()->drawSolidPoly(platform.pts, Platform::POINTS, Color4F(0.55f, 0.55f, 0.55f, 1));
     }
 
     // Draw crust
@@ -274,4 +299,15 @@ void Planet::fillCrust()
             _crust.push_back(r * Vec2::forAngle(a));
         }
     }
+}
+
+Platform::Platform(Vec2 pt0, Vec2 pt1, Vec2 pt2, Vec2 pt3)
+{
+    pts[0] = pt0;
+    pts[1] = pt1;
+    pts[2] = pt2;
+    pts[3] = pt3;
+    shape = PhysicsShapePolygon::create(
+        pts, 4, gPlatformMaterial
+    );
 }

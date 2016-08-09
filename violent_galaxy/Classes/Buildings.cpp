@@ -42,11 +42,11 @@ Node* Factory::createNodes()
 PhysicsBody* Factory::createBody()
 {
     _body = PhysicsBody::create(50.0, 10000.0);
-    auto hull = PhysicsShapeBox::create(
+    auto shape = PhysicsShapeBox::create(
         Size(_size, _size),
-        gUnitMaterial
+        gBuildingMaterial
     );
-    _body->addShape(hull, false);
+    _body->addShape(shape, false);
     return _body;
 }
 
