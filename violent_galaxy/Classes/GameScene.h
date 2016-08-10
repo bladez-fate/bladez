@@ -153,4 +153,5 @@ public: // Collisions
     void updateUnitVelocityOnSurface(cpBody* body, float dt);
 public: // Galaxy
     void initGalaxy();
+    void initBuildings(Planet* planet);
 };

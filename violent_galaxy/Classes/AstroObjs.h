@@ -46,6 +46,7 @@ struct Segment {
     Segment* prev = nullptr;
 
     std::vector<GeoPoint> pts;
+    std::vector<Deposit*> deposits;
 
     Segment() {
         pts.resize(1);
@@ -121,6 +122,7 @@ public:
     const AngularVec<Segment>& segments() const { return _segments; }
     cc::Vec2 polar2local(float r, float a);
     cc::Vec2 altAng2local(float alt, float a);
+    cc::Vec2 altAng2world(float alt, float a);
     cc::Vec2 polar2world(float r, float a);
     cc::Vec2 geogr2local(float lng, float alt);
     cc::Vec2 geogr2world(float lng, float alt);

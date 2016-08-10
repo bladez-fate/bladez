@@ -25,9 +25,9 @@ Planet::Planet()
 {
     // Generate mountains
     for (int i = 0; i < 100; i++) {
-        float height = random<float>(100.0, 400.0);
-        float slope = random<float>(1.0, 10.0);
-        float width = std::min(180.0, slope * height / 100.0);
+        float height = random<float>(50.0f, 400.0f);
+        float slope = random<float>(5.0f, 15.0f);
+        float width = std::min(180.0f, height / slope);
         float longitude = random<float>(0.0, 360.0);
         for (size_t i = 0; i < width; i++) {
             float x = 0;
@@ -67,6 +67,7 @@ Planet::Planet()
         Deposit& dep = _deposits.back();
         dep.res = res;
         dep.resLeft = 10000;
+        seg.deposits.push_back(&dep);
 
         if (res == Res::Ore) {
             for (size_t i = 0; i < ptsCount; i++) {
@@ -116,6 +117,11 @@ Vec2 Planet::polar2local(float r, float a)
 Vec2 Planet::altAng2local(float alt, float a)
 {
     return (alt + _coreRadius) * Vec2::forAngle(a);
+}
+
+Vec2 Planet::altAng2world(float alt, float a)
+{
+    return _body->local2World(altAng2local(alt, a));
 }
 
 Vec2 Planet::polar2world(float r, float a)
