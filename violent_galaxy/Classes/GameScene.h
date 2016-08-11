@@ -154,4 +154,5 @@ public: // Collisions
 public: // Galaxy
     void initGalaxy();
     void initBuildings(Planet* planet);
+    Planet* _planet = nullptr;
 };

@@ -65,6 +65,15 @@ void GameScene::update(float delta)
     Layer::update(delta);
     playerUpdate(delta);
     keyboardUpdate(delta);
+    _planet->getNode()->getPhysicsBody()->setVelocity(Vec2::ZERO);
+    _planet->getNode()->getPhysicsBody()->setAngularVelocity(0);
+    for (auto kv : *_objs) {
+        if (Building* building = dynamic_cast<Building*>(kv.second)) {
+            auto body = building->getNode()->getPhysicsBody();
+            body->setVelocity(Vec2::ZERO);
+            body->setAngularVelocity(0);
+        }
+    }
     view.update(delta);
 }
 
@@ -417,9 +426,9 @@ bool GameScene::dispatchContact(PhysicsContact& contact,
         return false; // avoid contact handling after obj destruction
     }
 
-    CCLOG("COLLISION thisObjType# %d thatObjType# %d thisShapeType# %d thatShapeType# %d",
-          (int)cinfo.thisObjTag.type(), (int)cinfo.thatObjTag.type(),
-          cinfo.thisShapeTag.type<int>(), cinfo.thatShapeTag.type<int>());
+//    CCLOG("COLLISION thisObjType# %d thatObjType# %d thisShapeType# %d thatShapeType# %d",
+//          (int)cinfo.thisObjTag.type(), (int)cinfo.thatObjTag.type(),
+//          cinfo.thisShapeTag.type<int>(), cinfo.thatShapeTag.type<int>());
 
 #define VG_DEFAULTCOLLISION(x, y)
 #define VG_IGNORECOLLISION(x, y) \
@@ -584,6 +593,7 @@ void GameScene::initBuildings(Planet* planet)
 void GameScene::initGalaxy()
 {
     auto pl = Planet::create(this);
+    _planet = pl;
     pl->setPosition(Vec2::ZERO);
     //pl->getNode()->getPhysicsBody()->applyTorque(1e11);
     //pl->getNode()->getPhysicsBody()->applyImpulse(Vec2(1e11,0.5e11));

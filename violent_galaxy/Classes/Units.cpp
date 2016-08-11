@@ -125,7 +125,7 @@ bool DropCapsid::onContactAstroObj(ContactInfo& cinfo)
                 replaceWith(created);
                 float up = (cinfo.thisBody->getPosition() - cinfo.thatBody->getPosition()).getAngle()  / (M_PI / 180.0);
                 created->getNode()->getPhysicsBody()->setRotation(90 - up);
-                CCLOG("LANDING up# %f", up);
+//                CCLOG("LANDING up# %f", up);
             }
         }
     }
