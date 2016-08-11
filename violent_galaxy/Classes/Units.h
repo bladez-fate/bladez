@@ -15,11 +15,13 @@ public:
     void replaceWith(Unit* unit);
     virtual void setPlayer(Player* player);
     Player* getPlayer() { return _player; }
+    void damage(i32 value);
 protected:
     Unit() {}
     bool init(GameScene* game) override;
 protected:
     Player* _player;
+    i32 _hp = 1;
 };
 
 class DropCapsid : public Unit {

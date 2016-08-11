@@ -22,6 +22,7 @@ protected:
 protected:
     Player* _player;
     cc::PhysicsBody* _body = nullptr;
+    i32 _damage = 1;
 };
 
 class Shell : public Projectile {

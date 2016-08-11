@@ -48,6 +48,7 @@ void Projectile::hit(Unit* unit)
                 hitBody->world2Local(j) - hitBody->world2Local(Vec2::ZERO),
                 hitBody->world2Local(_body->getPosition())
             );
+            unit->damage(_damage);
         }
     }
 }
@@ -60,6 +61,7 @@ void Projectile::setPlayer(Player* player)
 bool Shell::init(GameScene* game)
 {
     _size = 1;
+    _damage = 30;
     Projectile::init(game);
     return true;
 }

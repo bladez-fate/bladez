@@ -41,6 +41,14 @@ void Unit::setPlayer(Player* player)
     _player = player;
 }
 
+void Unit::damage(i32 value)
+{
+    _hp -= value;
+    if (_hp <= 0) {
+        destroy();
+    }
+}
+
 ObjType Unit::getObjType()
 {
     return ObjType::Unit;
@@ -48,6 +56,7 @@ ObjType Unit::getObjType()
 
 bool DropCapsid::init(GameScene* game)
 {
+    _hp = 100;
     _size = 20;
     Unit::init(game);
     listenContactAstroObj = true;
@@ -191,6 +200,7 @@ void Tank::move()
 
 bool Tank::init(GameScene* game)
 {
+    _hp = 150;
     _size = 20;
 
     Size bb(100,50);
