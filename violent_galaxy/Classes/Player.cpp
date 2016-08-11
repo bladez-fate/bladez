@@ -34,7 +34,7 @@ void Player::update(float delta)
 
             // NOTE: Consider rendering selection node on GUI camera
             float size = vobj->getSize();
-            float radius = clampf(_game->view.getZoom() * 16, size * 1.1, 1000);
+            float radius = clampf(_game->_view.getZoom() * 16, size * 1.1, 1000);
             _selectionNode->setCameraMask((unsigned short)gWorldCameraFlag);
             _selectionNode->drawCircle(
                 vobj->getNode()->getPosition(),
@@ -45,7 +45,6 @@ void Player::update(float delta)
         }
     }
 }
-
 
 bool Player::isSelect(Id id)
 {
@@ -76,6 +75,11 @@ void Player::selectRemove(Id id)
         }
     }
     selected.erase(std::remove(selected.begin(), selected.end(), 0), selected.end());
+}
+
+void Player::clearSelection()
+{
+    selected.clear();
 }
 
 void Player::drawSelection(bool value)

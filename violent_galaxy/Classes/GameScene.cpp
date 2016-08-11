@@ -74,7 +74,7 @@ void GameScene::update(float delta)
             body->setAngularVelocity(0);
         }
     }
-    view.update(delta);
+    _view.update(delta);
 }
 
 
@@ -92,7 +92,7 @@ void GameScene::createWorld(Scene* scene, PhysicsWorld* pworld)
     _pworld = pworld;
     pworld->setSpeed(1.0);
 
-    view.init(this);
+    _view.init(this);
     initGalaxy();
     initCollisions();
 
@@ -168,22 +168,32 @@ void GameScene::initMouse()
     mouseListener->onMouseScroll = CC_CALLBACK_1(GameScene::onMouseWheel, this);
     _eventDispatcher->addEventListenerWithFixedPriority(mouseListener, 1);
     this->schedule(schedule_selector(GameScene::onMouseTimer), _mouseTimerIntervalSec);
+
+    _mouseSelectRectNode = DrawNode::create();
+    _mouseSelectRectNode->setLocalZOrder(1);
+    this->addChild(_mouseSelectRectNode);
+
 }
 
 void GameScene::onMouseMove(Event* event)
 {
     EventMouse* e = (EventMouse*)event;
     Vec2 screenLoc = e->getLocationInView();
+    if (e->getMouseButton() == 0) {
+        mouseSelectRect(screenLoc);
+    }
     if (e->getMouseButton() == 2) {
         mousePan(screenLoc);
     }
-
     _mouseLastLoc = screenLoc;
 }
 
 void GameScene::onMouseDown(Event* event)
 {
     EventMouse* e = (EventMouse*)event;
+    if (e->getMouseButton() == 0) {
+       mouseSelectRect(e->getLocationInView());
+    }
     if (e->getMouseButton() == 2) {
        mousePan(e->getLocationInView());
     }
@@ -193,8 +203,9 @@ void GameScene::onMouseUp(Event *event)
 {
     EventMouse* e = (EventMouse*)event;
     Vec2 p = e->getLocationInView();
-    Vec2 pw = view.screen2world(p);
+    Vec2 pw = _view.screen2world(p);
     if (e->getMouseButton() == 0) {
+        bool doSelection = false;
         if (isKeyHeld(EventKeyboard::KeyCode::KEY_C)) {
             auto dc = DropCapsid::create(this);
             dc->setPosition(pw);
@@ -251,14 +262,12 @@ void GameScene::onMouseUp(Event *event)
                 }
             }
         } else {
-            playerSelect(pw,
-                isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT),
-                isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)
-            );
+            doSelection = true;
         }
+        mouseSelectRectStop(p, doSelection);
     } else if (e->getMouseButton() == 1) {
         if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
-            view.act(view.follow(pw, _mouseFollowDuration));
+            _view.act(_view.follow(pw, _mouseFollowDuration));
         }
     } else if (e->getMouseButton() == 2) {
         mousePanStop();
@@ -269,17 +278,17 @@ void GameScene::onMouseWheel(Event* event)
 {
     EventMouse* e = (EventMouse*)event;
     if (e->getScrollY() != 0.0) {
-        view.act(view.zoomTo(
+        _view.act(_view.zoomTo(
             powf(_mouseZoomFactor, e->getScrollY()),
-            view.screen2world(e->getLocationInView()),
+            _view.screen2world(e->getLocationInView()),
             _mouseViewActionDuration
         ));
     }
     if (e->getScrollX() != 0.0) {
-        if (!view.isSurfaceView()) {
-            view.act(view.rotateAround(
+        if (!_view.isSurfaceView()) {
+            _view.act(_view.rotateAround(
                 -e->getScrollX() * _mouseRotationFactor,
-                view.screen2world(e->getLocationInView()),
+                _view.screen2world(e->getLocationInView()),
                 _mouseViewActionDuration
             ));
         }
@@ -302,7 +311,7 @@ void GameScene::onMouseTimer(float dt)
         screenDir += Vec2(0.0, 1.0);
     }
     if (screenDir != Vec2::ZERO) {
-        view.act(view.screenScroll(dt * _mouseScrollFactor * screenDir, true, dt));
+        _view.act(_view.screenScroll(dt * _mouseScrollFactor * screenDir, true, dt));
     }
 }
 
@@ -312,13 +321,51 @@ void GameScene::mousePan(Vec2 screenLoc)
         _mousePanLastLoc = screenLoc;
         _mousePanEnabled = true;
     }
-    view.screenScroll(_mousePanLastLoc - screenLoc, true, 0.0f);
+    _view.screenScroll(_mousePanLastLoc - screenLoc, true, 0.0f);
     _mousePanLastLoc = screenLoc;
 }
 
 void GameScene::mousePanStop()
 {
     _mousePanEnabled = false;
+}
+
+void GameScene::mouseSelectRect(Vec2 screenLoc)
+{
+    if (!_mouseSelectRectEnabled) {
+        _mouseSelectRectStart = screenLoc;
+        _mouseSelectRectEnabled = true;
+    }
+    _mouseSelectRectEnd = screenLoc;
+    _mouseSelectRectNode->clear();
+    _mouseSelectRectNode->drawRect(
+        _mouseSelectRectStart,
+        _mouseSelectRectEnd,
+        Color4F::RED
+    );
+}
+
+void GameScene::mouseSelectRectStop(Vec2 screenLoc, bool apply)
+{
+    if (_mouseSelectRectEnabled) {
+        _mouseSelectRectEnabled = false;
+        _mouseSelectRectNode->clear();
+        if (apply) {
+            if (_mouseSelectRectStart != _mouseSelectRectEnd) {
+                playerSelectRect(
+                            _mouseSelectRectStart,
+                            _mouseSelectRectEnd,
+                            isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT)
+                            );
+            } else {
+                playerSelectPoint(
+                            screenLoc,
+                            isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT),
+                            isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)
+                            );
+            }
+        }
+    }
 }
 
 void GameScene::initPlayers()
@@ -352,14 +399,15 @@ void GameScene::playerActivate(Player* player)
     }
 }
 
-void GameScene::playerSelect(Vec2 p, bool add, bool all)
+void GameScene::playerSelectPoint(Vec2 p, bool add, bool all)
 {
     if (!_activePlayer) {
         return;
     }
     _pworld->queryPoint(
         CC_CALLBACK_3(GameScene::onSelectQueryPoint, this, add, all),
-        p, nullptr
+        _view.screen2world(p),
+        nullptr
     );
 }
 
@@ -382,6 +430,65 @@ bool GameScene::onSelectQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, vo
         }
     }
     return false;
+}
+
+void GameScene::playerSelectRect(Vec2 p1, Vec2 p2, bool add)
+{
+    if (!_activePlayer) {
+        return;
+    }
+    Vec2 p[] = {
+        Vec2(std::min(p1.x, p2.x), std::min(p1.y, p2.y)),
+        Vec2(std::max(p1.x, p2.x), std::min(p1.y, p2.y)),
+        Vec2(std::max(p1.x, p2.x), std::max(p1.y, p2.y)),
+        Vec2(std::min(p1.x, p2.x), std::max(p1.y, p2.y))
+    };
+    Vec2 pw[] = {
+        _view.screen2world(p[0]),
+        _view.screen2world(p[1]),
+        _view.screen2world(p[2]),
+        _view.screen2world(p[3])
+    };
+    Vec2 bbw[] = {
+        Vec2(std::min(pw[0].x, std::min(pw[1].x, std::min(pw[2].x, pw[3].x))),
+             std::min(pw[0].y, std::min(pw[1].y, std::min(pw[2].y, pw[3].y)))),
+        Vec2(std::max(pw[0].x, std::max(pw[1].x, std::max(pw[2].x, pw[3].x))),
+             std::max(pw[0].y, std::max(pw[1].y, std::max(pw[2].y, pw[3].y)))),
+    };
+    std::set<Id> ids;
+    _pworld->queryRect(
+        CC_CALLBACK_3(GameScene::onSelectQueryRect, this),
+        Rect(bbw[0].x, bbw[0].y, bbw[1].x - bbw[0].x, bbw[1].y - bbw[0].y),
+        &ids
+    );
+
+    bool selectionCleared = false;
+    for (Id id : ids) {
+        Unit* unit = _objs->getByIdAs<Unit>(id);
+        Vec2 uw = unit->getNode()->getPosition();
+        Vec2 u = _view.world2screen(uw);
+        float r = unit->getSize() / 2;
+        if (u.x > p[0].x - r && u.x < p[2].x + r) {
+            if (u.y > p[0].y - r && u.y < p[2].y + r) {
+                if (!add && !selectionCleared) {
+                    selectionCleared = true;
+                    _activePlayer->clearSelection();
+                }
+                _activePlayer->selectAdd(id);
+            }
+        }
+    }
+}
+
+bool GameScene::onSelectQueryRect(PhysicsWorld& pworld, PhysicsShape& shape, void* userdata)
+{
+    UNUSED(pworld);
+    std::set<Id>& ids = *reinterpret_cast<std::set<Id>*>(userdata);
+    ObjTag tag(shape.getBody()->getNode()->getTag());
+    if (tag.type() == ObjType::Unit) {
+        ids.insert(tag.id());
+    }
+    return true;
 }
 
 void GameScene::initCollisions()
@@ -610,7 +717,7 @@ void GameScene::initGalaxy()
     auto seg = pl->segments().locateLng(startLng);
     float startAlt = seg->pts.front().altitude;
     Vec2 start = pl->geogr2world(startLng, startAlt);
-    view.act(view.follow(start, pl, 0.0f));
+    _view.act(_view.follow(start, pl, 0.0f));
 
     // Player
     auto player = Player::create(this);

@@ -163,6 +163,12 @@ Vec2 WorldView::screen2world(Vec2 s)
     return Vec2(w.x, w.y);
 }
 
+Vec2 WorldView::world2screen(Vec2 w)
+{
+    Vec2 s = _camera->projectGL(Vec3(w.x, w.y, 0.0f));
+    return Vec2(s.x, s.y);
+}
+
 float WorldView::angleDiff(float phi, float psi)
 {
     return phi - psi; // TODO[fate]: normalize angles and find nearest rotation

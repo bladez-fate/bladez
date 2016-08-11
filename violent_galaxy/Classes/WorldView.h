@@ -56,6 +56,7 @@ public:
 
     bool isSurfaceView() const { return _state.surfaceId; }
     cc::Vec2 screen2world(cc::Vec2 s);
+    cc::Vec2 world2screen(cc::Vec2 w);
     float angleDiff(float phi, float psi);
     float getZoom() const { return _state.zoom; }
 private:

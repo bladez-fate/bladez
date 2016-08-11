@@ -115,7 +115,13 @@ private: // Mouse
     void onMouseTimer(float dt);
     void mousePan(cc::Vec2 screenLoc);
     void mousePanStop();
+    void mouseSelectRect(cc::Vec2 screenLoc);
+    void mouseSelectRectStop(cc::Vec2 screenLoc, bool apply);
     cc::Vec2 _mouseLastLoc;
+    bool _mouseSelectRectEnabled = false;
+    cc::Vec2 _mouseSelectRectStart; // screen coordinated of selection rectangle begining
+    cc::Vec2 _mouseSelectRectEnd; // screen coordinated of selection rectangle ending
+    cc::DrawNode* _mouseSelectRectNode = nullptr;
     bool _mousePanEnabled = false;
     cc::Vec2 _mousePanLastLoc;
     static constexpr float _mouseTimerIntervalSec = 0.05;
@@ -125,7 +131,7 @@ private: // Mouse
     static constexpr float _mouseViewActionDuration = 0.16;
     static constexpr float _mouseFollowDuration = 1.0;
 public: // View
-    WorldView view;
+    WorldView _view;
 private: // Players
     void initPlayers();
     void playerUpdate(float delta);
@@ -133,8 +139,10 @@ public:
     void addPlayer(Player* player);
 private:
     void playerActivate(Player* player);
-    void playerSelect(cc::Vec2 p, bool add, bool all);
+    void playerSelectPoint(cc::Vec2 p, bool add, bool all);
     bool onSelectQueryPoint(cc::PhysicsWorld& pworld, cc::PhysicsShape& shape, void* userdata, bool add, bool all);
+    void playerSelectRect(cc::Vec2 p1, cc::Vec2 p2, bool add);
+    bool onSelectQueryRect(cc::PhysicsWorld& pworld, cc::PhysicsShape& shape, void* userdata);
     Player* _activePlayer = nullptr;
     using Players = std::vector<Player*>;
     Players _players;

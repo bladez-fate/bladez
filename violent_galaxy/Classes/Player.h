@@ -16,6 +16,7 @@ public:
     void select(Id id);
     void selectAdd(Id id);
     void selectRemove(Id id);
+    void clearSelection();
     void drawSelection(bool value = true);
     ObjType getObjType() override;
     void update(float delta) override;
