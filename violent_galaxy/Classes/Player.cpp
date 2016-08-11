@@ -47,6 +47,16 @@ void Player::update(float delta)
 }
 
 
+bool Player::isSelect(Id id)
+{
+    for (Id sid : selected) {
+        if (id == sid) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void Player::select(Id id)
 {
     selected.clear();
@@ -56,6 +66,16 @@ void Player::select(Id id)
 void Player::selectAdd(Id id)
 {
     selected.push_back(id);
+}
+
+void Player::selectRemove(Id id)
+{
+    for (Id& sid : selected) {
+        if (sid == id) {
+            sid = 0;
+        }
+    }
+    selected.erase(std::remove(selected.begin(), selected.end(), 0), selected.end());
 }
 
 void Player::drawSelection(bool value)

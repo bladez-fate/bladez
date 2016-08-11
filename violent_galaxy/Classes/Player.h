@@ -12,8 +12,10 @@ public:
     PlayerId playerId;
     cc::Color4F color;
     std::vector<Id> selected;
+    bool isSelect(Id id);
     void select(Id id);
     void selectAdd(Id id);
+    void selectRemove(Id id);
     void drawSelection(bool value = true);
     ObjType getObjType() override;
     void update(float delta) override;

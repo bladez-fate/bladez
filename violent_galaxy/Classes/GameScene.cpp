@@ -370,10 +370,15 @@ bool GameScene::onSelectQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, vo
     UNUSED(all);
     ObjTag tag(shape.getBody()->getNode()->getTag());
     if (tag.type() == ObjType::Unit) {
+        Id id = tag.id();
         if (add) {
-            _activePlayer->selectAdd(tag.id());
+            if (_activePlayer->isSelect(id)) {
+                _activePlayer->selectRemove(id);
+            } else {
+                _activePlayer->selectAdd(id);
+            }
         } else {
-            _activePlayer->select(tag.id());
+            _activePlayer->select(id);
         }
     }
     return false;

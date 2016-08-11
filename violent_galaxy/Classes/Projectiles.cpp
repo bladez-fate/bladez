@@ -24,7 +24,7 @@ ObjType Projectile::getObjType()
 
 bool Projectile::onContactAstroObj(ContactInfo& cinfo)
 {
-    CCLOG("PROJECTILE CONTACT ASTROOBJ id# %d aobjId# %d", (int)_id, (int)cinfo.thatObjTag.id());
+//    CCLOG("PROJECTILE CONTACT ASTROOBJ id# %d aobjId# %d", (int)_id, (int)cinfo.thatObjTag.id());
 
     destroy();
     return false;
@@ -32,7 +32,7 @@ bool Projectile::onContactAstroObj(ContactInfo& cinfo)
 
 bool Projectile::onContactUnit(ContactInfo& cinfo)
 {
-    CCLOG("PROJECTILE CONTACT UNIT id# %d unitId# %d", (int)_id, (int)cinfo.thatObjTag.id());
+//    CCLOG("PROJECTILE CONTACT UNIT id# %d unitId# %d", (int)_id, (int)cinfo.thatObjTag.id());
     hit(static_cast<Unit*>(cinfo.thatObj));
     destroy();
     return false;
