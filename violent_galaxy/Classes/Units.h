@@ -70,6 +70,7 @@ protected:
 
     cc::Size _bb;
     cc::Vec2 _offs;
+    cc::Vec2 _cg_offs;
     cc::Vec2 _base[8];
     cc::Vec2 _head[6];
     cc::Vec2 _gunBegin;

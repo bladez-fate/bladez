@@ -205,6 +205,7 @@ bool Tank::init(GameScene* game)
 
     Size bb(100,50);
     Vec2 offs(0,5);
+    Vec2 cg_offs(0, -10);
     Vec2 base[8] = {
         Vec2(-40, -20), Vec2(-50, -10), Vec2(-50, 0), Vec2(-40, 10),
         Vec2(40, 10), Vec2(50, 0), Vec2(50, -10), Vec2(40, -20)
@@ -217,11 +218,12 @@ bool Tank::init(GameScene* game)
     float gunLength = 50;
 
     float scale = _size/bb.width;
-    for (size_t i = 0; i < sizeof(_base)/sizeof(*_base); i++) _base[i] = base[i] * scale;
-    for (size_t i = 0; i < sizeof(_head)/sizeof(*_head); i++) _head[i] = head[i] * scale;
-    _gunBegin = gunBegin * scale;
+    for (size_t i = 0; i < sizeof(_base)/sizeof(*_base); i++) _base[i] = (base[i] - cg_offs) * scale;
+    for (size_t i = 0; i < sizeof(_head)/sizeof(*_head); i++) _head[i] = (head[i] - cg_offs) * scale;
+    _gunBegin = (gunBegin - cg_offs) * scale;
     _bb = bb * scale;
     _offs = offs * scale;
+    _cg_offs = cg_offs * scale;
     _gunLength = gunLength * scale;
 
     _angleMin = 0;
@@ -252,13 +254,13 @@ PhysicsBody* Tank::createBody()
     auto hull = PhysicsShapeBox::create(
         Size(_bb.width - 2*r, _bb.height * 0.9 - 2*r),
         gUnitMaterial,
-        _offs + Vec2(0, _bb.height * 0.05),
+        _offs - _cg_offs + Vec2(0, _bb.height * 0.05),
         r
     );
     _track = PhysicsShapeBox::create(
         Size(_bb.width * 0.8, _bb.height * 0.1),
         gUnitMaterial,
-        _offs + Vec2(0, -_bb.height * 0.45)
+        _offs - _cg_offs + Vec2(0, -_bb.height * 0.45)
      );
     _body->addShape(hull, false);
     _body->addShape(_track, false);

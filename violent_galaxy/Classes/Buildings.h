@@ -51,3 +51,20 @@ protected:
     cc::PhysicsShape* _foundation = nullptr; // shape on the astro obj
     float _size;
 };
+
+class OilMine : public Building {
+public:
+    OBJ_CREATE_FUNC(OilMine);
+    float getSize() override;
+protected:
+    OilMine() {}
+    virtual bool init(GameScene* game) override;
+    cc::Node* createNodes() override;
+    cc::PhysicsBody* createBody() override;
+    void draw() override;
+protected:
+    cc::DrawNode* node() { return static_cast<cc::DrawNode*>(_rootNode); }
+    cc::PhysicsBody* _body = nullptr;
+    cc::PhysicsShape* _foundation = nullptr; // shape on the astro obj
+    float _size;
+};

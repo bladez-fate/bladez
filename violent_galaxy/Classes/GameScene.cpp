@@ -666,11 +666,16 @@ void GameScene::initBuildings(Planet* planet)
                 continue;
             }
             building = Factory::create(this);
-        } else {
+        } else if (seg.deposits.front()->res == Res::Ore) {
             if (random(0.0f, 1.0f) >= 0.8) {
                 continue;
             }
             building = Mine::create(this);
+        } else if (seg.deposits.front()->res == Res::Oil) {
+            if (random(0.0f, 1.0f) >= 0.8) {
+                continue;
+            }
+            building = OilMine::create(this);
         }
         Vec2 pw = planet->altAng2world(
             std::max(pt1.altitude, pt2.altitude) + 10.0f + building->getSize()/2,
