@@ -6,7 +6,10 @@
 
 class Unit : public VisualObj {
 public:
+    i32 hp = 1;
+    i32 hpMax = 1;
     Id surfaceId = 0; // Astro obj that unit is in contact with
+public:
     bool listenContactAstroObj = false;
     virtual bool onContactAstroObj(ContactInfo&) { return true; }
     virtual bool onContactUnit(ContactInfo&) { return true; }
@@ -21,7 +24,6 @@ protected:
     bool init(GameScene* game) override;
 protected:
     Player* _player;
-    i32 _hp = 1;
 };
 
 class DropCapsid : public Unit {

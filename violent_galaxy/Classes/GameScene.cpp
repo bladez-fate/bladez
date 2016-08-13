@@ -75,6 +75,7 @@ void GameScene::update(float delta)
         }
     }
     _view.update(delta);
+    guiUpdate(delta);
 }
 
 
@@ -172,7 +173,6 @@ void GameScene::initMouse()
     _mouseSelectRectNode = DrawNode::create();
     _mouseSelectRectNode->setLocalZOrder(1);
     this->addChild(_mouseSelectRectNode);
-
 }
 
 void GameScene::onMouseMove(Event* event)
@@ -363,6 +363,54 @@ void GameScene::mouseSelectRectStop(Vec2 screenLoc, bool apply)
                             isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT),
                             isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)
                             );
+            }
+        }
+    }
+}
+
+float GameScene::viewSelectionRadius(float size)
+{
+    return clampf(_view.getZoom() * 16.0f, size * 1.1f, 1000.0f);
+}
+
+void GameScene::guiUpdate(float delta)
+{
+    if (!_guiHpIndicators) {
+        _guiHpIndicators = DrawNode::create();
+        _guiHpIndicators->setLocalZOrder(2);
+        this->addChild(_guiHpIndicators);
+    }
+    _guiHpIndicators->clear();
+    for (auto kv : *_objs) {
+        if (Unit* unit = dynamic_cast<Unit*>(kv.second)) {
+            Vec2 pw = unit->getNode()->getPosition();
+            float screenSize = rintf(unit->getSize() / _view.getZoom());
+            if (screenSize >= 20.0f) {
+                Vec2 p = _view.world2screen(pw) - Vec2(0, screenSize * 0.6f);
+                Vec2 r = Vec2(rintf(p.x), rintf(p.y));
+                float lx = rintf(screenSize / 2);
+                float rx = rintf(screenSize - lx);
+                Vec2 p1 = r - Vec2(lx, 2.0f);
+                Vec2 p2 = r + Vec2(rx, 2.0f);
+                float share = (float)unit->hp / unit->hpMax;
+                float mx = rintf(p1.x + screenSize * share);
+                Color4F hpColor(share < 0.2f? Color4F::RED: (share < 0.5f? Color4F::YELLOW: Color4F::GREEN));
+                _guiHpIndicators->drawSolidRect(
+                    p1 - Vec2(1.0f, 1.0f), p2 + Vec2(1.0f, 1.0f),
+                    Color4F::WHITE
+                );
+                if (p1.x < mx) {
+                    _guiHpIndicators->drawSolidRect(
+                        p1, Vec2(mx, p2.y),
+                        hpColor
+                    );
+                }
+                if (mx + 1.0f < p2.x) {
+                    _guiHpIndicators->drawSolidRect(
+                        Vec2(mx + 1.0f, p1.y), p2,
+                        Color4F::GRAY
+                    );
+                }
             }
         }
     }

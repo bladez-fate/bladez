@@ -131,7 +131,11 @@ private: // Mouse
     static constexpr float _mouseViewActionDuration = 0.16;
     static constexpr float _mouseFollowDuration = 1.0;
 public: // View
+    float viewSelectionRadius(float size);
     WorldView _view;
+private: // GUI
+    void guiUpdate(float delta);
+    cc::DrawNode* _guiHpIndicators = nullptr;
 private: // Players
     void initPlayers();
     void playerUpdate(float delta);

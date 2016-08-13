@@ -34,7 +34,7 @@ void Player::update(float delta)
 
             // NOTE: Consider rendering selection node on GUI camera
             float size = vobj->getSize();
-            float radius = clampf(_game->_view.getZoom() * 16, size * 1.1, 1000);
+            float radius = _game->viewSelectionRadius(size);
             _selectionNode->setCameraMask((unsigned short)gWorldCameraFlag);
             _selectionNode->drawCircle(
                 vobj->getNode()->getPosition(),
