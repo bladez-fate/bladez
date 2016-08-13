@@ -130,19 +130,19 @@ float Mine::getSize()
 }
 
 
-bool OilMine::init(GameScene* game)
+bool PumpJack::init(GameScene* game)
 {
     _size = 100;
     Building::init(game);
     return true;
 }
 
-Node* OilMine::createNodes()
+Node* PumpJack::createNodes()
 {
     return DrawNode::create();
 }
 
-PhysicsBody* OilMine::createBody()
+PhysicsBody* PumpJack::createBody()
 {
     _body = PhysicsBody::create(50.0, 10000.0);
     auto shape = PhysicsShapeBox::create(
@@ -153,7 +153,7 @@ PhysicsBody* OilMine::createBody()
     return _body;
 }
 
-void OilMine::draw()
+void PumpJack::draw()
 {
     node()->clear();
     float r = _size / 2;
@@ -197,7 +197,7 @@ void OilMine::draw()
     node()->setLocalZOrder(-1);
 }
 
-float OilMine::getSize()
+float PumpJack::getSize()
 {
     return _size;
 }

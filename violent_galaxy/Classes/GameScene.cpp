@@ -808,7 +808,7 @@ void GameScene::initBuildings(Planet* planet)
             if (random(0.0f, 1.0f) >= 0.8) {
                 continue;
             }
-            building = OilMine::create(this);
+            building = PumpJack::create(this);
         }
         Vec2 pw = planet->altAng2world(
             std::max(pt1.altitude, pt2.altitude) + 10.0f + building->getSize()/2,

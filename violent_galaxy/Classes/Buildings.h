@@ -52,12 +52,12 @@ protected:
     float _size;
 };
 
-class OilMine : public Building {
+class PumpJack : public Building {
 public:
-    OBJ_CREATE_FUNC(OilMine);
+    OBJ_CREATE_FUNC(PumpJack);
     float getSize() override;
 protected:
-    OilMine() {}
+    PumpJack() {}
     virtual bool init(GameScene* game) override;
     cc::Node* createNodes() override;
     cc::PhysicsBody* createBody() override;
