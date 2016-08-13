@@ -1,8 +1,11 @@
 # RTS Contest TODO
 
+Fix bugs:
+- [ ] unit movement in rest due to hacked planet&building physics
+
 Must have features:
 - [x] hit points indicators
-- [ ] resource(ore&oil) and supply indicators
+- [x] resource(ore&oil) and supply indicators
 - [ ] auto resource mining from mine/pumpjack
 - [ ] unit group hotkeys 1-9 (save/select/show/add)
 - [ ] select all units button/key

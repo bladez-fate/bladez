@@ -136,6 +136,9 @@ public: // View
 private: // GUI
     void guiUpdate(float delta);
     cc::DrawNode* _guiHpIndicators = nullptr;
+    cc::DrawNode* _resIcons = nullptr;
+    cc::Label* _supplyLabel = nullptr;
+    cc::Label* _resLabels[RES_COUNT] = {0};
 private: // Players
     void initPlayers();
     void playerUpdate(float delta);

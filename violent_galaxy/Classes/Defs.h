@@ -36,16 +36,26 @@ struct ContactInfo;
 
 using Id = ui32; // 24 bits max
 
+// Resources
+static constexpr size_t RES_COUNT = 2;
+
+// Constacts
 constexpr int gMatterBitmask = 0x01;
 
+// Materials
 extern const cc::PhysicsMaterial gPlanetMaterial;
 extern const cc::PhysicsMaterial gUnitMaterial;
 extern const cc::PhysicsMaterial gProjectileMaterial;
 extern const cc::PhysicsMaterial gBuildingMaterial;
 extern const cc::PhysicsMaterial gPlatformMaterial;
 
+// Cameras
 extern const cc::CameraFlag gWorldCameraFlag;
 
+// Colors
+extern const cc::Color4F gOreColor;
+extern const cc::Color4F gOilColor;
+extern const cc::Color4F gResColor[RES_COUNT];
 
 // TODO[fate]: move to some sort of util
 // Returns x = a + 2*pi*n, where n is integer and x is in [0; 2*pi)

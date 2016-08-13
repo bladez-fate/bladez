@@ -79,7 +79,7 @@ Planet::Planet()
                 st.id = sid;
                 st.alt1 = pt.altitude - z * depth;
                 st.alt2 = pt.altitude;
-                st.col1 = st.col2 = Color4F(0.9f, 0.7f, 0.3f, 1.0f);
+                st.col1 = st.col2 = gOreColor;
                 st.deposit = &dep;
             }
         } if (res == Res::Oil) {
@@ -94,7 +94,7 @@ Planet::Planet()
                 st.id = sid;
                 st.alt1 = altitude - z * height/2;
                 st.alt2 = altitude + z * height/2;
-                st.col1 = st.col2 = Color4F::BLACK;
+                st.col1 = st.col2 = gOilColor;
                 st.deposit = &dep;
             }
         }

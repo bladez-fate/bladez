@@ -2,10 +2,17 @@
 
 #include "Defs.h"
 #include "Obj.h"
+#include "Resources.h"
 
 using PlayerId = int;
 
 class Player : public Obj {
+public:
+    ResVec res = {{0, 0}};
+    i64 supply = 0; // Currently in use
+    i64 supplyMax = 100; // Currently can be supported
+    i64 supplyLimit = 200; // Game limit of supply for given player
+
 public:
     OBJ_CREATE_FUNC(Player);
     std::string name;
