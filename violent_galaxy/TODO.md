@@ -6,7 +6,7 @@ Fix bugs:
 Must have features:
 - [x] hit points indicators
 - [x] resource(ore&oil) and supply indicators
-- [ ] auto resource mining from mine/pumpjack
+- [x] auto resource mining from mine/pumpjack
 - [ ] unit group hotkeys 1-9 (save/select/show/add)
 - [ ] select all units button/key
 - [ ] unit weapon cooldown

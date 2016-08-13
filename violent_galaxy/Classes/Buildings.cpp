@@ -80,6 +80,21 @@ float Factory::getSize()
     return _size;
 }
 
+void ResourceProducer::update(float delta, Player* player)
+{
+    if (player != _player) {
+        _player = player;
+        _elapsed = 0.0f; // Production cylce is reset on building capture
+    } else if (_player) {
+        _elapsed += delta;
+        // Note that we assume that delta in much less than _period
+        if (_elapsed > _period) {
+            _elapsed -= _period;
+            _player->res.add(_resAdd);
+        }
+    }
+}
+
 bool Mine::init(GameScene* game)
 {
     _size = 60;
@@ -124,11 +139,15 @@ void Mine::draw()
     node()->setLocalZOrder(-1);
 }
 
+void Mine::update(float delta)
+{
+    _resProd.update(delta, _player);
+}
+
 float Mine::getSize()
 {
     return _size;
 }
-
 
 bool PumpJack::init(GameScene* game)
 {
@@ -195,6 +214,11 @@ void PumpJack::draw()
     );
 
     node()->setLocalZOrder(-1);
+}
+
+void PumpJack::update(float delta)
+{
+    _resProd.update(delta, _player);
 }
 
 float PumpJack::getSize()

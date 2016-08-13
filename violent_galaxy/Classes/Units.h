@@ -23,7 +23,7 @@ protected:
     Unit() {}
     bool init(GameScene* game) override;
 protected:
-    Player* _player;
+    Player* _player = nullptr;
 };
 
 class DropCapsid : public Unit {

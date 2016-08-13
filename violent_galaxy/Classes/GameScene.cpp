@@ -67,13 +67,18 @@ void GameScene::update(float delta)
     keyboardUpdate(delta);
     _planet->getNode()->getPhysicsBody()->setVelocity(Vec2::ZERO);
     _planet->getNode()->getPhysicsBody()->setAngularVelocity(0);
+
+    // Hardcore: this must be optimized
     for (auto kv : *_objs) {
-        if (Building* building = dynamic_cast<Building*>(kv.second)) {
+        Obj* obj = kv.second;
+        obj->update(delta);
+        if (Building* building = dynamic_cast<Building*>(obj)) {
             auto body = building->getNode()->getPhysicsBody();
             body->setVelocity(Vec2::ZERO);
             body->setAngularVelocity(0);
         }
     }
+
     _view.update(delta);
     guiUpdate(delta);
 }
@@ -507,9 +512,10 @@ void GameScene::initPlayers()
 
 void GameScene::playerUpdate(float delta)
 {
-    for (Player* player : _players) {
-        player->update(delta);
-    }
+//    This is already do by calling update() on every object
+//    for (Player* player : _players) {
+//        player->update(delta);
+//    }
 }
 
 void GameScene::addPlayer(Player* player)
@@ -810,6 +816,9 @@ void GameScene::initBuildings(Planet* planet)
             }
             building = PumpJack::create(this);
         }
+
+        building->setPlayer(_activePlayer);
+
         Vec2 pw = planet->altAng2world(
             std::max(pt1.altitude, pt2.altitude) + 10.0f + building->getSize()/2,
             (pt1.angle + pt2.angle) / 2
@@ -848,6 +857,12 @@ void GameScene::initGalaxy()
     //pl->getNode()->getPhysicsBody()->applyTorque(1e11);
     //pl->getNode()->getPhysicsBody()->applyImpulse(Vec2(1e11,0.5e11));
 
+    // Player
+    auto player = Player::create(this);
+    player->name = "Player1";
+    player->color = Color4F::RED;
+    playerActivate(player);
+
     initBuildings(pl);
 
     // Starting location
@@ -856,13 +871,6 @@ void GameScene::initGalaxy()
     float startAlt = seg->pts.front().altitude;
     Vec2 start = pl->geogr2world(startLng, startAlt);
     _view.act(_view.follow(start, pl, 0.0f));
-
-    // Player
-    auto player = Player::create(this);
-    player->name = "Player1";
-    player->color = Color4F::RED;
-    playerActivate(player);
-
 
     auto keyboardListener = EventListenerKeyboard::create();
     keyboardListener->onKeyPressed = [=](EventKeyboard::KeyCode keyCode, Event* event) {

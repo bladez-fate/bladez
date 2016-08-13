@@ -74,11 +74,11 @@ public:
     Id getId() { return _id; }
     void setId(Id id) { _id = id; }
     virtual ObjType getObjType() = 0;
+    virtual void update(float delta);
 protected:
     Obj() {}
     virtual bool init(GameScene* game);
     virtual void destroy();
-    virtual void update(float delta);
 protected:
     Id _id;
     GameScene* _game;
