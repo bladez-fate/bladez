@@ -57,3 +57,16 @@ void VisualObj::setPosition(const Vec2& position)
     }
 }
 
+void VisualObj::setZs(Zs zs)
+{
+    _zs = zs;
+    if (_useZsForLocalZOrder) {
+        _rootNode->setLocalZOrder(ZsOrder(_zs));
+    }
+    if (auto body = _rootNode->getPhysicsBody()) {
+        body->setCategoryBitmask(_zs);
+        body->setContactTestBitmask(_zs);
+        body->setCollisionBitmask(_zs);
+    }
+}
+

@@ -8,7 +8,7 @@ USING_NS_CC;
 bool Building::init(GameScene* game)
 {
     VisualObj::init(game);
-    _rootNode->getPhysicsBody()->setContactTestBitmask(gMatterBitmask);
+    setZs(ZsBuildingDefault);
     return true;
 }
 
@@ -72,7 +72,6 @@ void Factory::draw()
         Color4F::GRAY
     );
     node()->drawSolidCircle(Vec2(0.6*r, 0.6*r), 0.1*r, 0, 12, darkGray);
-    node()->setLocalZOrder(-1);
 }
 
 float Factory::getSize()
@@ -136,7 +135,6 @@ void Mine::draw()
         mainColor
     );
     node()->drawSolidCircle(Vec2(0.6*r, 0.6*r), 0.1*r, 0, 12, darkColor);
-    node()->setLocalZOrder(-1);
 }
 
 void Mine::update(float delta)
@@ -212,8 +210,6 @@ void PumpJack::draw()
         r*Vec2(-0.789, 0.406), r*Vec2(-0.770, -0.950),
         Color4F::BLACK
     );
-
-    node()->setLocalZOrder(-1);
 }
 
 void PumpJack::update(float delta)

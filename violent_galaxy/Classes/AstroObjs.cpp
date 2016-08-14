@@ -11,7 +11,7 @@ bool AstroObj::init(GameScene* game)
     VisualObj::init(game);
     auto body = _rootNode->getPhysicsBody();
     game->physicsWorld()->getForceField()->addGravitySource(body);
-    body->setContactTestBitmask(gMatterBitmask);
+    setZs(ZsAstroObjDefault);
     return true;
 }
 
@@ -147,7 +147,9 @@ float Planet::getAltitudeAt(float a) const
 void Planet::addPlatform(Platform&& platform)
 {
     platform.shape->setTag(ShapeTag(AstroObj::ShapeType::BuildingPlatform, _id));
-    platform.shape->setContactTestBitmask(gMatterBitmask);
+    platform.shape->setCategoryBitmask(ZsBuildingDefault);
+    platform.shape->setContactTestBitmask(ZsBuildingDefault);
+    platform.shape->setCollisionBitmask(ZsBuildingDefault);
 
     _body->addShape(platform.shape, false);
     _platforms.push_back(platform);
@@ -195,7 +197,10 @@ PhysicsBody* Planet::createBody()
 void Planet::draw()
 {
     node()->clear();
+
+    // Special hack to avoid drawing atmosphere and crust over units
     node()->setLocalZOrder(-10);
+    _useZsForLocalZOrder = false;
 
     // Draw atmosphere gradient
     Color4F coreCol = Color4F::RED;

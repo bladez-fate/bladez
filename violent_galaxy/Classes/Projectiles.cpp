@@ -7,7 +7,7 @@ USING_NS_CC;
 bool Projectile::init(GameScene* game)
 {
     VisualObj::init(game);
-    _rootNode->getPhysicsBody()->setContactTestBitmask(gMatterBitmask);
+    setZs(ZsProjectileDefault);
     return true;
 }
 

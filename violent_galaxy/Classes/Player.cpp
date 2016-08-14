@@ -89,8 +89,7 @@ void Player::drawSelection(bool value)
     if (_drawSelection) {
         if (!_selectionNode) {
             _selectionNode = DrawNode::create();
-            _selectionNode->setLocalZOrder(1);
-            _game->addChild(_selectionNode);
+            _game->addChild(_selectionNode, 1001);
         }
     } else {
         if (_selectionNode) {

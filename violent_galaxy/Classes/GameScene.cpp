@@ -175,6 +175,10 @@ void GameScene::initKeyboard()
                                 tank->addPower();
                             } else if (keyCode == gHKPowerDec) {
                                 tank->subPower();
+                            } else if (keyCode == gHKGoBack) {
+                                tank->goBack();
+                            } else if (keyCode == gHKGoFront) {
+                                tank->goFront();
                             }
                         }
                     }
@@ -262,8 +266,7 @@ void GameScene::initMouse()
     this->schedule(schedule_selector(GameScene::onMouseTimer), _mouseTimerIntervalSec);
 
     _mouseSelectRectNode = DrawNode::create();
-    _mouseSelectRectNode->setLocalZOrder(1);
-    this->addChild(_mouseSelectRectNode);
+    this->addChild(_mouseSelectRectNode, 1000);
 }
 
 void GameScene::onMouseMove(Event* event)
@@ -471,8 +474,7 @@ void GameScene::guiUpdate(float delta)
 {
     if (!_guiHpIndicators) {
         _guiHpIndicators = DrawNode::create();
-        _guiHpIndicators->setLocalZOrder(2);
-        this->addChild(_guiHpIndicators);
+        this->addChild(_guiHpIndicators, 2000);
     }
     _guiHpIndicators->clear();
     for (auto kv : *_objs) {
@@ -512,7 +514,7 @@ void GameScene::guiUpdate(float delta)
     if (!_resIcons) {
         auto s = Director::getInstance()->getVisibleSize();
         _resIcons = DrawNode::create();
-        this->addChild(_resIcons, 3);
+        this->addChild(_resIcons, 2001);
         float width = 80;
         float size = 14;
         float txtwidth = width - size - 4;
@@ -522,7 +524,7 @@ void GameScene::guiUpdate(float delta)
             l->setPosition(p + Vec2(txtwidth/2, 0));
             l->setHorizontalAlignment(TextHAlignment::LEFT);
             l->setVerticalAlignment(TextVAlignment::BOTTOM);
-            addChild(l, 3);
+            this->addChild(l, 2002);
             _resIcons->drawSolidRect(
                 p - Vec2(size + 3, size/2 + 1),
                 p - Vec2(1, - size/2 - 1),

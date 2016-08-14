@@ -20,6 +20,8 @@ public:
     virtual void setPlayer(Player* player);
     Player* getPlayer() { return _player; }
     void damage(i32 value);
+    void goBack();
+    void goFront();
 protected:
     Unit(i32 hpMax_ = 1, i32 supply_ = 1)
         : supply(supply_)

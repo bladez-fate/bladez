@@ -88,6 +88,8 @@ class VisualObj : public Obj {
 public:
     cc::Node* getNode() { return _rootNode; }
     void setPosition(const cc::Vec2& position);
+    void setZs(Zs zs);
+    Zs getZs(Zs zs) const { return _zs; }
     virtual float getSize() = 0;
 protected:
     VisualObj() {}
@@ -98,4 +100,6 @@ protected:
     virtual void draw() = 0;
 protected:
     cc::Node* _rootNode = nullptr;
+    Zs _zs = ZsNone;
+    bool _useZsForLocalZOrder = true;
 };

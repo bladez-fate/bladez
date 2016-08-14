@@ -8,7 +8,7 @@ USING_NS_CC;
 bool Unit::init(GameScene* game)
 {
     VisualObj::init(game);
-    _rootNode->getPhysicsBody()->setContactTestBitmask(gMatterBitmask);
+    setZs(ZsUnitDefault);
     return true;
 }
 
@@ -56,6 +56,16 @@ void Unit::damage(i32 value)
     if (hp <= 0) {
         destroy();
     }
+}
+
+void Unit::goBack()
+{
+    setZs(ZsBackground);
+}
+
+void Unit::goFront()
+{
+    setZs(ZsForeground);
 }
 
 ObjType Unit::getObjType()
