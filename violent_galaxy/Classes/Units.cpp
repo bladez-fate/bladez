@@ -15,6 +15,9 @@ bool Unit::init(GameScene* game)
 void Unit::destroy()
 {
     VisualObj::destroy();
+    if (_player) {
+        _player->supply -= supply;
+    }
 }
 
 void Unit::replaceWith(Unit* unit)
@@ -38,7 +41,13 @@ void Unit::replaceWith(Unit* unit)
 
 void Unit::setPlayer(Player* player)
 {
-    _player = player;
+    if (_player != player) {
+        if (_player) {
+            _player->supply -= supply;
+        }
+        _player = player;
+        _player->supply += supply;
+    }
 }
 
 void Unit::damage(i32 value)
@@ -56,7 +65,6 @@ ObjType Unit::getObjType()
 
 bool DropCapsid::init(GameScene* game)
 {
-    hp = hpMax = 100;
     _size = 20;
     Unit::init(game);
     listenContactAstroObj = true;
@@ -121,11 +129,15 @@ bool DropCapsid::onContactAstroObj(ContactInfo& cinfo)
                 }
             }
             if (!moving) {
-                auto created = onLandCreate(_game);
-                replaceWith(created);
+                Unit* created = onLandCreate(_game);
+                Player* player = _player;
+                replaceWith(created); // this is destroyed
+
                 float up = (cinfo.thisBody->getPosition() - cinfo.thatBody->getPosition()).getAngle()  / (M_PI / 180.0);
                 created->getNode()->getPhysicsBody()->setRotation(90 - up);
+                created->setPlayer(player);
 //                CCLOG("LANDING up# %f", up);
+                return true;
             }
         }
     }
@@ -200,7 +212,6 @@ void Tank::move()
 
 bool Tank::init(GameScene* game)
 {
-    hp = hpMax = 150;
     _size = 20;
 
     Size bb(100,50);

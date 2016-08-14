@@ -121,7 +121,24 @@ void GameScene::initKeyboard()
         default:
             break;
         }
+
+        // Player control keyh handling
         if (_activePlayer) {
+            // Select army
+            if (keyCode == gHKSelectArmy) {
+                std::vector<Id> army;
+                for (auto kv : *_objs) {
+                    if (Unit* unit = dynamic_cast<Unit*>(kv.second)) {
+                        if (unit->getPlayer() == _activePlayer) {
+                            army.push_back(unit->getId());
+                        }
+                    }
+                }
+                if (!army.empty()) {
+                    _activePlayer->selected = army;
+                }
+            }
+
             // Group management
             for (size_t idx = 0; idx < GRP_COUNT; idx++) {
                 if (keyCode == gHKGroup[idx]) {
@@ -286,6 +303,7 @@ void GameScene::onMouseUp(Event *event)
             dc->onLandCreate = [](GameScene* game) {
                 return Tank::create(game);
             };
+            dc->setPlayer(_activePlayer);
         } else if (isKeyHeld(EventKeyboard::KeyCode::KEY_V)) {
             auto ss = SpaceStation::create(this);
             ss->setPosition(pw);
@@ -304,6 +322,7 @@ void GameScene::onMouseUp(Event *event)
                     break; // TODO[fate]: find nearest planet
                 }
             }
+            ss->setPlayer(_activePlayer);
         } else if (isKeyHeld(EventKeyboard::KeyCode::KEY_B)) {
             auto fact = Factory::create(this);
             fact->setPosition(pw);
@@ -335,6 +354,7 @@ void GameScene::onMouseUp(Event *event)
                     break; // TODO[fate]: find nearest planet
                 }
             }
+            fact->setPlayer(_activePlayer);
         } else {
             doSelection = true;
         }

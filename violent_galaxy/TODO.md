@@ -8,7 +8,7 @@ Must have features:
 - [x] resource(ore&oil) and supply indicators
 - [x] auto resource mining from mine/pumpjack
 - [x] unit group hotkeys 1-9 (save/select/show/add)
-- [ ] select all units button/key
+- [x] select all units button/key
 - [ ] unit weapon cooldown
 - [ ] unit commands AI (move, attack, hold)
 - [ ] unit "hold mode" should allow friendly units to pass through

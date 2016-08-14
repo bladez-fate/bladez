@@ -6,8 +6,9 @@
 
 class Unit : public VisualObj {
 public:
-    i32 hp = 1;
-    i32 hpMax = 1;
+    const i32 hpMax;
+    const i32 supply; // Supply required by this unit
+    i32 hp;
     Id surfaceId = 0; // Astro obj that unit is in contact with
 public:
     bool listenContactAstroObj = false;
@@ -20,7 +21,11 @@ public:
     Player* getPlayer() { return _player; }
     void damage(i32 value);
 protected:
-    Unit() {}
+    Unit(i32 hpMax_ = 1, i32 supply_ = 1)
+        : supply(supply_)
+        , hpMax(hpMax_)
+        , hp(hpMax)
+    {}
     bool init(GameScene* game) override;
 protected:
     Player* _player = nullptr;
@@ -32,7 +37,9 @@ public:
     float getSize() override;
     virtual bool onContactAstroObj(ContactInfo& cinfo) override;
 protected:
-    DropCapsid() {}
+    DropCapsid()
+        : Unit(100, 1)
+    {}
     bool init(GameScene* game) override;
     cc::Node* createNodes() override;
     cc::PhysicsBody* createBody() override;
@@ -58,7 +65,9 @@ public:
     void moveRight(bool go);
     void move();
 protected:
-    Tank() {}
+    Tank()
+        : Unit(150, 1)
+    {}
     virtual bool init(GameScene* game) override;
     cc::Node* createNodes() override;
     cc::PhysicsBody* createBody() override;
@@ -96,7 +105,9 @@ public:
     OBJ_CREATE_FUNC(SpaceStation);
     float getSize() override;
 protected:
-    SpaceStation() {}
+    SpaceStation()
+        : Unit(1500, 5)
+    {}
     virtual bool init(GameScene* game) override;
     cc::Node* createNodes() override;
     cc::PhysicsBody* createBody() override;
