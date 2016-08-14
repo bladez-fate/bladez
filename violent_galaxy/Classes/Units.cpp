@@ -150,13 +150,13 @@ void Tank::shoot()
     _body->applyImpulse(_body->world2Local(Vec2::ZERO) - _body->world2Local(j));
 }
 
-void Tank::upAngle(float dt)
+void Tank::incAngle(float dt)
 {
     _angle = clampf(_angle + _angleStep * dt, _angleMin, _angleMax);
     draw();
 }
 
-void Tank::downAngle(float dt)
+void Tank::decAngle(float dt)
 {
     _angle = clampf(_angle - _angleStep * dt, _angleMin, _angleMax);
     draw();

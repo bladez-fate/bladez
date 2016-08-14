@@ -156,14 +156,14 @@ void GameScene::keyboardUpdate(float delta)
         for (Id id : _activePlayer->selected) {
             if (auto obj = objs()->getById(id)) {
                 if (auto tank = dynamic_cast<Tank*>(obj)) {
-                    if (isKeyHeld(EventKeyboard::KeyCode::KEY_Q)) {
-                        tank->upAngle(delta);
+                    if (isKeyHeld(gHKAngleInc)) {
+                        tank->incAngle(delta);
                     }
-                    if (isKeyHeld(EventKeyboard::KeyCode::KEY_E)) {
-                        tank->downAngle(delta);
+                    if (isKeyHeld(gHKAngleDec)) {
+                        tank->decAngle(delta);
                     }
-                    tank->moveLeft(isKeyHeld(EventKeyboard::KeyCode::KEY_A));
-                    tank->moveRight(isKeyHeld(EventKeyboard::KeyCode::KEY_D));
+                    tank->moveLeft(isKeyHeld(gHKMoveLeft));
+                    tank->moveRight(isKeyHeld(gHKMoveRight));
                 }
             }
         }
@@ -977,19 +977,13 @@ void GameScene::initGalaxy()
                     if (auto tank = dynamic_cast<Tank*>(obj)) {
                         int repeat = isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT)? 10: 1;
                         while (repeat--) {
-                            switch (keyCode) {
-                            case EventKeyboard::KeyCode::KEY_SPACE:
+                            if (keyCode == gHKShoot) {
                                 tank->shoot();
                                 repeat = 0;
-                                break;
-                            case EventKeyboard::KeyCode::KEY_W:
+                            } else if (keyCode == gHKPowerInc) {
                                 tank->addPower();
-                                break;
-                            case EventKeyboard::KeyCode::KEY_S:
+                            } else if (keyCode == gHKPowerDec) {
                                 tank->subPower();
-                                break;
-                            default:
-                                break;
                             }
                         }
                     }

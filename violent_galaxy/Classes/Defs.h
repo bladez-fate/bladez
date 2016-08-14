@@ -60,6 +60,14 @@ extern const cc::Color4F gResColor[RES_COUNT];
 // Keyboard hotkeys
 static constexpr size_t GRP_COUNT = 10;
 extern cc::EventKeyboard::KeyCode gHKGroup[GRP_COUNT];
+extern cc::EventKeyboard::KeyCode gHKSelectArmy;
+extern cc::EventKeyboard::KeyCode gHKMoveLeft;
+extern cc::EventKeyboard::KeyCode gHKMoveRight;
+extern cc::EventKeyboard::KeyCode gHKAngleInc;
+extern cc::EventKeyboard::KeyCode gHKAngleDec;
+extern cc::EventKeyboard::KeyCode gHKPowerInc;
+extern cc::EventKeyboard::KeyCode gHKPowerDec;
+extern cc::EventKeyboard::KeyCode gHKShoot;
 
 // TODO[fate]: move to some sort of util
 // Returns x = a + 2*pi*n, where n is integer and x is in [0; 2*pi)

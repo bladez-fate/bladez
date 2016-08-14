@@ -30,3 +30,11 @@ cc::EventKeyboard::KeyCode gHKGroup[10] = {
     EventKeyboard::KeyCode::KEY_8,
     EventKeyboard::KeyCode::KEY_9
 };
+cc::EventKeyboard::KeyCode gHKSelectArmy = cc::EventKeyboard::KeyCode::KEY_F2;
+cc::EventKeyboard::KeyCode gHKMoveLeft = cc::EventKeyboard::KeyCode::KEY_A;
+cc::EventKeyboard::KeyCode gHKMoveRight = cc::EventKeyboard::KeyCode::KEY_D;
+cc::EventKeyboard::KeyCode gHKAngleInc = cc::EventKeyboard::KeyCode::KEY_Q;
+cc::EventKeyboard::KeyCode gHKAngleDec = cc::EventKeyboard::KeyCode::KEY_E;
+cc::EventKeyboard::KeyCode gHKPowerInc = cc::EventKeyboard::KeyCode::KEY_W;
+cc::EventKeyboard::KeyCode gHKPowerDec = cc::EventKeyboard::KeyCode::KEY_S;
+cc::EventKeyboard::KeyCode gHKShoot = cc::EventKeyboard::KeyCode::KEY_SPACE;

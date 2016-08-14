@@ -50,8 +50,8 @@ public:
     OBJ_CREATE_FUNC(Tank);
     float getSize() override;
     void shoot();
-    void upAngle(float dt);
-    void downAngle(float dt);
+    void incAngle(float dt);
+    void decAngle(float dt);
     void subPower();
     void addPower();
     void moveLeft(bool go);
