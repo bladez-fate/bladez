@@ -11,7 +11,7 @@ Must have features:
 - [x] select all units button/key
 - [x] unit weapon cooldown
 - [ ] unit commands AI (move, attack, hold)
-- [ ] unit "hold mode" should allow friendly units to pass through
+- [x] unit "hold mode" should allow friendly units to pass through
 - [ ] computer player AI
 - [ ] neutral units AI
 - [ ] neutral/enemy building capture if only ur unit are close within N seconds period
