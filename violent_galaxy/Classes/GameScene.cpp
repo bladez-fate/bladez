@@ -122,6 +122,7 @@ void GameScene::initKeyboard()
             break;
         }
         if (_activePlayer) {
+            // Group management
             for (size_t idx = 0; idx < GRP_COUNT; idx++) {
                 if (keyCode == gHKGroup[idx]) {
                     if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
@@ -141,6 +142,25 @@ void GameScene::initKeyboard()
                         }
                     }
                     break;
+                }
+            }
+
+            // Unit control
+            for (Id id : _activePlayer->selected) {
+                if (auto obj = objs()->getById(id)) {
+                    if (auto tank = dynamic_cast<Tank*>(obj)) {
+                        int repeat = isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT)? 10: 1;
+                        while (repeat--) {
+                            if (keyCode == gHKShoot) {
+                                tank->shoot();
+                                repeat = 0;
+                            } else if (keyCode == gHKPowerInc) {
+                                tank->addPower();
+                            } else if (keyCode == gHKPowerDec) {
+                                tank->subPower();
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -939,8 +959,8 @@ void GameScene::initGalaxy()
     Vec2 start = pl->geogr2world(startLng, startAlt);
     _view.act(_view.follow(start, pl, 0.0f));
 
-    auto keyboardListener = EventListenerKeyboard::create();
-    keyboardListener->onKeyPressed = [=](EventKeyboard::KeyCode keyCode, Event* event) {
+//    auto keyboardListener = EventListenerKeyboard::create();
+//    keyboardListener->onKeyPressed = [=](EventKeyboard::KeyCode keyCode, Event* event) {
 //        float t = 1e8;
 //        float j = 1e7;
 //        auto body = pl->getNode()->getPhysicsBody();
@@ -971,27 +991,8 @@ void GameScene::initGalaxy()
 //        default:
 //            break;
 //        }
-        if (_activePlayer) {
-            for (Id id : _activePlayer->selected) {
-                if (auto obj = objs()->getById(id)) {
-                    if (auto tank = dynamic_cast<Tank*>(obj)) {
-                        int repeat = isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT)? 10: 1;
-                        while (repeat--) {
-                            if (keyCode == gHKShoot) {
-                                tank->shoot();
-                                repeat = 0;
-                            } else if (keyCode == gHKPowerInc) {
-                                tank->addPower();
-                            } else if (keyCode == gHKPowerDec) {
-                                tank->subPower();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    };
-    _eventDispatcher->addEventListenerWithFixedPriority(keyboardListener, 1);
+//    };
+//    _eventDispatcher->addEventListenerWithFixedPriority(keyboardListener, 1);
 }
 
 bool KeySpec::isMod(EventKeyboard::KeyCode key)
