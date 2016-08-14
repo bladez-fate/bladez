@@ -72,6 +72,7 @@ protected:
     cc::Node* createNodes() override;
     cc::PhysicsBody* createBody() override;
     void draw() override;
+    void update(float delta) override;
 protected:
     cc::DrawNode* node() { return static_cast<cc::DrawNode*>(_rootNode); }
     cc::PhysicsBody* _body = nullptr;
@@ -98,6 +99,9 @@ protected:
     float _powerMin;
     float _powerMax;
     float _powerStep;
+
+    float _cooldown;
+    float _cooldownLeft = 0;
 };
 
 class SpaceStation : public Unit {

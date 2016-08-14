@@ -9,7 +9,7 @@ Must have features:
 - [x] auto resource mining from mine/pumpjack
 - [x] unit group hotkeys 1-9 (save/select/show/add)
 - [x] select all units button/key
-- [ ] unit weapon cooldown
+- [x] unit weapon cooldown
 - [ ] unit commands AI (move, attack, hold)
 - [ ] unit "hold mode" should allow friendly units to pass through
 - [ ] computer player AI

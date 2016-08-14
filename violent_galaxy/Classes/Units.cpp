@@ -151,15 +151,18 @@ float Tank::getSize()
 
 void Tank::shoot()
 {
-    Projectile* proj = Shell::create(_game);
-    Vec2 localBegin = _gunBegin;
-    Vec2 localEnd = _gunBegin + _gunLength * Vec2::forAngle(CC_DEGREES_TO_RADIANS(_angle));
-    Vec2 begin = _body->local2World(localBegin);
-    Vec2 end = _body->local2World(localEnd);
-    proj->setPosition(end);
-    Vec2 j = (end - begin).getNormalized() * _power;
-    proj->getNode()->getPhysicsBody()->applyImpulse(j);
-    _body->applyImpulse(_body->world2Local(Vec2::ZERO) - _body->world2Local(j));
+    if (_cooldownLeft <= 0.0f) {
+        _cooldownLeft = _cooldown;
+        Projectile* proj = Shell::create(_game);
+        Vec2 localBegin = _gunBegin;
+        Vec2 localEnd = _gunBegin + _gunLength * Vec2::forAngle(CC_DEGREES_TO_RADIANS(_angle));
+        Vec2 begin = _body->local2World(localBegin);
+        Vec2 end = _body->local2World(localEnd);
+        proj->setPosition(end);
+        Vec2 j = (end - begin).getNormalized() * _power;
+        proj->getNode()->getPhysicsBody()->applyImpulse(j);
+        _body->applyImpulse(_body->world2Local(Vec2::ZERO) - _body->world2Local(j));
+    }
 }
 
 void Tank::incAngle(float dt)
@@ -244,6 +247,8 @@ bool Tank::init(GameScene* game)
     _powerMax = 20;
     _powerStep = 1;
 
+    _cooldown = 2;
+
     _angle = 60;
     _power = _powerMax;
     _targetV = 100;
@@ -288,6 +293,13 @@ void Tank::draw()
     );
     node()->drawSolidPoly(_base, sizeof(_base)/sizeof(*_base), Color4F::WHITE);
     node()->drawSolidPoly(_head, sizeof(_head)/sizeof(*_head), Color4F::YELLOW);
+}
+
+void Tank::update(float delta)
+{
+    if (_cooldownLeft > 0) {
+        _cooldownLeft -= delta;
+    }
 }
 
 bool SpaceStation::init(GameScene* game)
