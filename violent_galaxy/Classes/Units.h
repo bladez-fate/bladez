@@ -29,6 +29,7 @@ protected:
         , hp(hpMax)
     {}
     bool init(GameScene* game) override;
+    cc::Color4F colorFilter(cc::Color4F c);
 protected:
     Player* _player = nullptr;
 };

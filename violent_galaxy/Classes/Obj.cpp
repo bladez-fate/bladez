@@ -39,7 +39,7 @@ bool VisualObj::init(GameScene* game)
         _rootNode->setPhysicsBody(body);
     }
 
-    draw();
+    // draw() is not called because you should call setZs() anyway
     return true;
 }
 
@@ -68,5 +68,6 @@ void VisualObj::setZs(Zs zs)
         body->setContactTestBitmask(_zs);
         body->setCollisionBitmask(_zs);
     }
+    draw();
 }
 

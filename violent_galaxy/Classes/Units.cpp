@@ -12,6 +12,16 @@ bool Unit::init(GameScene* game)
     return true;
 }
 
+Color4F Unit::colorFilter(Color4F c)
+{
+    if (_zs == ZsForeground) {
+        return c;
+    } else {
+        float k = 0.8;
+        return Color4F(k * c.r, k * c.g, k * c.b, c.a);
+    }
+}
+
 void Unit::destroy()
 {
     VisualObj::destroy();
@@ -107,16 +117,16 @@ void DropCapsid::draw()
 {
     node()->clear();
     float r = _size / 2;
-    node()->drawSolidCircle(Vec2::ZERO, r, 0, 12, Color4F::WHITE);
+    node()->drawSolidCircle(Vec2::ZERO, r, 0, 12, colorFilter(Color4F::WHITE));
     node()->drawSolidRect(
         Vec2(-r/10, -9*r/10),
         Vec2( r/10,  9*r/10),
-        Color4F::BLUE
+        colorFilter(Color4F::BLUE)
     );
     node()->drawSolidRect(
         Vec2(-9*r/10, -r/10),
         Vec2( 9*r/10,  r/10),
-        Color4F::BLUE
+        colorFilter(Color4F::BLUE)
     );
 }
 
@@ -299,10 +309,10 @@ void Tank::draw()
     node()->drawSegment(
         _gunBegin,
         _gunBegin + _gunLength * Vec2::forAngle(CC_DEGREES_TO_RADIANS(_angle)),
-        1, Color4F::YELLOW
+        1, colorFilter(Color4F::YELLOW)
     );
-    node()->drawSolidPoly(_base, sizeof(_base)/sizeof(*_base), Color4F::WHITE);
-    node()->drawSolidPoly(_head, sizeof(_head)/sizeof(*_head), Color4F::YELLOW);
+    node()->drawSolidPoly(_base, sizeof(_base)/sizeof(*_base), colorFilter(Color4F::WHITE));
+    node()->drawSolidPoly(_head, sizeof(_head)/sizeof(*_head), colorFilter(Color4F::YELLOW));
 }
 
 void Tank::update(float delta)
@@ -339,9 +349,9 @@ void SpaceStation::draw()
 {
     node()->clear();
     float r = _size / 2;
-    Color4F darkGray(0.3f, 0.3f, 0.3f, 1.0f);
+    Color4F darkGray = colorFilter(Color4F(0.3f, 0.3f, 0.3f, 1.0f));
     node()->drawSolidCircle(Vec2::ZERO, r*1.05, 0, 12, darkGray);
-    node()->drawSolidCircle(Vec2::ZERO, r, 0, 12, Color4F::GRAY);
+    node()->drawSolidCircle(Vec2::ZERO, r, 0, 12, colorFilter(Color4F::GRAY));
     node()->drawSolidRect(
         Vec2(-7*r/10, 4*r/10),
         Vec2( 7*r/10, 6*r/10),
@@ -351,7 +361,7 @@ void SpaceStation::draw()
         Vec2(-7*r/10, -6*r/10),
         Vec2( 7*r/10, -6*r/10),
         Vec2(      0,  r),
-        Color4F::GRAY, Color4F::GRAY, Color4F::BLUE
+        colorFilter(Color4F::GRAY), colorFilter(Color4F::GRAY), colorFilter(Color4F::BLUE)
     );
 }
 
