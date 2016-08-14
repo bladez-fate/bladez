@@ -150,11 +150,24 @@ WorldViewAction* WorldView::follow(Vec2 p, Obj* obj, float duration)
     return nullptr;
 }
 
+WorldViewAction* WorldView::moveTo(Vec2 p, float duration)
+{
+    return applyState(getViewStateAtPoint(p, true, _state.surfaceId), duration)->setSmooth();
+}
+
 void WorldView::act(WorldViewAction* action)
 {
     if (action) {
         _actions.push_back(action);
     }
+}
+
+void WorldView::clearActions()
+{
+    for (WorldViewAction* action : _actions) {
+        delete action;
+    }
+    _actions.clear();
 }
 
 Vec2 WorldView::screen2world(Vec2 s)
@@ -251,8 +264,8 @@ WorldView::State WorldView::getViewStateAtPoint(Vec2 center, bool zoomIfRequired
                 }
             }
         }
+        result.surfaceId = 0; // Turn surface view off if we could not rotate (due to rotation center in viewport)
     }
-    result.surfaceId = 0;
     return result;
 }
 

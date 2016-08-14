@@ -121,8 +121,33 @@ void GameScene::initKeyboard()
         default:
             break;
         }
+        if (_activePlayer) {
+            for (size_t idx = 0; idx < GRP_COUNT; idx++) {
+                if (keyCode == gHKGroup[idx]) {
+                    if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
+                        _activePlayer->setSelectionToGroup(idx);
+                    } else if (isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT)) {
+                        _activePlayer->addSelectionToGroup(idx);
+                    } else {
+                        _activePlayer->selectGroup(idx);
+                        if (!_keyHistory.empty()) {
+                            const KeyHistory& kh = _keyHistory.back();
+                            // TODO[fate]: add timeout
+                            //auto now = std::chrono::high_resolution_clock::now();
+                            //if (kh.time < now && (now - kh.time).count() <= 1)
+                            if (kh.spec.key == gHKGroup[idx] && kh.spec.mod.empty()) {
+                                playerCenterSelection();
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+        }
     };
-    _eventDispatcher->addEventListenerWithFixedPriority(keyboardListener, 1);
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(keyboardListener, this);
+//    _eventDispatcher->addEventListenerWithFixedPriority(keyboardListener, 1);
+    createKeyHistoryHandler();
 }
 
 void GameScene::keyboardUpdate(float delta)
@@ -150,11 +175,35 @@ void GameScene::createKeyHoldHandler()
     auto eventListener = EventListenerKeyboard::create();
     eventListener->onKeyPressed = [=](EventKeyboard::KeyCode keyCode, Event* event) {
         if (_keyHold.find(keyCode) == _keyHold.end()) {
-            _keyHold[keyCode] = std::chrono::high_resolution_clock::now();
+            auto now = std::chrono::high_resolution_clock::now();
+            _keyHold[keyCode] = now;
         }
     };
     eventListener->onKeyReleased = [=](EventKeyboard::KeyCode keyCode, Event* event) {
         _keyHold.erase(keyCode);
+    };
+    this->_eventDispatcher->addEventListenerWithSceneGraphPriority(eventListener, this);
+}
+
+void GameScene::createKeyHistoryHandler()
+{
+    auto eventListener = EventListenerKeyboard::create();
+    eventListener->onKeyPressed = [=](EventKeyboard::KeyCode keyCode, Event* event) {
+        if (!KeySpec::isMod(keyCode)) {
+            auto now = std::chrono::high_resolution_clock::now();
+            while (_keyHistory.size() >= _keyHistorySize) {
+                _keyHistory.pop_front();
+            }
+            _keyHistory.push_back(KeyHistory());
+            KeyHistory& kh = _keyHistory.back();
+            kh.time = now;
+            kh.spec.key = keyCode;
+            for (EventKeyboard::KeyCode mod : KeySpec::getKeyModList()) {
+                if (isKeyHeld(mod)) {
+                    kh.spec.mod.insert(mod);
+                }
+            }
+        }
     };
     this->_eventDispatcher->addEventListenerWithSceneGraphPriority(eventListener, this);
 }
@@ -630,6 +679,24 @@ bool GameScene::onSelectQueryRect(PhysicsWorld& pworld, PhysicsShape& shape, voi
     return true;
 }
 
+void GameScene::playerCenterSelection()
+{
+    if (_activePlayer) {
+        Vec2 center = Vec2::ZERO;
+        size_t count = 0;
+        for (Id id : _activePlayer->selected) {
+            if (VisualObj* vobj = dynamic_cast<VisualObj*>(objs()->getById(id))) {
+                center += vobj->getNode()->getPosition();
+                count++;
+            }
+        }
+        if (count > 0) {
+            center = center / count;
+            _view.act(_view.moveTo(center, 0.0f));
+        }
+    }
+}
+
 void GameScene::initCollisions()
 {
     auto contactListener = EventListenerPhysicsContact::create();
@@ -931,4 +998,21 @@ void GameScene::initGalaxy()
         }
     };
     _eventDispatcher->addEventListenerWithFixedPriority(keyboardListener, 1);
+}
+
+bool KeySpec::isMod(EventKeyboard::KeyCode key)
+{
+    auto ml = getKeyModList();
+    return ml.find(key) != ml.end();
+}
+
+const std::set<EventKeyboard::KeyCode>& KeySpec::getKeyModList()
+{
+    static std::set<EventKeyboard::KeyCode> ret;
+    if (ret.empty()) { // Not thread-safe
+        ret.insert(EventKeyboard::KeyCode::KEY_SHIFT);
+        ret.insert(EventKeyboard::KeyCode::KEY_ALT);
+        ret.insert(EventKeyboard::KeyCode::KEY_CTRL);
+    }
+    return ret;
 }

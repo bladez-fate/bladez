@@ -8,23 +8,30 @@ using PlayerId = int;
 
 class Player : public Obj {
 public:
+    std::string name;
+    PlayerId playerId;
+    cc::Color4F color;
+
     ResVec res = {{0, 0}};
     i64 supply = 0; // Currently in use
     i64 supplyMax = 100; // Currently can be supported
     i64 supplyLimit = 200; // Game limit of supply for given player
 
+    std::vector<Id> selected;
+    std::vector<std::vector<Id>> groups;
 public:
     OBJ_CREATE_FUNC(Player);
-    std::string name;
-    PlayerId playerId;
-    cc::Color4F color;
-    std::vector<Id> selected;
     bool isSelect(Id id);
     void select(Id id);
     void selectAdd(Id id);
     void selectRemove(Id id);
     void clearSelection();
     void drawSelection(bool value = true);
+
+    void selectGroup(size_t idx);
+    void setSelectionToGroup(size_t idx);
+    void addSelectionToGroup(size_t idx);
+
     ObjType getObjType() override;
     void update(float delta) override;
 protected:

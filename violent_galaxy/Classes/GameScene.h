@@ -82,6 +82,18 @@ private:
 
 using ObjStorage = Storage<Id, Obj>;
 
+struct KeySpec {
+    cc::EventKeyboard::KeyCode key;
+    std::set<cc::EventKeyboard::KeyCode> mod;
+    static bool isMod(cc::EventKeyboard::KeyCode);
+    static const std::set<cc::EventKeyboard::KeyCode>& getKeyModList();
+};
+
+struct KeyHistory {
+    KeySpec spec;
+    std::chrono::high_resolution_clock::time_point time;
+};
+
 class GameScene : public cc::Layer
 {
 public:
@@ -104,8 +116,11 @@ private: // Keyboard
     void initKeyboard();
     void keyboardUpdate(float delta);
     void createKeyHoldHandler();
+    void createKeyHistoryHandler();
     bool isKeyHeld(cc::EventKeyboard::KeyCode code);
     std::map<cc::EventKeyboard::KeyCode, std::chrono::high_resolution_clock::time_point> _keyHold;
+    std::deque<KeyHistory> _keyHistory;
+    static constexpr size_t _keyHistorySize = 10;
 private: // Mouse
     void initMouse();
     void onMouseMove(cc::Event *event);
@@ -132,6 +147,7 @@ private: // Mouse
     static constexpr float _mouseFollowDuration = 1.0;
 public: // View
     float viewSelectionRadius(float size);
+private:
     WorldView _view;
 private: // GUI
     void guiUpdate(float delta);
@@ -150,6 +166,7 @@ private:
     bool onSelectQueryPoint(cc::PhysicsWorld& pworld, cc::PhysicsShape& shape, void* userdata, bool add, bool all);
     void playerSelectRect(cc::Vec2 p1, cc::Vec2 p2, bool add);
     bool onSelectQueryRect(cc::PhysicsWorld& pworld, cc::PhysicsShape& shape, void* userdata);
+    void playerCenterSelection();
     Player* _activePlayer = nullptr;
     using Players = std::vector<Player*>;
     Players _players;

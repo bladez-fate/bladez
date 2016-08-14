@@ -7,6 +7,7 @@ bool Player::init(GameScene* game)
 {
     Obj::init(game);
     _game->addPlayer(this);
+    groups.resize(GRP_COUNT);
     return true;
 }
 
@@ -97,4 +98,37 @@ void Player::drawSelection(bool value)
             _selectionNode = nullptr;
         }
     }
+}
+
+void Player::selectGroup(size_t idx)
+{
+    CCASSERT(idx < groups.size(), "wrong group idx");
+    if (groups[idx].empty()) {
+        return; // Don't allow to select empty group
+    }
+    selected = groups[idx];
+}
+
+void Player::setSelectionToGroup(size_t idx)
+{
+    CCASSERT(idx < groups.size(), "wrong group idx");
+    groups[idx] = selected;
+    // TODO[fate]: do not allow enemies to be in group
+}
+
+void Player::addSelectionToGroup(size_t idx)
+{
+    CCASSERT(idx < groups.size(), "wrong group idx");
+    std::set<Id> grp;
+    for (Id id : groups[idx]) {
+        grp.insert(id);
+    }
+
+    for (Id id : selected) {
+        if (grp.find(id) == grp.end()) {
+            grp.insert(id);
+            groups[idx].push_back(id);
+        }
+    }
+    // TODO[fate]: do not allow enemies to be in group
 }

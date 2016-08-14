@@ -57,6 +57,10 @@ extern const cc::Color4F gOreColor;
 extern const cc::Color4F gOilColor;
 extern const cc::Color4F gResColor[RES_COUNT];
 
+// Keyboard hotkeys
+static constexpr size_t GRP_COUNT = 10;
+extern cc::EventKeyboard::KeyCode gHKGroup[GRP_COUNT];
+
 // TODO[fate]: move to some sort of util
 // Returns x = a + 2*pi*n, where n is integer and x is in [0; 2*pi)
 inline float mainAngle(float a)

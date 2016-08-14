@@ -51,8 +51,10 @@ public:
     WorldViewAction* screenScroll(cc::Vec2 offset, bool polar, float duration);
     WorldViewAction* follow(cc::Vec2 p, float duration);
     WorldViewAction* follow(cc::Vec2 p, Obj* obj, float duration);
+    WorldViewAction* moveTo(cc::Vec2 p, float duration);
 
     void act(WorldViewAction* action);
+    void clearActions();
 
     bool isSurfaceView() const { return _state.surfaceId; }
     cc::Vec2 screen2world(cc::Vec2 s);
