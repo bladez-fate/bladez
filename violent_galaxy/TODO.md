@@ -16,7 +16,7 @@ Must have features:
 - [ ] neutral units AI
 - [x] neutral/enemy building capture if only ur unit are close within N seconds period
 - [x] building selection
-- [ ] unit production
+- [x] unit production
 - [ ] unit production control (stop/repeat/once/choose unit)
 - [ ] unit production indicator (progress bar)
 - [ ] rally points

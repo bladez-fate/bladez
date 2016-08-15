@@ -76,6 +76,34 @@ ObjType Building::getObjType()
     return ObjType::Building;
 }
 
+void UnitProducer::update(float delta, Player* player, VisualObj* obj, GameScene* game)
+{
+    if (player != _player) {
+        _player = player;
+        _elapsed = 0.0f; // Production cylce is reset on building capture, money are lost
+    }
+    if (_player) {
+        if (_elapsed == 0.0f) { // Start production if there is enough resources
+            if (_player->res.enough(_unitCost)) {
+                _player->res.sub(_unitCost);
+                _elapsed += delta;
+            }
+        } else {
+            _elapsed += delta;
+            // Note that we assume that delta in much less than _period
+            if (_elapsed > _period) {
+                _elapsed = 0.0;
+                auto dc = DropCapsid::create(game);
+                dc->setPosition(obj->getNode()->getPosition());
+                dc->onLandCreate = [](GameScene* game) {
+                    return Tank::create(game);
+                };
+                dc->setPlayer(_player);
+            }
+        }
+    }
+}
+
 bool Factory::init(GameScene* game)
 {
     _size = 70;
@@ -141,6 +169,12 @@ void Factory::draw()
         Vec2(0.6*r, -0.5*r),
         colorFilter(Color4F::GRAY, 0.6f)
     );
+}
+
+void Factory::update(float delta)
+{
+    _unitProd.update(delta, _player, this, _game);
+    Building::update(delta);
 }
 
 float Factory::getSize()

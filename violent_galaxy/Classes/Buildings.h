@@ -28,21 +28,37 @@ protected:
     bool init(GameScene* game) override;
 };
 
+class UnitProducer {
+private:
+    ResVec _unitCost;
+    float _period;
+    float _elapsed = 0.0f;
+    Player* _player = nullptr;
+public:
+    UnitProducer(const ResVec& unitCost, float period)
+        : _unitCost(unitCost)
+        , _period(period)
+    {}
+    void update(float delta, Player* player, VisualObj* obj, GameScene* game);
+};
+
 class Factory : public Building {
 public:
     OBJ_CREATE_FUNC(Factory);
     float getSize() override;
 protected:
-    Factory() {}
+    Factory() : _unitProd({{150, 0}}, 1) {}
     virtual bool init(GameScene* game) override;
     cc::Node* createNodes() override;
     cc::PhysicsBody* createBody() override;
     void draw() override;
+    void update(float delta) override;
 protected:
     cc::DrawNode* node() { return static_cast<cc::DrawNode*>(_rootNode); }
     cc::PhysicsBody* _body = nullptr;
     cc::PhysicsShape* _foundation = nullptr; // shape on the astro obj
     float _size;
+    UnitProducer _unitProd;
 };
 
 class ResourceProducer {
@@ -65,7 +81,7 @@ public:
     OBJ_CREATE_FUNC(Mine);
     float getSize() override;
 protected:
-    Mine() : _resProd({{100, 0}}, 10) {}
+    Mine() : _resProd({{10, 0}}, 1) {}
     virtual bool init(GameScene* game) override;
     cc::Node* createNodes() override;
     cc::PhysicsBody* createBody() override;
@@ -84,7 +100,7 @@ public:
     OBJ_CREATE_FUNC(PumpJack);
     float getSize() override;
 protected:
-    PumpJack() : _resProd({{0, 50}}, 10) {}
+    PumpJack() : _resProd({{0, 5}}, 1) {}
     virtual bool init(GameScene* game) override;
     cc::Node* createNodes() override;
     cc::PhysicsBody* createBody() override;

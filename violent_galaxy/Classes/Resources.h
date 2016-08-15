@@ -40,4 +40,14 @@ struct ResVec {
             amount[i] -= o.amount[i];
         }
     }
+
+    bool enough(const ResVec& cost) const
+    {
+        for (size_t i = 0; i < RES_COUNT; i++) {
+            if (amount[i] < cost.amount[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
 };

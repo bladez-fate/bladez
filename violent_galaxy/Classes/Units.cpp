@@ -133,7 +133,8 @@ bool DropCapsid::onContactAstroObj(ContactInfo& cinfo)
                 cpFloat wa = cpBodyGetAngularVelocity(arb->body_a);
                 cpFloat wb = cpBodyGetAngularVelocity(arb->body_b);
                 cpFloat rw = wa - wb;
-                if (cpvlengthsq(rv) > 1e-6 || fabs(rw) > 0.5) {
+                //if (cpvlengthsq(rv) > 1e-6 || fabs(rw) > 0.5) {
+                if (cpvlengthsq(rv) > 1.0 || fabs(rw) > 5) {
                     moving = true;
                     break;
                 }
