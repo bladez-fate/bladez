@@ -202,11 +202,15 @@ void Planet::draw()
     node()->setLocalZOrder(-10);
     _useZsForLocalZOrder = false;
 
-    // Draw atmosphere gradient
+    // Palette
     Color4F coreCol = Color4F::RED;
     Color4F surfCol = Color4F(0.0, 0.5, 0.9, 1.0);
     Color4F atmoCol = Color4F(0.0, 0.2, 0.8, 1.0);
-    Color4F spacCol = Color4F::BLACK; // TODO: transparent?
+    Color4F spacCol = Color4F::BLACK;
+    Color4F crustCol = Color4F(0.5f, 0.4f, 0.0f, 1.0f);
+    Color4F platformCol = Color4F(0.55f, 0.55f, 0.55f, 1.0f);
+
+    // Draw atmosphere gradient
     auto prev = _segments.begin() + (_segments.size() - 1); // forward iter to last element
     for (auto i = _segments.begin(), e = _segments.end(); i != e; ++i) {
         float r1 = _coreRadius;
@@ -223,7 +227,7 @@ void Planet::draw()
 
     // Draw platforms
     for (Platform& platform : _platforms) {
-        node()->drawSolidPoly(platform.pts, Platform::POINTS, Color4F(0.55f, 0.55f, 0.55f, 1));
+        node()->drawSolidPoly(platform.pts, Platform::POINTS, platformCol);
     }
 
     // Draw crust
@@ -233,7 +237,7 @@ void Planet::draw()
     for (Vec2& c2 : _crust) {
         vert[0] = c1;
         vert[1] = c2;
-        node()->drawSolidPoly(vert, 3, Color4F::GREEN);
+        node()->drawSolidPoly(vert, 3, crustCol);
         c1 = c2;
     }
 

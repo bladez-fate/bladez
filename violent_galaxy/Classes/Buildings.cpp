@@ -17,11 +17,6 @@ void Building::destroy()
     VisualObj::destroy();
 }
 
-void Building::setPlayer(Player* player)
-{
-    _player = player;
-}
-
 ObjType Building::getObjType()
 {
     return ObjType::Building;
@@ -55,7 +50,7 @@ void Factory::draw()
     node()->clear();
     float r = _size / 2;
 
-    Color4F darkGray(0.3f, 0.3f, 0.3f, 1.0f);
+    Color4F darkGray(colorFilter(Color4F(0.3f, 0.3f, 0.3f, 1.0f)));
     node()->drawSolidRect(
         Vec2(-0.7*r, 1.0*r),
         Vec2(-0.3*r, 1.8*r),
@@ -69,9 +64,29 @@ void Factory::draw()
     node()->drawSolidRect(
         Vec2(-r, -r),
         Vec2( r, r),
-        Color4F::GRAY
+        colorFilter(Color4F::GRAY)
     );
     node()->drawSolidCircle(Vec2(0.6*r, 0.6*r), 0.1*r, 0, 12, darkGray);
+    node()->drawSolidRect(
+        Vec2(-0.9*r, -1.0*r),
+        Vec2(-0.7*r, 0.1*r),
+        colorFilter(Color4F::GRAY, 0.8f)
+    );
+    node()->drawSolidRect(
+        Vec2(0.7*r, -1.0*r),
+        Vec2(0.9*r, 0.1*r),
+        colorFilter(Color4F::GRAY, 0.8f)
+    );
+    node()->drawSolidRect(
+        Vec2(-0.6*r, -1.0*r),
+        Vec2(-0.5*r, -0.5*r),
+        colorFilter(Color4F::GRAY, 0.6f)
+    );
+    node()->drawSolidRect(
+        Vec2(0.5*r, -1.0*r),
+        Vec2(0.6*r, -0.5*r),
+        colorFilter(Color4F::GRAY, 0.6f)
+    );
 }
 
 float Factory::getSize()
@@ -122,8 +137,8 @@ void Mine::draw()
     node()->clear();
     float r = _size / 2;
 
-    Color4F darkColor(0.5f, 0.6f, 0.2f, 1.0f);
-    Color4F mainColor(0.6f, 0.8f, 0.3f, 1.0f);
+    Color4F darkColor(colorFilter(Color4F(0.5f, 0.6f, 0.2f, 1.0f)));
+    Color4F mainColor(colorFilter(Color4F(0.6f, 0.8f, 0.3f, 1.0f)));
     node()->drawSolidRect(
         Vec2(-0.3*r, 1.0*r),
         Vec2(0.3*r, 2.4*r),
@@ -134,7 +149,28 @@ void Mine::draw()
         Vec2( r, r),
         mainColor
     );
-    node()->drawSolidCircle(Vec2(0.6*r, 0.6*r), 0.1*r, 0, 12, darkColor);
+    node()->drawSolidCircle(Vec2(-0.4*r, 0.6*r), 0.1*r, 0, 12, 4.0, 1.0, darkColor);
+    node()->drawSolidCircle(Vec2(0.1*r, 0.45*r), 0.1*r, 0, 12, 2.0, 0.7, darkColor);
+    node()->drawSolidRect(
+        Vec2(-0.9*r, -1.0*r),
+        Vec2(-0.7*r, 0.1*r),
+        colorFilter(Color4F::GRAY, 0.8f)
+    );
+    node()->drawSolidRect(
+        Vec2(0.7*r, -1.0*r),
+        Vec2(0.9*r, 0.1*r),
+        colorFilter(Color4F::GRAY, 0.8f)
+    );
+    node()->drawSolidRect(
+        Vec2(-0.6*r, -1.0*r),
+        Vec2(-0.5*r, -0.5*r),
+        colorFilter(Color4F::GRAY, 0.6f)
+    );
+    node()->drawSolidRect(
+        Vec2(0.5*r, -1.0*r),
+        Vec2(0.6*r, -0.5*r),
+        colorFilter(Color4F::GRAY, 0.6f)
+    );
 }
 
 void Mine::update(float delta)
@@ -178,37 +214,43 @@ void PumpJack::draw()
     // Building under tower
     node()->drawSolidRect(
         r*Vec2(-0.5, -0.7), r*Vec2(1.0, -1.0),
-        Color4F::WHITE
+        colorFilter(Color4F::WHITE)
     );
 
     // Mine
     node()->drawSolidRect(
         r*Vec2(-0.979, -0.95), r*Vec2(-0.579, -1.0),
-        Color4F::WHITE
+        colorFilter(Color4F::WHITE)
     );
 
     Vec2 tower[] = {
         r*Vec2(0.0, 0.6), r*Vec2(0.0, 0.4), r*Vec2(-0.4, -0.7),
         r*Vec2(0.6, -0.7), r*Vec2(0.2, 0.4), r*Vec2(0.2, 0.6)
     };
-    node()->drawSolidPoly(tower, sizeof(tower)/sizeof(*tower), Color4F::GRAY);
+    node()->drawSolidPoly(tower, sizeof(tower)/sizeof(*tower), colorFilter(Color4F::GRAY));
 
     Vec2 hammer[] = {
         r*Vec2(0.884, 0.313), r*Vec2(-0.614, 0.875),
         r*Vec2(-0.684, 0.687), r*Vec2(0.814, 0.125)
     };
-    node()->drawSolidPoly(hammer, sizeof(hammer)/sizeof(*hammer), Color4F::YELLOW);
+    node()->drawSolidPoly(hammer, sizeof(hammer)/sizeof(*hammer), colorFilter(Color4F::WHITE, 0.8));
 
     Vec2 hammerHead[] = {
         r*Vec2(-0.520, 0.839), r*Vec2(-0.508, 1.155), r*Vec2(-0.708, 0.910),
         r*Vec2(-0.778, 0.722), r*Vec2(-0.789, 0.406), r*Vec2(-0.590, 0.652)
     };
-    node()->drawSolidPoly(hammerHead, sizeof(hammerHead)/sizeof(*hammerHead), Color4F(1.0, 0.4, 0.2, 1.0));
+    node()->drawSolidPoly(hammerHead, sizeof(hammerHead)/sizeof(*hammerHead), colorFilter(Color4F(1.0, 0.4, 0.2, 1.0)));
 
     // Thread from hammer head to mine
     node()->drawSolidRect(
         r*Vec2(-0.789, 0.406), r*Vec2(-0.770, -0.950),
-        Color4F::BLACK
+        colorFilter(Color4F::BLACK)
+    );
+
+    node()->drawSolidRect(
+        Vec2(0.0*r,  0.0*r),
+        Vec2(0.2*r, -0.7*r),
+        colorFilter(Color4F::GRAY, 0.8f)
     );
 }
 

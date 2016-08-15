@@ -91,6 +91,8 @@ public:
     void setZs(Zs zs);
     Zs getZs(Zs zs) const { return _zs; }
     virtual float getSize() = 0;
+    virtual void setPlayer(Player* player);
+    Player* getPlayer() { return _player; }
 protected:
     VisualObj() {}
     bool init(GameScene* game) override;
@@ -98,8 +100,11 @@ protected:
     virtual cc::Node* createNodes() = 0;
     virtual cc::PhysicsBody* createBody() = 0;
     virtual void draw() = 0;
+    cc::Color4F colorFilter(cc::Color4F c, float uniform = 0.0f);
+    cc::Color4F uniformColor();
 protected:
     cc::Node* _rootNode = nullptr;
     Zs _zs = ZsNone;
     bool _useZsForLocalZOrder = true;
+    Player* _player = nullptr;
 };

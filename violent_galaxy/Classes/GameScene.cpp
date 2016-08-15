@@ -438,7 +438,7 @@ void GameScene::mouseSelectRect(Vec2 screenLoc)
     _mouseSelectRectNode->drawRect(
         _mouseSelectRectStart,
         _mouseSelectRectEnd,
-        Color4F::RED
+        gSelectionColor
     );
 }
 
@@ -493,7 +493,7 @@ void GameScene::guiUpdate(float delta)
                 Color4F hpColor(share < 0.2f? Color4F::RED: (share < 0.5f? Color4F::YELLOW: Color4F::GREEN));
                 _guiHpIndicators->drawSolidRect(
                     p1 - Vec2(1.0f, 1.0f), p2 + Vec2(1.0f, 1.0f),
-                    Color4F::WHITE
+                    Color4F::BLACK
                 );
                 if (p1.x < mx) {
                     _guiHpIndicators->drawSolidRect(
@@ -945,7 +945,7 @@ void GameScene::initGalaxy()
     // Player
     auto player = Player::create(this);
     player->name = "Player1";
-    player->color = Color4F::RED;
+    player->color = gPlayerColor[0];
     playerActivate(player);
 
     initBuildings(pl);

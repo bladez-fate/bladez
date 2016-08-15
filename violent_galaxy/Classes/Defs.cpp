@@ -17,6 +17,13 @@ const cc::Color4F gSupplyColor(0.5f, 0.6f, 1.0f, 1.0f);
 const cc::Color4F gOreColor(0.9f, 0.7f, 0.3f, 1.0f);
 const cc::Color4F gOilColor(0.0f, 0.0f, 0.0f, 1.0f);
 const cc::Color4F gResColor[RES_COUNT] = { gOreColor, gOilColor };
+const cc::Color4F gNeutralPlayerColor(0.7f, 0.7f, 0.7f, 1.0f);
+const cc::Color4F gPlayerColor[3] = {
+    Color4F(0.9f, 0.9f, 0.1f, 1.0f),
+    Color4F(0.1f, 0.9f, 0.9f, 1.0f),
+    Color4F(0.9f, 0.1f, 0.9f, 1.0f)
+};
+const cc::Color4F gSelectionColor(0.0f, 0.9f, 0.0f, 1.0f);
 
 // Keyboard
 cc::EventKeyboard::KeyCode gHKGroup[10] = {

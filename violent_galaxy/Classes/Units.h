@@ -17,8 +17,7 @@ public:
     ObjType getObjType() override;
     void destroy() override;
     void replaceWith(Unit* unit);
-    virtual void setPlayer(Player* player);
-    Player* getPlayer() { return _player; }
+    void setPlayer(Player* player) override;
     void damage(i32 value);
     void goBack();
     void goFront();
@@ -29,9 +28,6 @@ protected:
         , hp(hpMax)
     {}
     bool init(GameScene* game) override;
-    cc::Color4F colorFilter(cc::Color4F c);
-protected:
-    Player* _player = nullptr;
 };
 
 class DropCapsid : public Unit {

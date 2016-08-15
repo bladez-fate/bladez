@@ -41,7 +41,7 @@ void Player::update(float delta)
                 vobj->getNode()->getPosition(),
                 radius, 0, 36,
                 false,
-                color
+                gSelectionColor
             );
         }
     }

@@ -12,16 +12,6 @@ bool Unit::init(GameScene* game)
     return true;
 }
 
-Color4F Unit::colorFilter(Color4F c)
-{
-    if (_zs == ZsForeground) {
-        return c;
-    } else {
-        float k = 0.8;
-        return Color4F(k * c.r, k * c.g, k * c.b, c.a);
-    }
-}
-
 void Unit::destroy()
 {
 	if (_player) {
@@ -51,11 +41,11 @@ void Unit::replaceWith(Unit* unit)
 
 void Unit::setPlayer(Player* player)
 {
-    if (_player != player) {
-        if (_player) {
-            _player->supply -= supply;
-        }
-        _player = player;
+    if (_player) {
+        _player->supply -= supply;
+    }
+    VisualObj::setPlayer(player);
+    if (_player) {
         _player->supply += supply;
     }
 }
@@ -121,12 +111,12 @@ void DropCapsid::draw()
     node()->drawSolidRect(
         Vec2(-r/10, -9*r/10),
         Vec2( r/10,  9*r/10),
-        colorFilter(Color4F::BLUE)
+        uniformColor()
     );
     node()->drawSolidRect(
         Vec2(-9*r/10, -r/10),
         Vec2( 9*r/10,  r/10),
-        colorFilter(Color4F::BLUE)
+        uniformColor()
     );
 }
 
@@ -309,10 +299,10 @@ void Tank::draw()
     node()->drawSegment(
         _gunBegin,
         _gunBegin + _gunLength * Vec2::forAngle(CC_DEGREES_TO_RADIANS(_angle)),
-        1, colorFilter(Color4F::YELLOW)
+        1, uniformColor()
     );
     node()->drawSolidPoly(_base, sizeof(_base)/sizeof(*_base), colorFilter(Color4F::WHITE));
-    node()->drawSolidPoly(_head, sizeof(_head)/sizeof(*_head), colorFilter(Color4F::YELLOW));
+    node()->drawSolidPoly(_head, sizeof(_head)/sizeof(*_head), uniformColor());
 }
 
 void Tank::update(float delta)
@@ -361,7 +351,7 @@ void SpaceStation::draw()
         Vec2(-7*r/10, -6*r/10),
         Vec2( 7*r/10, -6*r/10),
         Vec2(      0,  r),
-        colorFilter(Color4F::GRAY), colorFilter(Color4F::GRAY), colorFilter(Color4F::BLUE)
+        colorFilter(Color4F::GRAY), colorFilter(Color4F::GRAY), uniformColor()
     );
 }
 

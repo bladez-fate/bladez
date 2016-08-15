@@ -76,6 +76,9 @@ extern const cc::Color4F gSupplyColor;
 extern const cc::Color4F gOreColor;
 extern const cc::Color4F gOilColor;
 extern const cc::Color4F gResColor[RES_COUNT];
+extern const cc::Color4F gNeutralPlayerColor;
+extern const cc::Color4F gPlayerColor[3];
+extern const cc::Color4F gSelectionColor;
 
 // Keyboard hotkeys
 static constexpr size_t GRP_COUNT = 10;

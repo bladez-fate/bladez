@@ -71,3 +71,34 @@ void VisualObj::setZs(Zs zs)
     draw();
 }
 
+void VisualObj::setPlayer(Player* player)
+{
+    _player = player;
+    draw();
+}
+
+Color4F VisualObj::colorFilter(Color4F c, float uniform)
+{
+    // Apply player color
+    Color4F p = (getPlayer()? getPlayer()->color: gNeutralPlayerColor);
+    c = Color4F(
+        ((1-uniform)*c.r + uniform*p.r),
+        ((1-uniform)*c.g + uniform*p.g),
+        ((1-uniform)*c.b + uniform*p.b),
+        c.a
+    );
+
+    // Darken background units
+    if (_zs == ZsBackground) {
+        float k = 0.8;
+        return Color4F(k * c.r, k * c.g, k * c.b, c.a);
+    } else {
+        return c;
+    }
+}
+
+Color4F VisualObj::uniformColor()
+{
+    return colorFilter(Color4F::BLACK, 1.0f);
+}
+

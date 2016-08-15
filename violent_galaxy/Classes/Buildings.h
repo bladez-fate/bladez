@@ -10,13 +10,9 @@ public:
     Id surfaceId = 0; // Astro obj that builing is placed on
     ObjType getObjType() override;
     void destroy() override;
-    virtual void setPlayer(Player* player);
-    Player* getPlayer() { return _player; }
 protected:
     Building() {}
     bool init(GameScene* game) override;
-protected:
-    Player* _player = nullptr;
 };
 
 class Factory : public Building {
