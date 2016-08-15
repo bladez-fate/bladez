@@ -64,6 +64,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LibraryPath>../../external/sqlite3/libraries/win32;$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v7.1A\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(EngineRoot)/external/chipmunk/include</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LibraryPath>../../external/sqlite3/libraries/win32;$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v7.1A\lib;$(LibraryPath)</LibraryPath>
@@ -594,6 +595,7 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\release-lib\*.*
     <ClCompile Include="..\physics3d\CCPhysicsSprite3D.cpp" />
     <ClCompile Include="..\physics\CCPhysicsBody.cpp" />
     <ClCompile Include="..\physics\CCPhysicsContact.cpp" />
+    <ClCompile Include="..\physics\CCPhysicsForceField.cpp" />
     <ClCompile Include="..\physics\CCPhysicsJoint.cpp" />
     <ClCompile Include="..\physics\CCPhysicsShape.cpp" />
     <ClCompile Include="..\physics\CCPhysicsWorld.cpp" />
@@ -1211,6 +1213,7 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\release-lib\*.*
     <ClInclude Include="..\physics3d\CCPhysicsSprite3D.h" />
     <ClInclude Include="..\physics\CCPhysicsBody.h" />
     <ClInclude Include="..\physics\CCPhysicsContact.h" />
+    <ClInclude Include="..\physics\CCPhysicsForceField.h" />
     <ClInclude Include="..\physics\CCPhysicsHelper.h" />
     <ClInclude Include="..\physics\CCPhysicsJoint.h" />
     <ClInclude Include="..\physics\CCPhysicsShape.h" />

@@ -47,9 +47,15 @@ bool AppDelegate::applicationDidFinishLaunching() {
     auto glview = director->getOpenGLView();
     GLViewImpl* glviewimpl = nullptr;
     if(!glview) {
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+		//glview = GLViewImpl::createWithFullScreen("test1");
+		static cocos2d::Size designResolutionSize = cocos2d::Size(1350, 700);
+		glview = glviewimpl = GLViewImpl::createWithRect("test1", cocos2d::Rect(
+			0, 0,
+			designResolutionSize.width, designResolutionSize.height
+		), 1.0f, true);
+#elif (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
         // Fullscreen just doesn't work properly with Ubunty Unity, HUD and Super keys will hang system
-        //glview = GLViewImpl::createWithFullScreen("test1");
         glview = glviewimpl = GLViewImpl::createWithRect("test1", cocos2d::Rect(
             0, 0,
             designResolutionSize.width, designResolutionSize.height

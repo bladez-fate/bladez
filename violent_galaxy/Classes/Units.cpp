@@ -24,10 +24,10 @@ Color4F Unit::colorFilter(Color4F c)
 
 void Unit::destroy()
 {
-    VisualObj::destroy();
-    if (_player) {
-        _player->supply -= supply;
-    }
+	if (_player) {
+		_player->supply -= supply;
+	}
+	VisualObj::destroy();
 }
 
 void Unit::replaceWith(Unit* unit)

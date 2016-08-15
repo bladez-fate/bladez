@@ -9,12 +9,12 @@ namespace cc = cocos2d;
 using ui8 = unsigned char;
 using ui16 = unsigned short;
 using ui32 = unsigned int;
-using ui64 = unsigned long;
+using ui64 = unsigned long long;
 
 using i8 = char;
 using i16 = short;
 using i32 = int;
-using i64 = long;
+using i64 = long long;
 
 static_assert(sizeof(ui8)  == 1, "built-in type size mismatch");
 static_assert(sizeof(ui16) == 2, "built-in type size mismatch");
