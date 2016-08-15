@@ -13,6 +13,7 @@ const cc::PhysicsMaterial gPlatformMaterial(0.0, 0.2, 150.0);
 const cc::CameraFlag gWorldCameraFlag = CameraFlag::USER1;
 
 // Colors
+const cc::Color4F gSupplyColor(0.5f, 0.6f, 1.0f, 1.0f);
 const cc::Color4F gOreColor(0.9f, 0.7f, 0.3f, 1.0f);
 const cc::Color4F gOilColor(0.0f, 0.0f, 0.0f, 1.0f);
 const cc::Color4F gResColor[RES_COUNT] = { gOreColor, gOilColor };

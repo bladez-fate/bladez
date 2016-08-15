@@ -532,47 +532,11 @@ void GameScene::guiUpdate(float delta)
             );
             if (i == -1) { // supply
                 _supplyLabel = l;
-//              MAN vector icon
-//                Vec2 c = p - Vec2(size/2 + 2, 0);
-//                float r = size/2;
-//                float r = 1.25*size/2;
-//                Color4F color = Color4F::WHITE;
-//                _resIcons->drawSolidCircle(c + r*Vec2(0.0f, 0.5f), 0.3*r, 0, 12, color);
-//                _resIcons->drawSolidRect(c + r*Vec2(-0.1f, 0.3f), c + r*Vec2(0.1f, -0.4f), color);
-//                //_resIcons->drawSolidRect(c + r*Vec2(-0.4f, 0.1f), c + r*Vec2(0.4f, 0.0f), color);
-//                Vec2 legs[] = {
-//                    c + r*Vec2( 0.1f,  -0.4f), c + r*Vec2(-0.1f,  -0.4f), c + r*Vec2(-0.3f, -0.8f), c + r*Vec2(-0.15f, -0.8f),
-//                    c + r*Vec2(-0.0f, -0.5f),  c + r*Vec2( 0.15f, -0.8f), c + r*Vec2( 0.3f, -0.8f)
-//                };
-//                _resIcons->drawSolidPoly(legs, sizeof(legs)/sizeof(*legs), color);
-                ui8 o = 0;
-                ui8 m = 1;
-                ui8 supplyIcon[] = {
-                    o,o,o,o,o,o,o,o,o,o,o,o,o,o,
-                    o,o,o,o,o,m,m,m,m,o,o,o,o,o,
-                    o,o,o,o,m,o,o,o,o,m,o,o,o,o,
-                    o,o,o,m,o,o,o,o,o,o,m,o,o,o,
-                    o,o,m,o,o,o,o,o,o,o,o,m,o,o,
-                    o,m,o,o,o,m,m,m,m,o,o,o,m,o,
-                    o,m,o,o,m,o,o,o,o,m,o,o,m,o,
-                    o,o,o,m,o,o,o,o,o,o,m,o,o,o,
-                    o,o,m,o,o,o,m,m,o,o,o,m,o,o,
-                    o,o,m,o,o,m,o,o,m,o,o,m,o,o,
-                    o,o,o,o,m,o,o,o,o,m,o,o,o,o,
-                    o,o,o,o,m,o,m,m,o,m,o,o,o,o,
-                    o,o,o,o,o,o,m,m,o,o,o,o,o,o,
-                    o,o,o,o,o,o,o,o,o,o,o,o,o,o
-                };
-                Color4F palette[] = {
-                    Color4F(0.5f, 0.5f, 1.0f, 1.0f),
-                    Color4F(0.2f, 0.2f, 0.4f, 1.0f),
-                };
-                Vec2 c = p - Vec2(size + 1, size/2);
-                for (size_t i = 0; i < sizeof(supplyIcon); i++) {
-                    int x = i % 14;
-                    int y = i / 14;
-                    _resIcons->drawPoint(c + Vec2(x, 14-y), 1.0f, palette[supplyIcon[i]]);
-                }
+                _resIcons->drawSolidRect(
+                    p - Vec2(size + 2, size/2),
+                    p - Vec2(2, -size/2),
+                    gSupplyColor
+                );
             } else { // resources
                 _resLabels[i] = l;
                 _resIcons->drawSolidRect(

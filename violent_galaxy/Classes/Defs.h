@@ -72,6 +72,7 @@ extern const cc::PhysicsMaterial gPlatformMaterial;
 extern const cc::CameraFlag gWorldCameraFlag;
 
 // Colors
+extern const cc::Color4F gSupplyColor;
 extern const cc::Color4F gOreColor;
 extern const cc::Color4F gOilColor;
 extern const cc::Color4F gResColor[RES_COUNT];
