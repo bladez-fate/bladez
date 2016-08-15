@@ -647,8 +647,8 @@ bool GameScene::onSelectQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, vo
     UNUSED(userdata);
     UNUSED(all);
     ObjTag tag(shape.getBody()->getNode()->getTag());
+    Id id = tag.id();
     if (tag.type() == ObjType::Unit) {
-        Id id = tag.id();
         if (add) {
             if (_activePlayer->isSelect(id)) {
                 _activePlayer->selectRemove(id);
@@ -658,6 +658,9 @@ bool GameScene::onSelectQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, vo
         } else {
             _activePlayer->select(id);
         }
+    }
+    if (tag.type() == ObjType::Building) {
+        _activePlayer->select(id);
     }
     return false;
 }
@@ -694,17 +697,18 @@ void GameScene::playerSelectRect(Vec2 p1, Vec2 p2, bool add)
 
     bool selectionCleared = false;
     for (Id id : ids) {
-        Unit* unit = _objs->getByIdAs<Unit>(id);
-        Vec2 uw = unit->getNode()->getPosition();
-        Vec2 u = _view.world2screen(uw);
-        float r = unit->getSize() / 2;
-        if (u.x > p[0].x - r && u.x < p[2].x + r) {
-            if (u.y > p[0].y - r && u.y < p[2].y + r) {
-                if (!add && !selectionCleared) {
-                    selectionCleared = true;
-                    _activePlayer->clearSelection();
+        if (VisualObj* vobj = _objs->getByIdAs<VisualObj>(id)) {
+            Vec2 uw = vobj->getNode()->getPosition();
+            Vec2 u = _view.world2screen(uw);
+            float r = vobj->getSize() / 2;
+            if (u.x > p[0].x - r && u.x < p[2].x + r) {
+                if (u.y > p[0].y - r && u.y < p[2].y + r) {
+                    if (vobj->getObjType() == ObjType::Building || (!add && !selectionCleared)) {
+                        selectionCleared = true;
+                        _activePlayer->clearSelection();
+                    }
+                    _activePlayer->selectAdd(id);
                 }
-                _activePlayer->selectAdd(id);
             }
         }
     }
@@ -716,7 +720,15 @@ bool GameScene::onSelectQueryRect(PhysicsWorld& pworld, PhysicsShape& shape, voi
     std::set<Id>& ids = *reinterpret_cast<std::set<Id>*>(userdata);
     ObjTag tag(shape.getBody()->getNode()->getTag());
     if (tag.type() == ObjType::Unit) {
+        if (ids.size() == 1 && objs()->getById(*ids.begin())->getObjType() == ObjType::Building) {
+            ids.clear();
+        }
         ids.insert(tag.id());
+    }
+    if (tag.type() == ObjType::Building) {
+        if (ids.empty()) {
+            ids.insert(tag.id());
+        }
     }
     return true;
 }

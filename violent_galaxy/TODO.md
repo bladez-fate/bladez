@@ -15,7 +15,7 @@ Must have features:
 - [ ] computer player AI
 - [ ] neutral units AI
 - [ ] neutral/enemy building capture if only ur unit are close within N seconds period
-- [ ] building selection
+- [x] building selection
 - [ ] unit production
 - [ ] unit production control (stop/repeat/once/choose unit)
 - [ ] unit production indicator (progress bar)
