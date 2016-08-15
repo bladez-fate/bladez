@@ -208,7 +208,7 @@ void Planet::draw()
     Color4F atmoCol = Color4F(0.0, 0.2, 0.8, 1.0);
     Color4F spacCol = Color4F::BLACK;
     Color4F crustCol = Color4F(0.5f, 0.4f, 0.0f, 1.0f);
-    Color4F platformCol = Color4F(0.55f, 0.55f, 0.55f, 1.0f);
+    Color4F platformCol = Color4F(0.4f, 0.4f, 0.4f, 1.0f);
 
     // Draw atmosphere gradient
     auto prev = _segments.begin() + (_segments.size() - 1); // forward iter to last element

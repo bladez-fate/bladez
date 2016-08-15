@@ -440,7 +440,7 @@ void PhysicsWorld::queryRect(PhysicsQueryRectCallbackFunc func, const Rect& rect
     }
 }
 
-void PhysicsWorld::queryPoint(PhysicsQueryPointCallbackFunc func, const Vec2& point, void* data)
+void PhysicsWorld::queryPoint(PhysicsQueryPointCallbackFunc func, const Vec2& point, void* data, float maxDistance)
 {
     CCASSERT(func != nullptr, "func shouldn't be nullptr");
     
@@ -455,7 +455,7 @@ void PhysicsWorld::queryPoint(PhysicsQueryPointCallbackFunc func, const Vec2& po
         PhysicsWorldCallback::continues = true;
         cpSpacePointQuery(_cpSpace,
                                  PhysicsHelper::point2cpv(point),
-                                 0,
+                                 maxDistance,
                                  CP_SHAPE_FILTER_ALL,
                                  (cpSpacePointQueryFunc)PhysicsWorldCallback::queryPointFunc,
                                  &info);

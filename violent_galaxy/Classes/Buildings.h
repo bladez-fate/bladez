@@ -5,11 +5,24 @@
 #include "Physics.h"
 #include "Resources.h"
 
+class CaptureChecker {
+private:
+    float _period = 2.0f;
+    float _elapsed = 0.0f;
+    Player* _capturer = nullptr;
+public:
+    void update(float delta, Player* player, VisualObj* obj, GameScene* game);
+    bool onQueryPoint(cc::PhysicsWorld& pworld, cc::PhysicsShape& shape, void* userdata);
+};
+
 class Building : public VisualObj {
 public:
     Id surfaceId = 0; // Astro obj that builing is placed on
     ObjType getObjType() override;
     void destroy() override;
+    void update(float delta) override;
+private:
+    CaptureChecker _captureChecker;
 protected:
     Building() {}
     bool init(GameScene* game) override;

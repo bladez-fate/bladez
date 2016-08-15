@@ -14,7 +14,7 @@ Must have features:
 - [x] unit "hold mode" should allow friendly units to pass through
 - [ ] computer player AI
 - [ ] neutral units AI
-- [ ] neutral/enemy building capture if only ur unit are close within N seconds period
+- [x] neutral/enemy building capture if only ur unit are close within N seconds period
 - [x] building selection
 - [ ] unit production
 - [ ] unit production control (stop/repeat/once/choose unit)

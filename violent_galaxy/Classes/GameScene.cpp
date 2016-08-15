@@ -902,7 +902,7 @@ void GameScene::initBuildings(Planet* planet)
             building = PumpJack::create(this);
         }
 
-        building->setPlayer(_activePlayer);
+        //building->setPlayer(_activePlayer);
 
         Vec2 pw = planet->altAng2world(
             std::max(pt1.altitude, pt2.altitude) + 10.0f + building->getSize()/2,

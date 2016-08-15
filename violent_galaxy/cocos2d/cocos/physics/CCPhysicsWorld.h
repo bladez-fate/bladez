@@ -189,7 +189,7 @@ public:
     * @param   point   A Vec2 object contains the position of the point.
     * @param   data   User defined data, it is passed to func. 
     */
-    void queryPoint(PhysicsQueryPointCallbackFunc func, const Vec2& point, void* data);
+    void queryPoint(PhysicsQueryPointCallbackFunc func, const Vec2& point, void* data, float maxDistance = 0.0f);
     
     /**
     * Get physics shapes that contains the point. 

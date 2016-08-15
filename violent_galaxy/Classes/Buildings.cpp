@@ -5,6 +5,55 @@
 
 USING_NS_CC;
 
+void CaptureChecker::update(float delta, Player* player, VisualObj* obj, GameScene* game)
+{
+    std::set<Id> ids;
+    game->physicsWorld()->queryPoint(
+        CC_CALLBACK_3(CaptureChecker::onQueryPoint, this),
+        obj->getNode()->getPosition(),
+        &ids,
+        obj->getSize()
+    );
+    std::set<Player*> players;
+    for (Id id : ids) {
+        if (Unit* unit = game->objs()->getByIdAs<Unit>(id)) {
+            players.insert(unit->getPlayer());
+        }
+    }
+    if (players.size() == 1) {
+        if (Player* capturer = *players.begin()) {
+            if (capturer != obj->getPlayer()) {
+                if (_capturer != capturer) { // Begin capture
+                    _capturer = capturer;
+                    _elapsed = 0.0f;
+                }
+                _elapsed += delta;
+                if (_elapsed > _period) { // Successful capture
+                    obj->setPlayer(_capturer);
+                    _capturer = nullptr;
+                }
+                return; // Dont stop capture
+            }
+        }
+    }
+
+    // Stop capture
+    _capturer = nullptr;
+}
+
+bool CaptureChecker::onQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, void* userdata)
+{
+    UNUSED(pworld);
+    std::set<Id>& ids = *reinterpret_cast<std::set<Id>*>(userdata);
+    ObjTag tag(shape.getBody()->getNode()->getTag());
+    Id id = tag.id();
+    if (tag.type() == ObjType::Unit) {
+        ids.insert(id);
+    }
+    return true;
+}
+
+
 bool Building::init(GameScene* game)
 {
     VisualObj::init(game);
@@ -15,6 +64,11 @@ bool Building::init(GameScene* game)
 void Building::destroy()
 {
     VisualObj::destroy();
+}
+
+void Building::update(float delta)
+{
+    _captureChecker.update(delta, _player, this, _game);
 }
 
 ObjType Building::getObjType()
@@ -137,8 +191,8 @@ void Mine::draw()
     node()->clear();
     float r = _size / 2;
 
-    Color4F darkColor(colorFilter(Color4F(0.5f, 0.6f, 0.2f, 1.0f)));
-    Color4F mainColor(colorFilter(Color4F(0.6f, 0.8f, 0.3f, 1.0f)));
+    Color4F darkColor(colorFilter(Color4F(0.5f, 0.3f, 0.2f, 1.0f)));
+    Color4F mainColor(colorFilter(Color4F(0.6f, 0.4f, 0.3f, 1.0f)));
     node()->drawSolidRect(
         Vec2(-0.3*r, 1.0*r),
         Vec2(0.3*r, 2.4*r),
@@ -176,6 +230,7 @@ void Mine::draw()
 void Mine::update(float delta)
 {
     _resProd.update(delta, _player);
+    Building::update(delta);
 }
 
 float Mine::getSize()
@@ -257,6 +312,7 @@ void PumpJack::draw()
 void PumpJack::update(float delta)
 {
     _resProd.update(delta, _player);
+    Building::update(delta);
 }
 
 float PumpJack::getSize()
