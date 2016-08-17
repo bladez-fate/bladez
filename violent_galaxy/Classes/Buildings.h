@@ -21,6 +21,7 @@ public:
     ObjType getObjType() override;
     void destroy() override;
     void update(float delta) override;
+    virtual float getProductionProgress() { return 0.0f; }
 private:
     CaptureChecker _captureChecker;
 protected:
@@ -40,6 +41,7 @@ public:
         , _period(period)
     {}
     void update(float delta, Player* player, VisualObj* obj, GameScene* game);
+    float progress();
 };
 
 class Factory : public Building {
@@ -47,12 +49,13 @@ public:
     OBJ_CREATE_FUNC(Factory);
     float getSize() override;
 protected:
-    Factory() : _unitProd({{150, 0}}, 1) {}
+    Factory() : _unitProd({{150, 0}}, 10) {}
     virtual bool init(GameScene* game) override;
     cc::Node* createNodes() override;
     cc::PhysicsBody* createBody() override;
     void draw() override;
     void update(float delta) override;
+    float getProductionProgress() override;
 protected:
     cc::DrawNode* node() { return static_cast<cc::DrawNode*>(_rootNode); }
     cc::PhysicsBody* _body = nullptr;

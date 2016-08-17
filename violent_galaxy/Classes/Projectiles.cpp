@@ -60,7 +60,7 @@ void Projectile::setPlayer(Player* player)
 
 bool Shell::init(GameScene* game)
 {
-    _size = 1;
+    _size = 2;
     _damage = 30;
     Projectile::init(game);
     return true;
@@ -81,7 +81,7 @@ PhysicsBody* Shell::createBody()
 
 void Shell::draw()
 {
-    node()->drawSolidCircle(Vec2::ZERO, _size, 0, 4, Color4F::WHITE);
+    node()->drawSolidCircle(Vec2::ZERO, _size, 0, 6, Color4F::WHITE);
 }
 
 float Shell::getSize()

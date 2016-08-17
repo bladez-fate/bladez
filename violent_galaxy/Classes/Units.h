@@ -103,6 +103,59 @@ protected:
     float _cooldownLeft = 0;
 };
 
+class Tank2 : public Unit {
+public:
+    OBJ_CREATE_FUNC(Tank2);
+    float getSize() override;
+    void shoot();
+    void incAngle(float dt);
+    void decAngle(float dt);
+    void subPower();
+    void addPower();
+    void moveLeft(bool go);
+    void moveRight(bool go);
+    void move();
+protected:
+    Tank2()
+        : Unit(150, 1)
+    {}
+    virtual bool init(GameScene* game) override;
+    cc::Node* createNodes() override;
+    cc::PhysicsBody* createBody() override;
+    void draw() override;
+    void update(float delta) override;
+protected:
+    cc::DrawNode* node() { return static_cast<cc::DrawNode*>(_rootNode); }
+    cc::PhysicsBody* _body = nullptr;
+    cc::PhysicsShape* _track = nullptr;
+
+    float _size;
+
+    cc::Size _bb;
+    cc::Vec2 _cg_offs;
+    cc::Vec2 _base[6];
+    cc::Vec2 _head[8];
+    cc::Vec2 _hullPoly[4];
+    cc::Vec2 _trackPoly[4];
+    cc::Vec2 _gunBegin;
+    float _gunLength;
+    float _angle;
+    float _power;
+    float _targetV;
+    bool _movingLeft = false;
+    bool _movingRight = false;
+
+    float _angleMin;
+    float _angleMax;
+    float _angleStep;
+    float _powerMin;
+    float _powerMax;
+    float _powerStep;
+
+    float _cooldown;
+    float _cooldownLeft = 0;
+};
+
 class SpaceStation : public Unit {
 public:
     OBJ_CREATE_FUNC(SpaceStation);

@@ -104,6 +104,11 @@ void UnitProducer::update(float delta, Player* player, VisualObj* obj, GameScene
     }
 }
 
+float UnitProducer::progress()
+{
+    return std::min(1.0f, _elapsed / _period);
+}
+
 bool Factory::init(GameScene* game)
 {
     _size = 70;
@@ -175,6 +180,11 @@ void Factory::update(float delta)
 {
     _unitProd.update(delta, _player, this, _game);
     Building::update(delta);
+}
+
+float Factory::getProductionProgress()
+{
+    return _unitProd.progress();
 }
 
 float Factory::getSize()

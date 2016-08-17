@@ -182,6 +182,23 @@ void GameScene::initKeyboard()
                             }
                         }
                     }
+                    if (auto tank = dynamic_cast<Tank2*>(obj)) {
+                        int repeat = isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT)? 10: 1;
+                        while (repeat--) {
+                            if (keyCode == gHKShoot) {
+                                tank->shoot();
+                                repeat = 0;
+                            } else if (keyCode == gHKPowerInc) {
+                                tank->addPower();
+                            } else if (keyCode == gHKPowerDec) {
+                                tank->subPower();
+                            } else if (keyCode == gHKGoBack) {
+                                tank->goBack();
+                            } else if (keyCode == gHKGoFront) {
+                                tank->goFront();
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -197,6 +214,16 @@ void GameScene::keyboardUpdate(float delta)
         for (Id id : _activePlayer->selected) {
             if (auto obj = objs()->getById(id)) {
                 if (auto tank = dynamic_cast<Tank*>(obj)) {
+                    if (isKeyHeld(gHKAngleInc)) {
+                        tank->incAngle(delta);
+                    }
+                    if (isKeyHeld(gHKAngleDec)) {
+                        tank->decAngle(delta);
+                    }
+                    tank->moveLeft(isKeyHeld(gHKMoveLeft));
+                    tank->moveRight(isKeyHeld(gHKMoveRight));
+                }
+                if (auto tank = dynamic_cast<Tank2*>(obj)) {
                     if (isKeyHeld(gHKAngleInc)) {
                         tank->incAngle(delta);
                     }
@@ -300,7 +327,14 @@ void GameScene::onMouseUp(Event *event)
     Vec2 pw = _view.screen2world(p);
     if (e->getMouseButton() == 0) {
         bool doSelection = false;
-        if (isKeyHeld(EventKeyboard::KeyCode::KEY_C)) {
+        if (isKeyHeld(EventKeyboard::KeyCode::KEY_X)) {
+            auto dc = DropCapsid::create(this);
+            dc->setPosition(pw);
+            dc->onLandCreate = [](GameScene* game) {
+                return Tank2::create(game);
+            };
+            dc->setPlayer(_activePlayer);
+        } else if (isKeyHeld(EventKeyboard::KeyCode::KEY_C)) {
             auto dc = DropCapsid::create(this);
             dc->setPosition(pw);
             dc->onLandCreate = [](GameScene* game) {
@@ -472,11 +506,11 @@ float GameScene::viewSelectionRadius(float size)
 
 void GameScene::guiUpdate(float delta)
 {
-    if (!_guiHpIndicators) {
-        _guiHpIndicators = DrawNode::create();
-        this->addChild(_guiHpIndicators, 2000);
+    if (!_guiIndicators) {
+        _guiIndicators = DrawNode::create();
+        this->addChild(_guiIndicators, 2000);
     }
-    _guiHpIndicators->clear();
+    _guiIndicators->clear();
     for (auto kv : *_objs) {
         if (Unit* unit = dynamic_cast<Unit*>(kv.second)) {
             Vec2 pw = unit->getNode()->getPosition();
@@ -486,26 +520,60 @@ void GameScene::guiUpdate(float delta)
                 Vec2 r = Vec2(rintf(p.x), rintf(p.y));
                 float lx = rintf(screenSize / 2);
                 float rx = rintf(screenSize - lx);
+                // TODO[fate]: do not draw indicator off screen
                 Vec2 p1 = r - Vec2(lx, 2.0f);
                 Vec2 p2 = r + Vec2(rx, 2.0f);
                 float share = (float)unit->hp / unit->hpMax;
                 float mx = rintf(p1.x + screenSize * share);
-                Color4F hpColor(share < 0.2f? Color4F::RED: (share < 0.5f? Color4F::YELLOW: Color4F::GREEN));
-                _guiHpIndicators->drawSolidRect(
+                Color4F hpColor(share < gHpRedLevel? gHpRedColor: (share < gHpYellowLevel? gHpYellowColor: gHpGreenColor));
+                _guiIndicators->drawSolidRect(
                     p1 - Vec2(1.0f, 1.0f), p2 + Vec2(1.0f, 1.0f),
-                    Color4F::BLACK
+                    gIndicatorBorderColor
                 );
                 if (p1.x < mx) {
-                    _guiHpIndicators->drawSolidRect(
+                    _guiIndicators->drawSolidRect(
                         p1, Vec2(mx, p2.y),
                         hpColor
                     );
                 }
                 if (mx + 1.0f < p2.x) {
-                    _guiHpIndicators->drawSolidRect(
+                    _guiIndicators->drawSolidRect(
                         Vec2(mx + 1.0f, p1.y), p2,
-                        Color4F::GRAY
+                        gHpBgColor
                     );
+                }
+            }
+        }
+        if (Building* building = dynamic_cast<Building*>(kv.second)) {
+            Vec2 pw = building->getNode()->getPosition();
+            float screenSize = rintf(building->getSize() / _view.getZoom());
+            if (screenSize >= 20.0f) {
+                Vec2 p = _view.world2screen(pw) + Vec2(0, screenSize * 0.6f);
+                Vec2 r = Vec2(rintf(p.x), rintf(p.y));
+                float lx = rintf(screenSize / 2);
+                float rx = rintf(screenSize - lx);
+                // TODO[fate]: do not draw indicator off screen
+                Vec2 p1 = r - Vec2(lx, 2.0f);
+                Vec2 p2 = r + Vec2(rx, 2.0f);
+                float share = building->getProductionProgress();
+                if (share > 0.0f) {
+                    float mx = rintf(p1.x + screenSize * share);
+                    _guiIndicators->drawSolidRect(
+                        p1 - Vec2(1.0f, 1.0f), p2 + Vec2(1.0f, 1.0f),
+                        gIndicatorBorderColor
+                    );
+                    if (p1.x < mx) {
+                        _guiIndicators->drawSolidRect(
+                            p1, Vec2(mx, p2.y),
+                            gProdColor
+                        );
+                    }
+                    if (mx + 1.0f < p2.x) {
+                        _guiIndicators->drawSolidRect(
+                            Vec2(mx + 1.0f, p1.y), p2,
+                            gProdBgColor
+                        );
+                    }
                 }
             }
         }

@@ -5,6 +5,7 @@ USING_NS_CC;
 // Materials
 const cc::PhysicsMaterial gPlanetMaterial(0.0, 0.2, 500.0);
 const cc::PhysicsMaterial gUnitMaterial(0.0, 0.2, 0.002);
+const cc::PhysicsMaterial gRoughUnitMaterial(0.0, 0.2, 0.2);
 const cc::PhysicsMaterial gProjectileMaterial(0.0, 0.2, 10.0);
 const cc::PhysicsMaterial gBuildingMaterial(0.0, 0.2, 10.0);
 const cc::PhysicsMaterial gPlatformMaterial(0.0, 0.2, 150.0);
@@ -24,6 +25,15 @@ const cc::Color4F gPlayerColor[3] = {
     Color4F(0.9f, 0.1f, 0.9f, 1.0f)
 };
 const cc::Color4F gSelectionColor(0.0f, 0.9f, 0.0f, 1.0f);
+const float gHpRedLevel    = 0.2f;
+const float gHpYellowLevel = 0.5f;
+const cc::Color4F gHpRedColor   (1.0f, 0.0f, 0.0f, 1.0f);
+const cc::Color4F gHpYellowColor(1.0f, 1.0f, 0.0f, 1.0f);
+const cc::Color4F gHpGreenColor (0.0f, 1.0f, 0.0f, 1.0f);
+const cc::Color4F gHpBgColor    (0.7f, 0.7f, 0.7f, 1.0f);
+const cc::Color4F gProdColor      (0.0f, 1.0f, 1.0f, 1.0f);
+const cc::Color4F gProdBgColor    (0.7f, 0.7f, 0.7f, 1.0f);
+const cc::Color4F gIndicatorBorderColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 // Keyboard
 cc::EventKeyboard::KeyCode gHKGroup[10] = {

@@ -64,6 +64,7 @@ constexpr int gMatterBitmask = 0x02;
 // Materials
 extern const cc::PhysicsMaterial gPlanetMaterial;
 extern const cc::PhysicsMaterial gUnitMaterial;
+extern const cc::PhysicsMaterial gRoughUnitMaterial;
 extern const cc::PhysicsMaterial gProjectileMaterial;
 extern const cc::PhysicsMaterial gBuildingMaterial;
 extern const cc::PhysicsMaterial gPlatformMaterial;
@@ -79,6 +80,15 @@ extern const cc::Color4F gResColor[RES_COUNT];
 extern const cc::Color4F gNeutralPlayerColor;
 extern const cc::Color4F gPlayerColor[3];
 extern const cc::Color4F gSelectionColor;
+extern const float gHpRedLevel;
+extern const float gHpYellowLevel;
+extern const cc::Color4F gHpRedColor;
+extern const cc::Color4F gHpYellowColor;
+extern const cc::Color4F gHpGreenColor;
+extern const cc::Color4F gHpBgColor;
+extern const cc::Color4F gProdColor;
+extern const cc::Color4F gProdBgColor;
+extern const cc::Color4F gIndicatorBorderColor;
 
 // Keyboard hotkeys
 static constexpr size_t GRP_COUNT = 10;
