@@ -18,7 +18,7 @@ Must have features:
 - [x] building selection
 - [x] unit production
 - [ ] unit production control (stop/repeat/once/choose unit)
-- [ ] unit production indicator (progress bar)
+- [x] unit production indicator (progress bar)
 - [ ] rally points
 - [ ] unit/building control panel (with button for commands)
 - [ ] unit/building selection panel (with selected units list)
