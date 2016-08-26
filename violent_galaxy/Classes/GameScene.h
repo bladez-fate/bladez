@@ -194,8 +194,6 @@ public: // Collisions
                          cc::PhysicsContactPreSolve* preSolve,
                          const cc::PhysicsContactPostSolve* postSolve);
 private:
-    void onContactUnit(ContactInfo& cinfo, Unit* subj, Unit* obj);
-    bool onContactUnitUnit(ContactInfo& cinfo);
     bool onContactUnitAstroObj(ContactInfo& cinfo);
     bool onContactProjectileAstroObj(ContactInfo& cinfo);
     bool onContactProjectileUnit(ContactInfo& cinfo);

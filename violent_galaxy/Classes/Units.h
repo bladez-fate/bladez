@@ -135,7 +135,6 @@ public:
     void goBack();
     void goFront();
     float separationVelocityAlong(cc::Vec2 axis);
-    virtual bool isMoving() { return false; } // Should return true iff unit has an order that forces it to move
 protected:
     Unit(i32 hpMax_ = 1, i32 supply_ = 1)
         : supply(supply_)
@@ -178,7 +177,6 @@ public:
     void moveLeft(bool go);
     void moveRight(bool go);
     void move();
-    bool isMoving()  override;
 protected:
     Tank()
         : Unit(150, 1)

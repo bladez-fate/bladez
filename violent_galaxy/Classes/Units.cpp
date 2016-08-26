@@ -217,7 +217,7 @@ void Tank::moveRight(bool go)
 void Tank::move()
 {
     float v = 0.0f;
-    if (Tank::isMoving()) {
+    if (_movingLeft ^ _movingRight) {
         if (_movingRight) {
             v += _targetV;
         } else {
@@ -229,11 +229,6 @@ void Tank::move()
     v += separationVelocityAlong(xdir);
 
     _track->setSurfaceVelocity(-v * xdir);
-}
-
-bool Tank::isMoving()
-{
-    return _movingLeft ^ _movingRight;
 }
 
 bool Tank::init(GameScene* game)

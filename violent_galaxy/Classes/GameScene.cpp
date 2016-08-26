@@ -874,13 +874,17 @@ bool GameScene::dispatchContact(PhysicsContact& contact,
         return onContact ## x ## x (cinfo); \
     } \
     /**/
+#define VG_IGNORECOLLISION_BOTH(x) \
+    if (cinfo.thisObjTag.type() == ObjType::x && cinfo.thatObjTag.type() == ObjType::x) { \
+        return false; \
+    } \
+    /**/
 #define VG_DEFAULTCOLLISION(x, y)
 #define VG_IGNORECOLLISION(x, y) \
     if (cinfo.thisObjTag.type() == ObjType::x && cinfo.thatObjTag.type() == ObjType::y) { \
         return false; \
     } \
     if (cinfo.thisObjTag.type() == ObjType::y && cinfo.thatObjTag.type() == ObjType::x) { \
-        cinfo.swap(); \
         return false; \
     } \
     /**/
@@ -893,7 +897,8 @@ bool GameScene::dispatchContact(PhysicsContact& contact,
         return onContact ## x ## y(cinfo); \
     } \
     /**/
-    VG_CHECKCOLLISION_BOTH(Unit);
+    VG_IGNORECOLLISION_BOTH(Unit);
+    VG_IGNORECOLLISION_BOTH(Projectile);
     VG_CHECKCOLLISION  (Unit,       AstroObj);
     VG_CHECKCOLLISION  (Projectile, AstroObj);
     VG_CHECKCOLLISION  (Projectile, Unit);
@@ -924,29 +929,6 @@ const char* ContactEventCodeName(PhysicsContact::EventCode ecode)
     default:
         return "UNKNOWN";
     }
-}
-
-void GameScene::onContactUnit(ContactInfo& cinfo, Unit* subj, Unit* obj)
-{
-    switch (cinfo.contact.getEventCode()) {
-    case PhysicsContact::EventCode::BEGIN:
-        break;
-    case PhysicsContact::EventCode::SEPARATE:
-        break;
-    }
-}
-
-bool GameScene::onContactUnitUnit(ContactInfo& cinfo)
-{
-    Unit* thisUnit = static_cast<Unit*>(cinfo.thisObj);
-    Unit* thatUnit = static_cast<Unit*>(cinfo.thatObj);
-    onContactUnit(cinfo, thisUnit, thatUnit);
-    onContactUnit(cinfo, thatUnit, thisUnit);
-//    CCLOG("CONTACT UNIT-UNIT %s contacts1# %d contacts2# %d",
-//          ContactEventCodeName(cinfo.contact.getEventCode()),
-//          thisUnit->contacts, thatUnit->contacts
-//    );
-    return false;
 }
 
 bool GameScene::onContactUnitAstroObj(ContactInfo& cinfo)
