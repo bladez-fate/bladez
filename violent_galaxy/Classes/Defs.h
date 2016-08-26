@@ -58,8 +58,10 @@ static constexpr Zs ZsForeground = Zs4;
 // Resources
 static constexpr size_t RES_COUNT = 2;
 
-// Constacts
-constexpr int gMatterBitmask = 0x02;
+// Contacts
+extern const float gMaxUnitSize;
+extern const float gMaxSeparationVelocity;
+extern const float gMaxSeparationVelocitySq;
 
 // Materials
 extern const cc::PhysicsMaterial gPlanetMaterial;
@@ -89,6 +91,23 @@ extern const cc::Color4F gHpBgColor;
 extern const cc::Color4F gProdColor;
 extern const cc::Color4F gProdBgColor;
 extern const cc::Color4F gIndicatorBorderColor;
+
+// GUI
+extern const cc::Color4F gPanelBgColor;
+extern const cc::Color4F gPanelBorderColor;
+//extern float gSelectionPanelWidth;
+extern float gSelectionPanelHeight;
+extern float gMiniMapPanelWidth;
+extern float gMiniMapPanelHeight;
+extern float gControlPanelWidth;
+extern float gControlPanelHeight;
+
+// Z-Order
+extern const int gZOrderMouseSelectionRect;
+extern const int gZOrderIndicators;
+extern const int gZOrderResIcons;
+extern const int gZOrderResLabels;
+extern const int gZOrderSelectionPanel;
 
 // Keyboard hotkeys
 static constexpr size_t GRP_COUNT = 10;

@@ -13,8 +13,17 @@ bool Obj::init(GameScene* game)
 void Obj::destroy()
 {
 //    _game->objs()->release(this); // creates autorelease obj
-    _game->objs()->remove(this); // creates autorelease obj
-//    CCLOG("OBJ DESTROY id# %d", (int)_id);
+    _game->objs()->remove(this); // destructs obj
+    //    CCLOG("OBJ DESTROY id# %d", (int)_id);
+}
+
+void Obj::die()
+{
+    if (_game) {
+        _game->addDeadObj(this);
+    } else {
+        destroy();
+    }
 }
 
 void Obj::update(float delta)

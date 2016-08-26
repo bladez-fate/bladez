@@ -78,7 +78,9 @@ public:
 protected:
     Obj() {}
     virtual bool init(GameScene* game);
+public:
     virtual void destroy();
+    virtual void die(); // Marks object for later destroy()
 protected:
     Id _id;
     GameScene* _game;

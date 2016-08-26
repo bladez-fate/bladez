@@ -36,7 +36,7 @@ void Unit::replaceWith(Unit* unit)
     ub->setAngularVelocity(b->getAngularVelocity());
 
     // Should not we reuse Id?
-    destroy();
+    die();
 }
 
 void Unit::setPlayer(Player* player)
@@ -66,6 +66,12 @@ void Unit::goBack()
 void Unit::goFront()
 {
     setZs(ZsForeground);
+}
+
+float Unit::separationVelocityAlong(Vec2 axis)
+{
+    CCASSERT(fabsf(axis.getLengthSq() - 1) < 1e-3, "got unnormalized axis vector");
+    return sepDir.dot(axis) * gMaxSeparationVelocity * 0.4f;
 }
 
 ObjType Unit::getObjType()
@@ -201,27 +207,34 @@ void Tank::addPower()
 void Tank::moveLeft(bool go)
 {
     _movingLeft = go;
-    move();
 }
 
 void Tank::moveRight(bool go)
 {
     _movingRight = go;
-    move();
 }
 
 void Tank::move()
 {
-    if (_movingLeft ^ _movingRight) {
-        Vec2 xdir = _body->local2World(Vec2::UNIT_X) - _body->local2World(Vec2::ZERO);
+    float v = 0.0f;
+    if (Tank::isMoving()) {
         if (_movingRight) {
-            _track->setSurfaceVelocity(-_targetV * xdir);
+            v += _targetV;
         } else {
-            _track->setSurfaceVelocity(-_targetV * -xdir);
+            v -= _targetV;
         }
-    } else {
-        _track->setSurfaceVelocity(Vec2::ZERO);
     }
+
+    Vec2 xdir = _body->local2World(Vec2::UNIT_X) - _body->local2World(Vec2::ZERO);
+    v += separationVelocityAlong(xdir);
+    v = clampf(v, -_targetV, _targetV);
+
+    _track->setSurfaceVelocity(-v * xdir);
+}
+
+bool Tank::isMoving()
+{
+    return _movingLeft ^ _movingRight;
 }
 
 bool Tank::init(GameScene* game)
@@ -308,161 +321,10 @@ void Tank::draw()
 
 void Tank::update(float delta)
 {
-    if (_cooldownLeft > 0) {
-        _cooldownLeft -= delta;
+    if (!getNode()->getPhysicsBody()) {
+        return; // Happens just after creation
     }
-}
-
-float Tank2::getSize()
-{
-    return _size;
-}
-
-void Tank2::shoot()
-{
-    if (_cooldownLeft <= 0.0f) {
-        _cooldownLeft = _cooldown;
-        Projectile* proj = Shell::create(_game);
-        Vec2 localBegin = _gunBegin;
-        Vec2 localEnd = _gunBegin + _gunLength * Vec2::forAngle(CC_DEGREES_TO_RADIANS(_angle));
-        Vec2 begin = _body->local2World(localBegin);
-        Vec2 end = _body->local2World(localEnd);
-        proj->setPosition(end);
-        Vec2 j = (end - begin).getNormalized() * _power;
-        proj->getNode()->getPhysicsBody()->applyImpulse(j);
-        _body->applyImpulse(_body->world2Local(Vec2::ZERO) - _body->world2Local(j));
-    }
-}
-
-void Tank2::incAngle(float dt)
-{
-    _angle = clampf(_angle + _angleStep * dt, _angleMin, _angleMax);
-    draw();
-}
-
-void Tank2::decAngle(float dt)
-{
-    _angle = clampf(_angle - _angleStep * dt, _angleMin, _angleMax);
-    draw();
-}
-
-void Tank2::subPower()
-{
-    _power = clampf(_power - _powerStep, _powerMin, _powerMax);
-}
-
-void Tank2::addPower()
-{
-    _power = clampf(_power + _powerStep, _powerMin, _powerMax);
-}
-
-void Tank2::moveLeft(bool go)
-{
-    _movingLeft = go;
     move();
-}
-
-void Tank2::moveRight(bool go)
-{
-    _movingRight = go;
-    move();
-}
-
-void Tank2::move()
-{
-    if (_movingLeft ^ _movingRight) {
-        Vec2 xdir = _body->local2World(Vec2::UNIT_X) - _body->local2World(Vec2::ZERO);
-        if (_movingRight) {
-            _track->setSurfaceVelocity(-_targetV * xdir);
-        } else {
-            _track->setSurfaceVelocity(-_targetV * -xdir);
-        }
-    } else {
-        _track->setSurfaceVelocity(Vec2::ZERO);
-    }
-}
-
-bool Tank2::init(GameScene* game)
-{
-    _size = 25;
-
-    float x = 40;
-    Size bb(220 + 2*x,80);
-    Vec2 cg_offs(0, -30);
-    Vec2 base[] = {
-        Vec2(-80-x, 0), Vec2(-102.5-x, -30), Vec2(-95-x, -40), Vec2(95+x, -40),
-        Vec2(102.5+x, -30), Vec2(80+x, 0)
-    };
-    Vec2 head[] = {
-        Vec2(-50-x, 40), Vec2(-60-x, 30), Vec2(-60-x, 10), Vec2(-50-x, 0),
-        Vec2(50+x, 0), Vec2(60+x, 10), Vec2(60+x, 30), Vec2(50+x, 40)
-    };
-    Vec2 hullPoly[] = {
-        Vec2(-50-x, 40), Vec2(-102.5-x, -30), Vec2(102.5+x, -30), Vec2(50+x, 40)
-    };
-    Vec2 trackPoly[] = {
-        Vec2(-102.5-x, -30), Vec2(-95-x, -40), Vec2(95+x, -40), Vec2(102.5+x, -30)
-    };
-    Vec2 gunBegin(0, 20);
-    float gunLength = 110+x;
-
-    float scale = _size/bb.width;
-    for (size_t i = 0; i < sizeof(_base)/sizeof(*_base); i++) _base[i] = (base[i] - cg_offs) * scale;
-    for (size_t i = 0; i < sizeof(_head)/sizeof(*_head); i++) _head[i] = (head[i] - cg_offs) * scale;
-    for (size_t i = 0; i < sizeof(_hullPoly)/sizeof(*_hullPoly); i++) _hullPoly[i] = (hullPoly[i] - cg_offs) * scale;
-    for (size_t i = 0; i < sizeof(_trackPoly)/sizeof(*_trackPoly); i++) _trackPoly[i] = (trackPoly[i] - cg_offs) * scale;
-    _gunBegin = (gunBegin - cg_offs) * scale;
-    _bb = bb * scale;
-    _cg_offs = cg_offs * scale;
-    _gunLength = gunLength * scale;
-
-    _angleMin = 0;
-    _angleMax = 180 - _angleMin;
-    _angleStep = 90;
-    _powerMin = 1;
-    _powerMax = 20;
-    _powerStep = 1;
-
-    _cooldown = 2;
-
-    _angle = 60;
-    _power = _powerMax;
-    _targetV = 100;
-
-    Unit::init(game);
-
-    return true;
-}
-
-Node* Tank2::createNodes()
-{
-    return DrawNode::create();
-}
-
-PhysicsBody* Tank2::createBody()
-{
-    _body = PhysicsBody::create(1.0, 200.0);
-    auto hull = PhysicsShapePolygon::create(_hullPoly, sizeof(_hullPoly)/sizeof(*_hullPoly), gRoughUnitMaterial, Vec2::ZERO);
-    _track = PhysicsShapePolygon::create(_trackPoly, sizeof(_trackPoly)/sizeof(*_trackPoly), gRoughUnitMaterial, Vec2::ZERO);
-    _body->addShape(hull, false);
-    _body->addShape(_track, false);
-    return _body;
-}
-
-void Tank2::draw()
-{
-    node()->clear();
-    node()->drawSegment(
-        _gunBegin,
-        _gunBegin + _gunLength * Vec2::forAngle(CC_DEGREES_TO_RADIANS(_angle)),
-        1, uniformColor()
-    );
-    node()->drawSolidPoly(_base, sizeof(_base)/sizeof(*_base), colorFilter(Color4F::WHITE));
-    node()->drawSolidPoly(_head, sizeof(_head)/sizeof(*_head), uniformColor());
-}
-
-void Tank2::update(float delta)
-{
     if (_cooldownLeft > 0) {
         _cooldownLeft -= delta;
     }

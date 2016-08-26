@@ -2,6 +2,11 @@
 
 USING_NS_CC;
 
+// Contacts
+extern const float gMaxUnitSize = 100;
+extern const float gMaxSeparationVelocity = 80;
+extern const float gMaxSeparationVelocitySq = gMaxSeparationVelocity * gMaxSeparationVelocity;
+
 // Materials
 const cc::PhysicsMaterial gPlanetMaterial(0.0, 0.2, 500.0);
 const cc::PhysicsMaterial gUnitMaterial(0.0, 0.2, 0.002);
@@ -34,6 +39,23 @@ const cc::Color4F gHpBgColor    (0.7f, 0.7f, 0.7f, 1.0f);
 const cc::Color4F gProdColor      (0.0f, 1.0f, 1.0f, 1.0f);
 const cc::Color4F gProdBgColor    (0.7f, 0.7f, 0.7f, 1.0f);
 const cc::Color4F gIndicatorBorderColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+// GUI
+const cc::Color4F gPanelBgColor    (0.0f, 0.0f, 0.0f, 1.0f);
+const cc::Color4F gPanelBorderColor(0.8f, 0.8f, 0.8f, 1.0f);
+//float gSelectionPanelWidth = 800;
+float gSelectionPanelHeight = 100;
+float gMiniMapPanelWidth = 250;
+float gMiniMapPanelHeight = 250;
+float gControlPanelWidth = 350;
+float gControlPanelHeight = 250;
+
+// Z-Order
+const int gZOrderMouseSelectionRect = 1000;
+const int gZOrderIndicators = 2000;
+const int gZOrderResIcons = 2001;
+const int gZOrderResLabels = 2002;
+const int gZOrderSelectionPanel = 3000;
 
 // Keyboard
 cc::EventKeyboard::KeyCode gHKGroup[10] = {

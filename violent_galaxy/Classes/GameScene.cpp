@@ -28,6 +28,11 @@ Scene* GameScene::createScene()
     return scene;
 }
 
+void GameScene::addDeadObj(Obj* obj)
+{
+     _deadObjs.push_back(obj);
+}
+
 bool GameScene::init()
 {
     if (!Layer::init()) {
@@ -62,13 +67,63 @@ bool GameScene::init()
 
 void GameScene::update(float delta)
 {
+    // Remove dead objs
+    for (Obj* obj : _deadObjs) {
+        obj->destroy();
+    }
+    _deadObjs.clear();
+
+    // Tile grid
+    _unitGrid.clear();
+    for (auto kv : *_objs) {
+        Obj* obj = kv.second;
+        if (Unit* unit = dynamic_cast<Unit*>(obj)) {
+            Vec2 p = unit->getNode()->getPhysicsBody()->getPosition();
+            _unitGrid.add(unit, p, unit->getSize() / 2);
+        }
+    }
+
+    // Push overlapping units
+    for (auto kv : *_objs) {
+        Obj* obj = kv.second;
+        if (Unit* u = dynamic_cast<Unit*>(obj)) {
+            auto body = u->getNode()->getPhysicsBody();
+            Vec2 p = body->getPosition();
+            float radius = u->getSize() / 2;
+            u->sepDir = Vec2::ZERO;
+            _unitGrid.query(p, u->getSize() / 2, [=] (Unit* u2, Vec2 p2, float radius2, float distSq) -> bool {
+                if (u == u2) {
+                    return true;
+                }
+                auto body2 = u2->getNode()->getPhysicsBody();
+                Vec2 rv = body->getVelocity() - body2->getVelocity(); // relative velocity
+                if (rv.lengthSquared() < gMaxSeparationVelocitySq) {
+                    Vec2 d = p - p2;
+                    d.normalize();
+                    float maxDist = radius + radius2;
+                    d *= std::max(0.0, std::min(1.0, 1.0 - distSq / maxDist / maxDist));
+                    if (d.isSmall()) {
+                        Vec2 xdir = body->local2World(Vec2::UNIT_X) - body->local2World(Vec2::ZERO);
+                        Vec2 xdir2 = body2->local2World(Vec2::UNIT_X) - body2->local2World(Vec2::ZERO);
+                        Vec2 sepAxis = xdir + xdir2;
+                        sepAxis.normalize();
+                        int order = (u->getId() < u2->getId()? -1: 1);
+                        d = order * sepAxis;
+                    }
+                    u->sepDir += d;
+                }
+                return true;
+            });
+        }
+    }
+
+    // Update
     Layer::update(delta);
     playerUpdate(delta);
     keyboardUpdate(delta);
     _planet->getNode()->getPhysicsBody()->setVelocity(Vec2::ZERO);
     _planet->getNode()->getPhysicsBody()->setAngularVelocity(0);
 
-    // Hardcore: this must be optimized
     for (auto kv : *_objs) {
         Obj* obj = kv.second;
         obj->update(delta);
@@ -105,6 +160,8 @@ void GameScene::createWorld(Scene* scene, PhysicsWorld* pworld)
     initPlayers();
     initMouse();
     initKeyboard();
+
+    initGui();
 }
 
 void GameScene::initKeyboard()
@@ -182,23 +239,6 @@ void GameScene::initKeyboard()
                             }
                         }
                     }
-                    if (auto tank = dynamic_cast<Tank2*>(obj)) {
-                        int repeat = isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT)? 10: 1;
-                        while (repeat--) {
-                            if (keyCode == gHKShoot) {
-                                tank->shoot();
-                                repeat = 0;
-                            } else if (keyCode == gHKPowerInc) {
-                                tank->addPower();
-                            } else if (keyCode == gHKPowerDec) {
-                                tank->subPower();
-                            } else if (keyCode == gHKGoBack) {
-                                tank->goBack();
-                            } else if (keyCode == gHKGoFront) {
-                                tank->goFront();
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -214,16 +254,6 @@ void GameScene::keyboardUpdate(float delta)
         for (Id id : _activePlayer->selected) {
             if (auto obj = objs()->getById(id)) {
                 if (auto tank = dynamic_cast<Tank*>(obj)) {
-                    if (isKeyHeld(gHKAngleInc)) {
-                        tank->incAngle(delta);
-                    }
-                    if (isKeyHeld(gHKAngleDec)) {
-                        tank->decAngle(delta);
-                    }
-                    tank->moveLeft(isKeyHeld(gHKMoveLeft));
-                    tank->moveRight(isKeyHeld(gHKMoveRight));
-                }
-                if (auto tank = dynamic_cast<Tank2*>(obj)) {
                     if (isKeyHeld(gHKAngleInc)) {
                         tank->incAngle(delta);
                     }
@@ -293,7 +323,7 @@ void GameScene::initMouse()
     this->schedule(schedule_selector(GameScene::onMouseTimer), _mouseTimerIntervalSec);
 
     _mouseSelectRectNode = DrawNode::create();
-    this->addChild(_mouseSelectRectNode, 1000);
+    this->addChild(_mouseSelectRectNode, gZOrderMouseSelectionRect);
 }
 
 void GameScene::onMouseMove(Event* event)
@@ -328,12 +358,12 @@ void GameScene::onMouseUp(Event *event)
     if (e->getMouseButton() == 0) {
         bool doSelection = false;
         if (isKeyHeld(EventKeyboard::KeyCode::KEY_X)) {
-            auto dc = DropCapsid::create(this);
-            dc->setPosition(pw);
-            dc->onLandCreate = [](GameScene* game) {
-                return Tank2::create(game);
-            };
-            dc->setPlayer(_activePlayer);
+//            auto dc = DropCapsid::create(this);
+//            dc->setPosition(pw);
+//            dc->onLandCreate = [](GameScene* game) {
+//                return Tank2::create(game);
+//            };
+//            dc->setPlayer(_activePlayer);
         } else if (isKeyHeld(EventKeyboard::KeyCode::KEY_C)) {
             auto dc = DropCapsid::create(this);
             dc->setPosition(pw);
@@ -504,11 +534,16 @@ float GameScene::viewSelectionRadius(float size)
     return clampf(_view.getZoom() * 16.0f, size * 1.1f, 1000.0f);
 }
 
+void GameScene::initGui()
+{
+    _selectionPanel.init(this);
+}
+
 void GameScene::guiUpdate(float delta)
 {
     if (!_guiIndicators) {
         _guiIndicators = DrawNode::create();
-        this->addChild(_guiIndicators, 2000);
+        this->addChild(_guiIndicators, gZOrderIndicators);
     }
     _guiIndicators->clear();
     for (auto kv : *_objs) {
@@ -582,7 +617,7 @@ void GameScene::guiUpdate(float delta)
     if (!_resIcons) {
         auto s = Director::getInstance()->getVisibleSize();
         _resIcons = DrawNode::create();
-        this->addChild(_resIcons, 2001);
+        this->addChild(_resIcons, gZOrderResIcons);
         float width = 80;
         float size = 14;
         float txtwidth = width - size - 4;
@@ -592,7 +627,7 @@ void GameScene::guiUpdate(float delta)
             l->setPosition(p + Vec2(txtwidth/2, 0));
             l->setHorizontalAlignment(TextHAlignment::LEFT);
             l->setVerticalAlignment(TextVAlignment::BOTTOM);
-            this->addChild(l, 2002);
+            this->addChild(l, gZOrderResLabels);
             _resIcons->drawSolidRect(
                 p - Vec2(size + 3, size/2 + 1),
                 p - Vec2(1, - size/2 - 1),
@@ -834,6 +869,11 @@ bool GameScene::dispatchContact(PhysicsContact& contact,
 //          (int)cinfo.thisObjTag.type(), (int)cinfo.thatObjTag.type(),
 //          cinfo.thisShapeTag.type<int>(), cinfo.thatShapeTag.type<int>());
 
+#define VG_CHECKCOLLISION_BOTH(x) \
+    if (cinfo.thisObjTag.type() == ObjType::x && cinfo.thatObjTag.type() == ObjType::x) { \
+        return onContact ## x ## x (cinfo); \
+    } \
+    /**/
 #define VG_DEFAULTCOLLISION(x, y)
 #define VG_IGNORECOLLISION(x, y) \
     if (cinfo.thisObjTag.type() == ObjType::x && cinfo.thatObjTag.type() == ObjType::y) { \
@@ -853,17 +893,60 @@ bool GameScene::dispatchContact(PhysicsContact& contact,
         return onContact ## x ## y(cinfo); \
     } \
     /**/
+    VG_CHECKCOLLISION_BOTH(Unit);
     VG_CHECKCOLLISION  (Unit,       AstroObj);
     VG_CHECKCOLLISION  (Projectile, AstroObj);
     VG_CHECKCOLLISION  (Projectile, Unit);
     VG_DEFAULTCOLLISION(Building,   AstroObj);
     VG_IGNORECOLLISION (Building,   Unit);
     VG_IGNORECOLLISION (Building,   Projectile);
+#undef VG_CHECKCOLLISION_BOTH
 #undef VG_DEFAULTCOLLISION
 #undef VG_IGNORECOLLISION
 #undef VG_CHECKCOLLISION
 
     return true;
+}
+
+const char* ContactEventCodeName(PhysicsContact::EventCode ecode)
+{
+    switch (ecode) {
+    case PhysicsContact::EventCode::NONE:
+        return "NONE";
+    case PhysicsContact::EventCode::BEGIN:
+        return "BEGIN";
+    case PhysicsContact::EventCode::PRESOLVE:
+        return "PRESOLVE";
+    case PhysicsContact::EventCode::POSTSOLVE:
+        return "POSTSOLVE";
+    case PhysicsContact::EventCode::SEPARATE:
+        return "SEPARATE";
+    default:
+        return "UNKNOWN";
+    }
+}
+
+void GameScene::onContactUnit(ContactInfo& cinfo, Unit* subj, Unit* obj)
+{
+    switch (cinfo.contact.getEventCode()) {
+    case PhysicsContact::EventCode::BEGIN:
+        break;
+    case PhysicsContact::EventCode::SEPARATE:
+        break;
+    }
+}
+
+bool GameScene::onContactUnitUnit(ContactInfo& cinfo)
+{
+    Unit* thisUnit = static_cast<Unit*>(cinfo.thisObj);
+    Unit* thatUnit = static_cast<Unit*>(cinfo.thatObj);
+    onContactUnit(cinfo, thisUnit, thatUnit);
+    onContactUnit(cinfo, thatUnit, thisUnit);
+//    CCLOG("CONTACT UNIT-UNIT %s contacts1# %d contacts2# %d",
+//          ContactEventCodeName(cinfo.contact.getEventCode()),
+//          thisUnit->contacts, thatUnit->contacts
+//    );
+    return false;
 }
 
 bool GameScene::onContactUnitAstroObj(ContactInfo& cinfo)
@@ -1076,4 +1159,49 @@ const std::set<EventKeyboard::KeyCode>& KeySpec::getKeyModList()
         ret.insert(EventKeyboard::KeyCode::KEY_CTRL);
     }
     return ret;
+}
+
+void Panels::init(GameScene* game)
+{
+    _background = DrawNode::create();
+    game->addChild(_background, gZOrderSelectionPanel);
+
+    Size s = Director::getInstance()->getVisibleSize();
+    Vec2 o = Director::getInstance()->getVisibleOrigin();
+
+    // Selection panel
+    _background->drawSolidRect(
+        Vec2(gMiniMapPanelWidth, 0),
+        Vec2((s.width - gControlPanelWidth), gSelectionPanelHeight),
+        gPanelBgColor
+    );
+    _background->drawRect(
+        Vec2(gMiniMapPanelWidth, 0),
+        Vec2((s.width - gControlPanelWidth), gSelectionPanelHeight),
+        gPanelBorderColor
+    );
+
+    // MiniMap panel
+    _background->drawSolidRect(
+        Vec2(0, 0),
+        Vec2(gMiniMapPanelWidth, gMiniMapPanelHeight),
+        gPanelBgColor
+    );
+    _background->drawRect(
+        Vec2(0, 0),
+        Vec2(gMiniMapPanelWidth, gMiniMapPanelHeight),
+        gPanelBorderColor
+    );
+
+    // Control panel
+    _background->drawSolidRect(
+        Vec2(s.width - gControlPanelWidth, 0),
+        Vec2(s.width, gControlPanelHeight),
+        gPanelBgColor
+    );
+    _background->drawRect(
+        Vec2(s.width - gControlPanelWidth, 0),
+        Vec2(s.width, gControlPanelHeight),
+        gPanelBorderColor
+    );
 }

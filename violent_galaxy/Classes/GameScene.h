@@ -94,6 +94,13 @@ struct KeyHistory {
     std::chrono::high_resolution_clock::time_point time;
 };
 
+class Panels {
+public:
+    void init(GameScene* game);
+private:
+    cc::DrawNode* _background; // Main node, other nodes are children
+};
+
 class GameScene : public cc::Layer
 {
 public:
@@ -101,17 +108,22 @@ public:
     CREATE_FUNC(GameScene);
 
     ObjStorage* objs() { return _objs.get(); }
+    void addDeadObj(Obj* obj);
     cc::PhysicsWorld* physicsWorld() { return _pworld; }
 public:
     void menuCloseCallback(cc::Ref* pSender);
 private: // Scene
-    GameScene() {}
+    GameScene()
+        : _unitGrid(3200, 5)
+    {}
     virtual bool init() override;
     void update(float delta) override;
 private: // World
     void createWorld(cc::Scene* scene, cc::PhysicsWorld* pworld);
     cc::PhysicsWorld* _pworld = nullptr;
     cc::RefPtr<ObjStorage> _objs;
+    std::vector<Obj*> _deadObjs;
+    TileGrid<Unit*> _unitGrid;
 private: // Keyboard
     void initKeyboard();
     void keyboardUpdate(float delta);
@@ -150,11 +162,13 @@ public: // View
 private:
     WorldView _view;
 private: // GUI
+    void initGui();
     void guiUpdate(float delta);
     cc::DrawNode* _guiIndicators = nullptr;
     cc::DrawNode* _resIcons = nullptr;
     cc::Label* _supplyLabel = nullptr;
     cc::Label* _resLabels[RES_COUNT] = {0};
+    Panels _selectionPanel;
 private: // Players
     void initPlayers();
     void playerUpdate(float delta);
@@ -179,6 +193,9 @@ public: // Collisions
     bool dispatchContact(cc::PhysicsContact& contact,
                          cc::PhysicsContactPreSolve* preSolve,
                          const cc::PhysicsContactPostSolve* postSolve);
+private:
+    void onContactUnit(ContactInfo& cinfo, Unit* subj, Unit* obj);
+    bool onContactUnitUnit(ContactInfo& cinfo);
     bool onContactUnitAstroObj(ContactInfo& cinfo);
     bool onContactProjectileAstroObj(ContactInfo& cinfo);
     bool onContactProjectileUnit(ContactInfo& cinfo);
