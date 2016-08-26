@@ -227,7 +227,6 @@ void Tank::move()
 
     Vec2 xdir = _body->local2World(Vec2::UNIT_X) - _body->local2World(Vec2::ZERO);
     v += separationVelocityAlong(xdir);
-    v = clampf(v, -_targetV, _targetV);
 
     _track->setSurfaceVelocity(-v * xdir);
 }
