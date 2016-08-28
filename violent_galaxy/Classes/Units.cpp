@@ -74,6 +74,17 @@ float Unit::separationVelocityAlong(Vec2 axis)
     return sepDir.dot(axis) * gMaxSeparationVelocity * 0.4f;
 }
 
+void Unit::giveOrder(Order order, bool add)
+{
+    if (!add) {
+        _orders.clear();
+    }
+    if (_orders.size() >= gMaxOrders) {
+        return; // TODO[fate]: add some kind of notification on order ignore
+    }
+    _orders.emplace_back(order);
+}
+
 ObjType Unit::getObjType()
 {
     return ObjType::Unit;
@@ -214,9 +225,38 @@ void Tank::moveRight(bool go)
     _movingRight = go;
 }
 
+Tank::ExecResult Tank::executeMove(Vec2 p)
+{
+    if (surfaceId) {
+        if (Planet* planet = _game->objs()->getByIdAs<Planet>(surfaceId)) {
+            Polar src = planet->world2polar(_body->getPosition());
+            Polar dst = planet->world2polar(p);
+            float aDist = angleDistance(src.a, dst.a);
+            if (fabsf(aDist) * src.r < getSize() / 10) {
+                moveLeft(false);
+                moveRight(false);
+                return ExecResult::Done;
+            } else if (aDist < 0) {
+                moveRight(true);
+                moveLeft(false);
+                return ExecResult::InProgress;
+            } else {
+                moveRight(false);
+                moveLeft(true);
+                return ExecResult::InProgress;
+            }
+        } else {
+            return ExecResult::Failed;
+        }
+    } else {
+        return ExecResult::Delayed;
+    }
+}
+
 void Tank::move()
 {
     float v = 0.0f;
+
     if (_movingLeft ^ _movingRight) {
         if (_movingRight) {
             v += _targetV;
@@ -313,11 +353,44 @@ void Tank::draw()
     node()->drawSolidPoly(_head, sizeof(_head)/sizeof(*_head), uniformColor());
 }
 
+void Tank::handleOrders(float delta)
+{
+    while (!_orders.empty()) {
+        Order order = _orders.front();
+        ExecResult result = ExecResult::Done;
+        switch (order.type) {
+        case OrderType::Move: result = executeMove(order.p); break;
+        default: break;
+        }
+
+        if (result == ExecResult::Done) {
+            _orderDelayElapsed = 0;
+            _orders.pop_front();
+            continue; // Handle next order
+        } else if (result == ExecResult::InProgress) {
+            _orderDelayElapsed = 0;
+            break; // Stop handling
+        } else if (result == ExecResult::Delayed) {
+            _orderDelayElapsed += delta;
+            if (_orderDelayElapsed > gOrderDelayTimeout) {
+                _orderDelayElapsed = 0;
+                // Fail order by timeout (see below)
+            } else {
+                break; // Continue trying
+            }
+        }
+
+        // Failed order -- stop all orders in list
+        _orders.clear();
+    }
+}
+
 void Tank::update(float delta)
 {
     if (!getNode()->getPhysicsBody()) {
         return; // Happens just after creation
     }
+    handleOrders(delta);
     move();
     if (_cooldownLeft > 0) {
         _cooldownLeft -= delta;

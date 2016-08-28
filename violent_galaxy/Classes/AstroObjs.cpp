@@ -139,6 +139,16 @@ Vec2 Planet::geogr2world(float lng, float alt)
     return _body->local2World(geogr2local(lng, alt));
 }
 
+Polar Planet::world2polar(Vec2 pw) const
+{
+    return local2polar(_body->world2Local(pw));
+}
+
+Polar Planet::local2polar(Vec2 pl) const
+{
+    return Polar(pl);
+}
+
 float Planet::getAltitudeAt(float a) const
 {
     return _segments.locate(a)->getAltitudeAt(a);

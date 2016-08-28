@@ -3,6 +3,7 @@
 #include "Defs.h"
 #include "Obj.h"
 #include "Resources.h"
+#include "Units.h"
 
 using PlayerId = int;
 
@@ -27,10 +28,11 @@ public:
     void selectRemove(Id id);
     void clearSelection();
     void drawSelection(bool value = true);
-
     void selectGroup(size_t idx);
     void setSelectionToGroup(size_t idx);
     void addSelectionToGroup(size_t idx);
+
+    void giveOrder(Unit::Order order, bool add);
 
     ObjType getObjType() override;
     void update(float delta) override;

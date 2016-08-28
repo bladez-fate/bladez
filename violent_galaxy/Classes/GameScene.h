@@ -181,6 +181,7 @@ private:
     void playerSelectRect(cc::Vec2 p1, cc::Vec2 p2, bool add);
     bool onSelectQueryRect(cc::PhysicsWorld& pworld, cc::PhysicsShape& shape, void* userdata);
     void playerCenterSelection();
+    void playerOrderPoint(cc::Vec2 p, bool add);
     Player* _activePlayer = nullptr;
     using Players = std::vector<Player*>;
     Players _players;

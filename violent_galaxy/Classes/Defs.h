@@ -124,9 +124,13 @@ extern cc::EventKeyboard::KeyCode gHKPowerDec;
 extern cc::EventKeyboard::KeyCode gHKShoot;
 extern cc::EventKeyboard::KeyCode gHKHold;
 
+// Orders
+extern size_t gMaxOrders;
+extern float gOrderDelayTimeout; // Time after which delayed order fails
+
 // TODO[fate]: move to some sort of util
 // Returns x = a + 2*pi*n, where n is integer and x is in [0; 2*pi)
-inline float mainAngle(float a)
+inline float angleMain(float a)
 {
     if (a < 0 || a >= 2 * M_PI) {
         a -= (2 * M_PI) * floorf(a / (2 * M_PI));
@@ -134,6 +138,22 @@ inline float mainAngle(float a)
         CCASSERT(a < 2 * M_PI , "angle is still above 2*pi");
     }
     return a;
+}
+
+// Returns x = a + 2*pi*n, where n is integer and x is in [-pi; pi)
+inline float angleShort(float a)
+{
+    a = angleMain(a);
+    if (a >= M_PI) {
+        a -= 2*M_PI;
+    }
+    return a;
+}
+
+// Return angle in radians that should be added to a1 to give a2
+inline float angleDistance(float a1, float a2)
+{
+    return angleShort(a2 - a1);
 }
 
 // Converts Zs to local z-order in game scene

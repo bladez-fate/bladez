@@ -81,3 +81,7 @@ cc::EventKeyboard::KeyCode gHKPowerInc = cc::EventKeyboard::KeyCode::KEY_R;
 cc::EventKeyboard::KeyCode gHKPowerDec = cc::EventKeyboard::KeyCode::KEY_F;
 cc::EventKeyboard::KeyCode gHKShoot = cc::EventKeyboard::KeyCode::KEY_SPACE;
 cc::EventKeyboard::KeyCode gHKHold = cc::EventKeyboard::KeyCode::KEY_H;
+
+// Orders
+size_t gMaxOrders = 32;
+float gOrderDelayTimeout = 10;

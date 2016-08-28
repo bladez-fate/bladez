@@ -123,11 +123,37 @@ void Player::addSelectionToGroup(size_t idx)
         grp.insert(id);
     }
 
-    for (Id id : selected) {
+    for (Id& id : selected) {
+        if (id == 0) {
+            continue; // Leave empty space for destroyed units
+        }
+        Obj* obj = _game->objs()->getById(id);
+        if (!obj) {
+            id = 0; // Mark as destroyed
+            continue;
+        }
         if (grp.find(id) == grp.end()) {
             grp.insert(id);
             groups[idx].push_back(id);
         }
     }
     // TODO[fate]: do not allow enemies to be in group
+}
+
+void Player::giveOrder(Unit::Order order, bool add)
+{
+    for (Id& id : selected) {
+        if (id == 0) {
+            continue; // Leave empty space for destroyed units
+        }
+        Obj* obj = _game->objs()->getById(id);
+        if (!obj) {
+            id = 0; // Mark as destroyed
+            continue;
+        }
+
+        if (Unit* unit = dynamic_cast<Unit*>(obj)) {
+            unit->giveOrder(order, add);
+        }
+    }
 }

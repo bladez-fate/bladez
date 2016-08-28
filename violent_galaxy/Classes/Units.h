@@ -118,13 +118,44 @@ private:
 
 class Unit : public VisualObj {
 public:
+    enum class OrderType : ui8 {
+        None,       // ARGUMENT TYPE:
+
+        // Generic orders
+        Move,       // point
+        Follow,     // id
+        AttackMove, // point
+        Attack,     // id
+        Patrol,     // point
+        Stop,       // none
+        Hold,        // none
+
+        // Special orders
+        Repair,     // id
+
+        MAX
+    };
+
+    struct Order {
+        OrderType type;
+        cc::Vec2 p;
+        Id id;
+
+        Order() {}
+        Order(OrderType type_, cc::Vec2 p_) : type(type_), p(p_), id(0) {}
+        Order(OrderType type_, cc::Vec2 p_, Id id_) : type(type_), p(p_), id(id_) {}
+    };
+
+    using Orders = std::deque<Order>;
+public:
     const i32 hpMax;
     const i32 supply; // Supply required by this unit
     i32 hp;
     Id surfaceId = 0; // Astro obj that unit is in contact with
+    Id surfaceIdCount = 0; // Astro obj that unit is in contact with
     cc::Vec2 sepDir; // Direction for separation
-public:
     bool listenContactAstroObj = false;
+public:
     virtual bool onContactAstroObj(ContactInfo&) { return true; }
     virtual bool onContactUnit(ContactInfo&) { return true; }
     ObjType getObjType() override;
@@ -135,6 +166,7 @@ public:
     void goBack();
     void goFront();
     float separationVelocityAlong(cc::Vec2 axis);
+    void giveOrder(Order order, bool add);
 protected:
     Unit(i32 hpMax_ = 1, i32 supply_ = 1)
         : supply(supply_)
@@ -142,6 +174,8 @@ protected:
         , hp(hpMax)
     {}
     bool init(GameScene* game) override;
+protected:
+    Orders _orders;
 };
 
 class DropCapsid : public Unit {
@@ -176,7 +210,6 @@ public:
     void addPower();
     void moveLeft(bool go);
     void moveRight(bool go);
-    void move();
 protected:
     Tank()
         : Unit(150, 1)
@@ -186,6 +219,20 @@ protected:
     cc::PhysicsBody* createBody() override;
     void draw() override;
     void update(float delta) override;
+    void handleOrders(float delta);
+    void move();
+
+    // Orders execution
+    enum class ExecResult : ui8 {
+        Done,
+        InProgress,
+        Delayed,
+        Failed,
+        MAX
+    };
+
+    ExecResult executeMove(cc::Vec2 p);
+
 protected:
     cc::DrawNode* node() { return static_cast<cc::DrawNode*>(_rootNode); }
     cc::PhysicsBody* _body = nullptr;
@@ -215,6 +262,8 @@ protected:
 
     float _cooldown;
     float _cooldownLeft = 0;
+
+    float _orderDelayElapsed = 0;
 };
 
 class SpaceStation : public Unit {

@@ -429,6 +429,9 @@ void GameScene::onMouseUp(Event *event)
     } else if (e->getMouseButton() == 1) {
         if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
             _view.act(_view.follow(pw, _mouseFollowDuration));
+        } else {
+            bool add = isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT);
+            playerOrderPoint(p, add);
         }
     } else if (e->getMouseButton() == 2) {
         mousePanStop();
@@ -514,16 +517,16 @@ void GameScene::mouseSelectRectStop(Vec2 screenLoc, bool apply)
         if (apply) {
             if (_mouseSelectRectStart != _mouseSelectRectEnd) {
                 playerSelectRect(
-                            _mouseSelectRectStart,
-                            _mouseSelectRectEnd,
-                            isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT)
-                            );
+                    _mouseSelectRectStart,
+                    _mouseSelectRectEnd,
+                    isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT)
+                );
             } else {
                 playerSelectPoint(
-                            screenLoc,
-                            isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT),
-                            isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)
-                            );
+                    screenLoc,
+                    isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT),
+                    isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)
+                );
             }
         }
     }
@@ -818,6 +821,31 @@ void GameScene::playerCenterSelection()
     }
 }
 
+void GameScene::playerOrderPoint(Vec2 p, bool add)
+{
+    if (!_activePlayer) {
+        return;
+    }
+    Vec2 pw = _view.screen2world(p);
+
+    // Determine order type
+    Unit::OrderType orderType = Unit::OrderType::Move;
+
+    // Check if it is an ID-order
+    bool found = false;
+    _pworld->queryPoint([=, &found] (PhysicsWorld&, PhysicsShape& shape, void*) -> bool {
+        ObjTag tag(shape.getBody()->getNode()->getTag());
+        Id id = tag.id();
+        _activePlayer->giveOrder(Unit::Order(orderType, pw, id), add);
+        return false;
+    }, pw, nullptr);
+
+    // It is a POINT-order
+    if (!found) {
+        _activePlayer->giveOrder(Unit::Order(orderType, pw), add);
+    }
+}
+
 void GameScene::initCollisions()
 {
     auto contactListener = EventListenerPhysicsContact::create();
@@ -948,7 +976,12 @@ bool GameScene::onContactUnitAstroObj(ContactInfo& cinfo)
             // TODO[fate]: double contact with astro obj -- destroy unit
             return false;
         }
-        unit->surfaceId = aobj->getId();
+        if (unit->surfaceId == aobj->getId()) {
+            unit->surfaceIdCount++;
+        } else {
+            unit->surfaceId = aobj->getId();
+            unit->surfaceIdCount = 1;
+        }
         cinfo.thisBody->setUpdateVelocityFunc(CC_CALLBACK_2(GameScene::updateUnitVelocityOnSurface, this));
         break;
     case PhysicsContact::EventCode::PRESOLVE:
@@ -956,8 +989,12 @@ bool GameScene::onContactUnitAstroObj(ContactInfo& cinfo)
     case PhysicsContact::EventCode::POSTSOLVE:
         break;
     case PhysicsContact::EventCode::SEPARATE:
-        unit->surfaceId = 0;
-        cinfo.thisBody->resetUpdateVelocityFunc();
+        if (unit->surfaceId == aobj->getId()) {
+            unit->surfaceIdCount--;
+            if (unit->surfaceIdCount == 0) {
+                cinfo.thisBody->resetUpdateVelocityFunc();
+            }
+        }
         break;
     }
 

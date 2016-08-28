@@ -33,7 +33,7 @@ public:
 
     Iterator locate(float a)
     {
-        a = mainAngle(a);
+        a = angleMain(a);
         i64 ai = (i64)floorf(a / _astep) % this->size();
         CCASSERT(ai >= 0 && ai < (i64)this->size(), "angle rounding internal error");
         return this->begin() + ai;

@@ -84,7 +84,7 @@ struct Segment {
 
     float getAltitudeAt(float a) const
     {
-        a = mainAngle(a);
+        a = angleMain(a);
         CC_ASSERT(a1 <= a);
         CC_ASSERT(a <= a2);
         const GeoPoint* pt1 = &pts.front();
@@ -115,18 +115,45 @@ public:
     Platform(cc::Vec2 pt0, cc::Vec2 pt1, cc::Vec2 pt2, cc::Vec2 pt3);
 };
 
+struct Polar {
+    float r; // Distance from pole
+    float a; // Angle (longitude) in radians (could be local or world)
+
+    explicit Polar(float r_ = 0.0f, float a_ = 0.0f) : r(r_), a(a_) {}
+    explicit Polar(cc::Vec2 p) : r(p.getLength()), a(p.getAngle()) {}
+
+    float getLongitude() const
+    {
+        return CC_RADIANS_TO_DEGREES(a);
+    }
+
+    float getAltitude(float zeroLevel) const
+    {
+        return r + zeroLevel;
+    }
+};
+
 class Planet : public AstroObj {
 public:
     OBJ_CREATE_FUNC(Planet);
     float getSize() override;
     const AngularVec<Segment>& segments() const { return _segments; }
+
+    // Get local/world position from polar/geogr
     cc::Vec2 polar2local(float r, float a);
     cc::Vec2 altAng2local(float alt, float a);
     cc::Vec2 altAng2world(float alt, float a);
     cc::Vec2 polar2world(float r, float a);
     cc::Vec2 geogr2local(float lng, float alt);
     cc::Vec2 geogr2world(float lng, float alt);
+
+    // Get polar/geogr from local/world position
+    Polar world2polar(cc::Vec2 pw) const;
+    Polar local2polar(cc::Vec2 pl) const;
+
+    // Get crust parameters
     float getAltitudeAt(float a) const;
+
     void addPlatform(Platform&& platform);
 protected:
     Planet();
