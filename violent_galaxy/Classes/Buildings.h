@@ -22,6 +22,7 @@ public:
     void destroy() override;
     void update(float delta) override;
     virtual float getProductionProgress() { return 0.0f; }
+    void setPlayer(Player *player) override;
 private:
     CaptureChecker _captureChecker;
 protected:
@@ -35,9 +36,12 @@ private:
     float _period;
     float _elapsed = 0.0f;
     Player* _player = nullptr;
+    ui32 _unitSupply;
+    ui32 _supplyReserved = 0;
 public:
-    UnitProducer(const ResVec& unitCost, float period)
+    UnitProducer(const ResVec& unitCost, ui32 unitSupply, float period)
         : _unitCost(unitCost)
+        , _unitSupply(unitSupply)
         , _period(period)
     {}
     void update(float delta, Player* player, VisualObj* obj, GameScene* game);
@@ -49,7 +53,7 @@ public:
     OBJ_CREATE_FUNC(Factory);
     float getSize() override;
 protected:
-    Factory() : _unitProd({{150, 0}}, 10) {}
+    Factory() : _unitProd({{150, 0}}, 1, 10) {}
     virtual bool init(GameScene* game) override;
     cc::Node* createNodes() override;
     cc::PhysicsBody* createBody() override;

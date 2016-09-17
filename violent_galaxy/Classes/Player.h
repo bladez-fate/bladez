@@ -15,7 +15,7 @@ public:
 
     ResVec res = {{0, 0}};
     i64 supply = 0; // Currently in use
-    i64 supplyMax = 100; // Currently can be supported
+    i64 supplyMax = 0; // Currently can be supported
     i64 supplyLimit = 200; // Game limit of supply for given player
 
     std::vector<Id> selected;

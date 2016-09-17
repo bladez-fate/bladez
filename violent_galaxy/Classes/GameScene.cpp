@@ -371,57 +371,57 @@ void GameScene::onMouseUp(Event *event)
                 return Tank::create(game);
             };
             dc->setPlayer(_activePlayer);
-        } else if (isKeyHeld(EventKeyboard::KeyCode::KEY_V)) {
-            auto ss = SpaceStation::create(this);
-            ss->setPosition(pw);
-            for (auto kv : *_objs) {
-                if (AstroObj* ao = dynamic_cast<AstroObj*>(kv.second)) {
-                    PhysicsBody* gsource = ao->getNode()->getPhysicsBody();
-                    Vec2 p = ss->getNode()->getPhysicsBody()->getPosition();
-                    Vec2 o = gsource->getPosition();
-                    Vec2 g = _pworld->getForceField()->getBodyGravity(gsource, p);
-                    Vec2 r = p - o;
-                    // For orbital velocity: g = v*v/r  =>  v = sqrt(g*r)
-                    float v = sqrtf(g.length() * r.length());
-                    ss->getNode()->getPhysicsBody()->setVelocity(
-                        v * r.getNormalized().rotate(Vec2::forAngle(M_PI_2))
-                    );
-                    break; // TODO[fate]: find nearest planet
-                }
-            }
-            ss->setPlayer(_activePlayer);
-        } else if (isKeyHeld(EventKeyboard::KeyCode::KEY_B)) {
-            auto fact = Factory::create(this);
-            fact->setPosition(pw);
-            for (auto kv : *_objs) {
-                if (Planet* planet = dynamic_cast<Planet*>(kv.second)) {
-                    auto pb = planet->getNode()->getPhysicsBody();
+//        } else if (isKeyHeld(EventKeyboard::KeyCode::KEY_V)) {
+//            auto ss = SpaceStation::create(this);
+//            ss->setPosition(pw);
+//            for (auto kv : *_objs) {
+//                if (AstroObj* ao = dynamic_cast<AstroObj*>(kv.second)) {
+//                    PhysicsBody* gsource = ao->getNode()->getPhysicsBody();
+//                    Vec2 p = ss->getNode()->getPhysicsBody()->getPosition();
+//                    Vec2 o = gsource->getPosition();
+//                    Vec2 g = _pworld->getForceField()->getBodyGravity(gsource, p);
+//                    Vec2 r = p - o;
+//                    // For orbital velocity: g = v*v/r  =>  v = sqrt(g*r)
+//                    float v = sqrtf(g.length() * r.length());
+//                    ss->getNode()->getPhysicsBody()->setVelocity(
+//                        v * r.getNormalized().rotate(Vec2::forAngle(M_PI_2))
+//                    );
+//                    break; // TODO[fate]: find nearest planet
+//                }
+//            }
+//            ss->setPlayer(_activePlayer);
+//        } else if (isKeyHeld(EventKeyboard::KeyCode::KEY_B)) {
+//            auto fact = Factory::create(this);
+//            fact->setPosition(pw);
+//            for (auto kv : *_objs) {
+//                if (Planet* planet = dynamic_cast<Planet*>(kv.second)) {
+//                    auto pb = planet->getNode()->getPhysicsBody();
 
-                    // Set factory orientation upwards
-                    Vec2 rw = pw - pb->getPosition(); // building coords in world frame
-                    float dirw = rw.getAngle();
-                    fact->getNode()->setRotation(
-                        90 - CC_RADIANS_TO_DEGREES(dirw)
-                    );
+//                    // Set factory orientation upwards
+//                    Vec2 rw = pw - pb->getPosition(); // building coords in world frame
+//                    float dirw = rw.getAngle();
+//                    fact->getNode()->setRotation(
+//                        90 - CC_RADIANS_TO_DEGREES(dirw)
+//                    );
 
-                    // Create platform body
-                    Vec2 rl = pb->world2Local(pw); // building coords in planet local frame
-                    float dirl = rl.getAngle();
-                    float len = 0.6*fact->getSize(); // half of platform length
-                    Vec2 bldFloor = (rl.length() - fact->getSize()/2) * rl.getNormalized(); // coordinates of building floor in body frame
-                    Vec2 rightEdge(bldFloor + len*Vec2::forAngle(dirl - M_PI_2));
-                    Vec2 leftEdge(bldFloor - len*Vec2::forAngle(dirl - M_PI_2));
-                    float foundationHeight = 50;
-                    planet->addPlatform(Platform(
-                        rightEdge,
-                        leftEdge,
-                        planet->altAng2local(planet->getAltitudeAt(leftEdge.getAngle()) - foundationHeight, leftEdge.getAngle()),
-                        planet->altAng2local(planet->getAltitudeAt(rightEdge.getAngle()) - foundationHeight, rightEdge.getAngle())
-                    ));
-                    break; // TODO[fate]: find nearest planet
-                }
-            }
-            fact->setPlayer(_activePlayer);
+//                    // Create platform body
+//                    Vec2 rl = pb->world2Local(pw); // building coords in planet local frame
+//                    float dirl = rl.getAngle();
+//                    float len = 0.6*fact->getSize(); // half of platform length
+//                    Vec2 bldFloor = (rl.length() - fact->getSize()/2) * rl.getNormalized(); // coordinates of building floor in body frame
+//                    Vec2 rightEdge(bldFloor + len*Vec2::forAngle(dirl - M_PI_2));
+//                    Vec2 leftEdge(bldFloor - len*Vec2::forAngle(dirl - M_PI_2));
+//                    float foundationHeight = 50;
+//                    planet->addPlatform(Platform(
+//                        rightEdge,
+//                        leftEdge,
+//                        planet->altAng2local(planet->getAltitudeAt(leftEdge.getAngle()) - foundationHeight, leftEdge.getAngle()),
+//                        planet->altAng2local(planet->getAltitudeAt(rightEdge.getAngle()) - foundationHeight, rightEdge.getAngle())
+//                    ));
+//                    break; // TODO[fate]: find nearest planet
+//                }
+//            }
+//            fact->setPlayer(_activePlayer);
         } else {
             doSelection = true;
         }
@@ -1043,10 +1043,13 @@ void GameScene::updateUnitVelocityOnSurface(cpBody* body, float dt)
     }
 }
 
-void GameScene::initBuildings(Planet* planet)
+float GameScene::initBuildings(Planet* planet)
 {
     auto pb = planet->getNode()->getPhysicsBody();
     auto segments = planet->segments();
+
+    bool playerStarted = false;
+    float playerLng = 0.0f;
 
     for (const Segment& seg : segments) {
         const GeoPoint& pt1 = seg.pts.front();
@@ -1062,6 +1065,12 @@ void GameScene::initBuildings(Planet* planet)
                 continue;
             }
             building = Factory::create(this);
+            if (!playerStarted) {
+                // Create factory for active player
+                building->setPlayer(_activePlayer);
+                playerLng = CC_RADIANS_TO_DEGREES((pt1.angle + pt2.angle)/2);
+                playerStarted = true;
+            }
         } else if (seg.deposits.front()->res == Res::Ore) {
             if (random(0.0f, 1.0f) >= 0.8) {
                 continue;
@@ -1104,6 +1113,7 @@ void GameScene::initBuildings(Planet* planet)
             planet->altAng2local(planet->getAltitudeAt(rightEdge.getAngle()) - foundationHeight, rightEdge.getAngle())
         ));
     }
+    return playerLng;
 }
 
 void GameScene::initGalaxy()
@@ -1116,14 +1126,14 @@ void GameScene::initGalaxy()
 
     // Player
     auto player = Player::create(this);
+    player->res = {{150, 0}};
     player->name = "Player1";
     player->color = gPlayerColor[0];
     playerActivate(player);
 
-    initBuildings(pl);
+    float startLng = initBuildings(pl);
 
     // Starting location
-    float startLng = random<float>(0.0, 360.0);
     auto seg = pl->segments().locateLng(startLng);
     float startAlt = seg->pts.front().altitude;
     Vec2 start = pl->geogr2world(startLng, startAlt);

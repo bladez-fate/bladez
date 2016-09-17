@@ -456,10 +456,10 @@ bool Tank::init(GameScene* game)
     _angleMax = 180 - _angleMin;
     _angleStep = 90;
     _powerMin = 1;
-    _powerMax = 20;
+    _powerMax = 40;
     _powerStep = 1;
 
-    _cooldown = 2;
+    _cooldown = 3;
 
     _angle = 60;
     _power = _powerMax;

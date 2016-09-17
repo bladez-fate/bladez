@@ -71,6 +71,17 @@ void Building::update(float delta)
     _captureChecker.update(delta, _player, this, _game);
 }
 
+void Building::setPlayer(Player* player)
+{
+    if (_player) {
+        _player->supplyMax -= 2;
+    }
+    VisualObj::setPlayer(player);
+    if (_player) {
+        _player->supplyMax += 2;
+    }
+}
+
 ObjType Building::getObjType()
 {
     return ObjType::Building;
@@ -79,19 +90,28 @@ ObjType Building::getObjType()
 void UnitProducer::update(float delta, Player* player, VisualObj* obj, GameScene* game)
 {
     if (player != _player) {
+        if (_supplyReserved) {
+            _player->supply -= _supplyReserved;
+            _supplyReserved = 0;
+        }
         _player = player;
         _elapsed = 0.0f; // Production cylce is reset on building capture, money are lost
     }
     if (_player) {
         if (_elapsed == 0.0f) { // Start production if there is enough resources
-            if (_player->res.enough(_unitCost)) {
+            if (_player->res.enough(_unitCost) && _player->supply + _unitSupply <= _player->supplyMax) {
                 _player->res.sub(_unitCost);
                 _elapsed += delta;
+                _player->supply += _unitSupply;
+                _supplyReserved = _unitSupply;
             }
         } else {
             _elapsed += delta;
             // Note that we assume that delta in much less than _period
             if (_elapsed > _period) {
+                _player->supply -= _supplyReserved;
+                _supplyReserved = 0;
+
                 _elapsed = 0.0;
                 auto dc = DropCapsid::create(game);
                 dc->setPosition(obj->getNode()->getPosition());
