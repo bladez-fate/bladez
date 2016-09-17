@@ -70,13 +70,14 @@ void Unit::goFront()
 
 float Unit::separationVelocityAlong(Vec2 axis)
 {
-    CCASSERT(fabsf(axis.getLengthSq() - 1) < 1e-3, "got unnormalized axis vector");
+    CCASSERT(fabsf(axis.getLengthSq() - 1) < 1e-2, "got unnormalized axis vector");
     return sepDir.dot(axis) * gMaxSeparationVelocity * 0.4f;
 }
 
 void Unit::giveOrder(Order order, bool add)
 {
     if (!add) {
+        stopCurrentOrder();
         _orders.clear();
     }
     if (_orders.size() >= gMaxOrders) {
@@ -177,42 +178,18 @@ float Tank::getSize()
     return _size;
 }
 
-void Tank::shoot()
+void Tank::getShootParams(Vec2& fromPoint, Vec2& dir)
 {
-    if (_cooldownLeft <= 0.0f) {
-        _cooldownLeft = _cooldown;
-        Projectile* proj = Shell::create(_game);
-        Vec2 localBegin = _gunBegin;
-        Vec2 localEnd = _gunBegin + _gunLength * Vec2::forAngle(CC_DEGREES_TO_RADIANS(_angle));
-        Vec2 begin = _body->local2World(localBegin);
-        Vec2 end = _body->local2World(localEnd);
-        proj->setPosition(end);
-        Vec2 j = (end - begin).getNormalized() * _power;
-        proj->getNode()->getPhysicsBody()->applyImpulse(j);
-        _body->applyImpulse(_body->world2Local(Vec2::ZERO) - _body->world2Local(j));
-    }
+    Vec2 localBegin = _gunBegin;
+    Vec2 localEnd = _gunBegin + _gunLength * Vec2::forAngle(CC_DEGREES_TO_RADIANS(_angle));
+    Vec2 begin = _body->local2World(localBegin);
+    fromPoint = _body->local2World(localEnd);
+    dir = (fromPoint - begin).getNormalized();
 }
 
-void Tank::incAngle(float dt)
+void Tank::gunRotationSpeed(float speed)
 {
-    _angle = clampf(_angle + _angleStep * dt, _angleMin, _angleMax);
-    draw();
-}
-
-void Tank::decAngle(float dt)
-{
-    _angle = clampf(_angle - _angleStep * dt, _angleMin, _angleMax);
-    draw();
-}
-
-void Tank::subPower()
-{
-    _power = clampf(_power - _powerStep, _powerMin, _powerMax);
-}
-
-void Tank::addPower()
-{
-    _power = clampf(_power + _powerStep, _powerMin, _powerMax);
+    _rotationSpeed = clampf(speed, -1.0f, 1.0f);
 }
 
 void Tank::moveLeft(bool go)
@@ -224,6 +201,43 @@ void Tank::moveRight(bool go)
 {
     _movingRight = go;
 }
+
+void Tank::shoot()
+{
+    if (_cooldownLeft <= 0.0f) {
+        _cooldownLeft = _cooldown;
+        Vec2 fromPoint;
+        Vec2 dir;
+        getShootParams(fromPoint, dir);
+        Projectile* proj = Shell::create(_game);
+        proj->setPosition(fromPoint);
+        Vec2 j = dir * _power;
+        proj->getNode()->getPhysicsBody()->applyImpulse(j);
+        _body->applyImpulse(_body->world2Local(Vec2::ZERO) - _body->world2Local(j));
+    }
+}
+
+//void Tank::incAngle(float dt)
+//{
+//    _angle = clampf(_angle + _angleStep * dt, _angleMin, _angleMax);
+//    draw();
+//}
+
+//void Tank::decAngle(float dt)
+//{
+//    _angle = clampf(_angle - _angleStep * dt, _angleMin, _angleMax);
+//    draw();
+//}
+
+//void Tank::subPower()
+//{
+//    _power = clampf(_power - _powerStep, _powerMin, _powerMax);
+//}
+
+//void Tank::addPower()
+//{
+//    _power = clampf(_power + _powerStep, _powerMin, _powerMax);
+//}
 
 Tank::ExecResult Tank::executeMove(Vec2 p)
 {
@@ -253,6 +267,138 @@ Tank::ExecResult Tank::executeMove(Vec2 p)
     }
 }
 
+struct AimInfo {
+    cc::Vec2 source; // From where we want shoot
+    cc::Vec2 target; // Where we try to aim
+    float mass; // Projectile mass
+    float velocity; // Projectile starting velocity
+};
+
+struct AimResult {
+    bool hit; // true if we can hit, otherwise false
+    cc::Vec2 axis; // axis to shoot along for hit
+};
+
+bool Aim(GameScene* game, const AimInfo& info, AimResult& res)
+{
+    // Simplest possible aiming in uniform gravitational field
+    // Choose reference frame is which Oy axis is antiparallel to gravity
+    // And origin is in the source point
+    // r' = U*r + r0 (r' - world, r - new reference frame)
+    // Solve problem in new reference frame
+    //    x(t) = v0x*t
+    //    +y(t) = v0y*t - g*t^2/2
+    //    v0x = v0*cos(a);  v0y = v0*sin(a)   -- initial velocity
+    //    x(t) = x;       y(t) = y            -- coordinates of a target
+    //    x = v0*t*cos(a)           => t = x / (v0 * cos(a))
+    // Energy conservation:
+    //    E0 = K0                             -- initial energy
+    //    E = K + m*g*y                       -- final energy
+    //    E0 = E => K0 = K + m*g*y
+    //    K = K0 - m*g*y = m*v0^2/2 - m*g*y
+    //    v^2 = v0^2/2 - g*y (1)
+    //    Height Condition: v0^2/2 > g*y (2)
+    //    vx = v0x => vy^2 = v^2 - v0x^2
+    //    vy = v0y - g*t                      -- law for velocity change
+    //   | (v0y - g*t)^2 = v^2 - v0x^2
+    //   | x = v0x*t   => v0x = x/t
+    //    (v0y - g*x/v0x)^2 = v^2 - v0x^2  -- to hard try find t instead
+    //   | v0y = g*t + vy
+    //   | v0x = x/t
+    // TODO
+
+
+
+
+
+    //    y = v*t*sin(a) - g*t^2/2   <--'
+    //
+    //    y = x*tg(a) - g * x^2 / (v * cos(a))^2 / 2
+    // Use: 1 / cos(a)^2 = 1 + tg(a)^2, and let c := tg(a)
+    //    y = x*c - g*x^2/v^2* (1+c^2)/2
+    //    c^2 * [g*x^2/v^2/2] - c*[x] + [y + g*x^2/v^2/2]
+    //    D = x^2 - 4 [g*x^2/v^2/2]*[y + g*x^2/v^2/2]
+    //      = x^2 - [g*x^2/v^2]*[2*y + g*x^2/v^2]
+    //      = x^2 * [1 - g/v^2*[2*y + g*x^2/v^2]]
+    return true;
+}
+
+//Tank::ExecResult Tank::executeAttack(Id targetId)
+//{
+//    if (surfaceId) {
+//        if (Planet* planet = _game->objs()->getByIdAs<Planet>(surfaceId)) {
+//            if (Unit* target = _game->objs()->getByIdAs<Unit>(targetId)) {
+//                Polar src = planet->world2polar(_body->getPosition());
+//                Polar dst = planet->world2polar(target->getNode()->getPosition());
+//                float aDist = angleDistance(src.a, dst.a);
+//                if (fabsf(aDist) * src.r < getSize()*10) {
+//                    moveLeft(false);
+//                    moveRight(false);
+//                    return ExecResult::Done;
+//                } else if (aDist < 0) {
+//                    moveRight(true);
+//                    moveLeft(false);
+//                    return ExecResult::InProgress;
+//                } else {
+//                    moveRight(false);
+//                    moveLeft(true);
+//                    return ExecResult::InProgress;
+//                }
+//            }
+//        }
+//        return ExecResult::Failed;
+//    } else {
+//        return ExecResult::Delayed;
+//    }
+//}
+
+Tank::ExecResult Tank::executeAim(Vec2 p)
+{
+    if (surfaceId) {
+        if (Planet* planet = _game->objs()->getByIdAs<Planet>(surfaceId)) {
+            Vec2 src = _body->getPosition();
+            Vec2 fromPoint;
+            Vec2 sourceDir;
+            getShootParams(fromPoint, sourceDir);
+            Vec2 targetDir = (p - src).getNormalized();
+            if (targetDir.isSmall() || sourceDir.isSmall()) {
+                gunRotationSpeed(0.0f);
+                return ExecResult::Done; // We do not know where to aim, so we are done
+            }
+            float aDist = angleDistance(sourceDir.getAngle(), targetDir.getAngle());
+            if (fabsf(aDist) < CC_DEGREES_TO_RADIANS(5)) {
+                if (fabsf(aDist) < CC_DEGREES_TO_RADIANS(1)) {
+                    gunRotationSpeed(0.0f);
+                    return ExecResult::Done;
+                } else if (aDist < 0) {
+                    gunRotationSpeed(-0.2f);
+                    return ExecResult::InProgress;
+                } else {
+                    gunRotationSpeed(0.2f);
+                    return ExecResult::InProgress;
+                }
+            } else if (aDist < 0) {
+                gunRotationSpeed(-1.0f);
+                return ExecResult::InProgress;
+            } else {
+                gunRotationSpeed(1.0f);
+                return ExecResult::InProgress;
+            }
+        } else {
+            return ExecResult::Failed;
+        }
+    } else {
+        return ExecResult::Delayed;
+    }
+}
+
+void Tank::stopCurrentOrder()
+{
+    gunRotationSpeed(0.0f);
+    moveRight(false);
+    moveLeft(false);
+}
+
 void Tank::move()
 {
     float v = 0.0f;
@@ -269,6 +415,14 @@ void Tank::move()
     v += separationVelocityAlong(xdir);
 
     _track->setSurfaceVelocity(-v * xdir);
+}
+
+void Tank::rotateGun(float dt)
+{
+    if (_rotationSpeed != 0.0f) {
+        _angle = clampf(_angle + _angleStep * _rotationSpeed * dt, _angleMin, _angleMax);
+        draw();
+    }
 }
 
 bool Tank::init(GameScene* game)
@@ -360,6 +514,7 @@ void Tank::handleOrders(float delta)
         ExecResult result = ExecResult::Done;
         switch (order.type) {
         case OrderType::Move: result = executeMove(order.p); break;
+        case OrderType::Aim: result = executeAim(order.p); break;
         default: break;
         }
 
@@ -392,6 +547,7 @@ void Tank::update(float delta)
     }
     handleOrders(delta);
     move();
+    rotateGun(delta);
     if (_cooldownLeft > 0) {
         _cooldownLeft -= delta;
     }

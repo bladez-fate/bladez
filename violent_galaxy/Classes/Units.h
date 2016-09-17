@@ -123,6 +123,7 @@ public:
 
         // Generic orders
         Move,       // point
+        Aim,        // point
         Follow,     // id
         AttackMove, // point
         Attack,     // id
@@ -167,6 +168,7 @@ public:
     void goFront();
     float separationVelocityAlong(cc::Vec2 axis);
     void giveOrder(Order order, bool add);
+    virtual void stopCurrentOrder() {}
 protected:
     Unit(i32 hpMax_ = 1, i32 supply_ = 1)
         : supply(supply_)
@@ -204,12 +206,10 @@ public:
     OBJ_CREATE_FUNC(Tank);
     float getSize() override;
     void shoot();
-    void incAngle(float dt);
-    void decAngle(float dt);
-    void subPower();
-    void addPower();
-    void moveLeft(bool go);
-    void moveRight(bool go);
+//    void incAngle(float dt);
+//    void decAngle(float dt);
+//    void subPower();
+//    void addPower();
 protected:
     Tank()
         : Unit(150, 1)
@@ -221,6 +221,7 @@ protected:
     void update(float delta) override;
     void handleOrders(float delta);
     void move();
+    void rotateGun(float dt);
 
     // Orders execution
     enum class ExecResult : ui8 {
@@ -231,7 +232,17 @@ protected:
         MAX
     };
 
+    void getShootParams(cc::Vec2& fromPoint, cc::Vec2& dir);
+
+    void gunRotationSpeed(float speed);
+    void moveLeft(bool go);
+    void moveRight(bool go);
+
     ExecResult executeMove(cc::Vec2 p);
+    ExecResult executeAim(cc::Vec2 p);
+//    ExecResult executeAttack(Id targetId);
+
+    void stopCurrentOrder() override;
 
 protected:
     cc::DrawNode* node() { return static_cast<cc::DrawNode*>(_rootNode); }
@@ -248,6 +259,7 @@ protected:
     cc::Vec2 _gunBegin;
     float _gunLength;
     float _angle;
+    float _rotationSpeed = 0.0f;
     float _power;
     float _targetV;
     bool _movingLeft = false;

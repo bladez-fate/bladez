@@ -228,10 +228,10 @@ void GameScene::initKeyboard()
                             if (keyCode == gHKShoot) {
                                 tank->shoot();
                                 repeat = 0;
-                            } else if (keyCode == gHKPowerInc) {
-                                tank->addPower();
-                            } else if (keyCode == gHKPowerDec) {
-                                tank->subPower();
+//                            } else if (keyCode == gHKPowerInc) {
+//                                tank->addPower();
+//                            } else if (keyCode == gHKPowerDec) {
+//                                tank->subPower();
                             } else if (keyCode == gHKGoBack) {
                                 tank->goBack();
                             } else if (keyCode == gHKGoFront) {
@@ -250,22 +250,22 @@ void GameScene::initKeyboard()
 
 void GameScene::keyboardUpdate(float delta)
 {
-    if (_activePlayer) {
-        for (Id id : _activePlayer->selected) {
-            if (auto obj = objs()->getById(id)) {
-                if (auto tank = dynamic_cast<Tank*>(obj)) {
-                    if (isKeyHeld(gHKAngleInc)) {
-                        tank->incAngle(delta);
-                    }
-                    if (isKeyHeld(gHKAngleDec)) {
-                        tank->decAngle(delta);
-                    }
-                    tank->moveLeft(isKeyHeld(gHKMoveLeft));
-                    tank->moveRight(isKeyHeld(gHKMoveRight));
-                }
-            }
-        }
-    }
+//    if (_activePlayer) {
+//        for (Id id : _activePlayer->selected) {
+//            if (auto obj = objs()->getById(id)) {
+//                if (auto tank = dynamic_cast<Tank*>(obj)) {
+//                    if (isKeyHeld(gHKAngleInc)) {
+//                        tank->incAngle(delta);
+//                    }
+//                    if (isKeyHeld(gHKAngleDec)) {
+//                        tank->decAngle(delta);
+//                    }
+//                    tank->moveLeft(isKeyHeld(gHKMoveLeft));
+//                    tank->moveRight(isKeyHeld(gHKMoveRight));
+//                }
+//            }
+//        }
+//    }
 }
 
 void GameScene::createKeyHoldHandler()
@@ -427,12 +427,11 @@ void GameScene::onMouseUp(Event *event)
         }
         mouseSelectRectStop(p, doSelection);
     } else if (e->getMouseButton() == 1) {
-        if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
-            _view.act(_view.follow(pw, _mouseFollowDuration));
-        } else {
-            bool add = isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT);
-            playerOrderPoint(p, add);
-        }
+//        if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
+//            _view.act(_view.follow(pw, _mouseFollowDuration));
+//        }
+        bool add = isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT);
+        playerOrderPoint(p, add);
     } else if (e->getMouseButton() == 2) {
         mousePanStop();
     }
@@ -830,6 +829,9 @@ void GameScene::playerOrderPoint(Vec2 p, bool add)
 
     // Determine order type
     Unit::OrderType orderType = Unit::OrderType::Move;
+    if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
+        orderType = Unit::OrderType::Aim;
+    }
 
     // Check if it is an ID-order
     bool found = false;
@@ -1182,45 +1184,45 @@ const std::set<EventKeyboard::KeyCode>& KeySpec::getKeyModList()
 
 void Panels::init(GameScene* game)
 {
-    _background = DrawNode::create();
-    game->addChild(_background, gZOrderSelectionPanel);
+//    _background = DrawNode::create();
+//    game->addChild(_background, gZOrderSelectionPanel);
 
-    Size s = Director::getInstance()->getVisibleSize();
-    Vec2 o = Director::getInstance()->getVisibleOrigin();
+//    Size s = Director::getInstance()->getVisibleSize();
+//    Vec2 o = Director::getInstance()->getVisibleOrigin();
 
-    // Selection panel
-    _background->drawSolidRect(
-        Vec2(gMiniMapPanelWidth, 0),
-        Vec2((s.width - gControlPanelWidth), gSelectionPanelHeight),
-        gPanelBgColor
-    );
-    _background->drawRect(
-        Vec2(gMiniMapPanelWidth, 0),
-        Vec2((s.width - gControlPanelWidth), gSelectionPanelHeight),
-        gPanelBorderColor
-    );
+//    // Selection panel
+//    _background->drawSolidRect(
+//        Vec2(gMiniMapPanelWidth, 0),
+//        Vec2((s.width - gControlPanelWidth), gSelectionPanelHeight),
+//        gPanelBgColor
+//    );
+//    _background->drawRect(
+//        Vec2(gMiniMapPanelWidth, 0),
+//        Vec2((s.width - gControlPanelWidth), gSelectionPanelHeight),
+//        gPanelBorderColor
+//    );
 
-    // MiniMap panel
-    _background->drawSolidRect(
-        Vec2(0, 0),
-        Vec2(gMiniMapPanelWidth, gMiniMapPanelHeight),
-        gPanelBgColor
-    );
-    _background->drawRect(
-        Vec2(0, 0),
-        Vec2(gMiniMapPanelWidth, gMiniMapPanelHeight),
-        gPanelBorderColor
-    );
+//    // MiniMap panel
+//    _background->drawSolidRect(
+//        Vec2(0, 0),
+//        Vec2(gMiniMapPanelWidth, gMiniMapPanelHeight),
+//        gPanelBgColor
+//    );
+//    _background->drawRect(
+//        Vec2(0, 0),
+//        Vec2(gMiniMapPanelWidth, gMiniMapPanelHeight),
+//        gPanelBorderColor
+//    );
 
-    // Control panel
-    _background->drawSolidRect(
-        Vec2(s.width - gControlPanelWidth, 0),
-        Vec2(s.width, gControlPanelHeight),
-        gPanelBgColor
-    );
-    _background->drawRect(
-        Vec2(s.width - gControlPanelWidth, 0),
-        Vec2(s.width, gControlPanelHeight),
-        gPanelBorderColor
-    );
+//    // Control panel
+//    _background->drawSolidRect(
+//        Vec2(s.width - gControlPanelWidth, 0),
+//        Vec2(s.width, gControlPanelHeight),
+//        gPanelBgColor
+//    );
+//    _background->drawRect(
+//        Vec2(s.width - gControlPanelWidth, 0),
+//        Vec2(s.width, gControlPanelHeight),
+//        gPanelBorderColor
+//    );
 }
