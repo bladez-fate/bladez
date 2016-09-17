@@ -30,7 +30,7 @@ Scene* GameScene::createScene()
 
 void GameScene::addDeadObj(Obj* obj)
 {
-     _deadObjs.push_back(obj);
+     _deadObjs.insert(obj);
 }
 
 bool GameScene::init()

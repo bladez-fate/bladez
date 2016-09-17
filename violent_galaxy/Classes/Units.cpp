@@ -70,7 +70,7 @@ void Unit::goFront()
 
 float Unit::separationVelocityAlong(Vec2 axis)
 {
-    CCASSERT(fabsf(axis.getLengthSq() - 1) < 1e-2, "got unnormalized axis vector");
+    axis.normalize();
     return sepDir.dot(axis) * gMaxSeparationVelocity * 0.4f;
 }
 

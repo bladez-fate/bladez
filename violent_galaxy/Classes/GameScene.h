@@ -122,7 +122,7 @@ private: // World
     void createWorld(cc::Scene* scene, cc::PhysicsWorld* pworld);
     cc::PhysicsWorld* _pworld = nullptr;
     cc::RefPtr<ObjStorage> _objs;
-    std::vector<Obj*> _deadObjs;
+    std::set<Obj*> _deadObjs;
     TileGrid<Unit*> _unitGrid;
 private: // Keyboard
     void initKeyboard();
