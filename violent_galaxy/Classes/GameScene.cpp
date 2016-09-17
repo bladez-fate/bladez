@@ -232,10 +232,10 @@ void GameScene::initKeyboard()
 //                                tank->addPower();
 //                            } else if (keyCode == gHKPowerDec) {
 //                                tank->subPower();
-                            } else if (keyCode == gHKGoBack) {
-                                tank->goBack();
-                            } else if (keyCode == gHKGoFront) {
-                                tank->goFront();
+//                            } else if (keyCode == gHKGoBack) {
+//                                tank->goBack();
+//                            } else if (keyCode == gHKGoFront) {
+//                                tank->goFront();
                             }
                         }
                     }
