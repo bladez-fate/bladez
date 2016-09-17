@@ -10,7 +10,8 @@ bool AstroObj::init(GameScene* game)
 {
     VisualObj::init(game);
     auto body = _rootNode->getPhysicsBody();
-    game->physicsWorld()->getForceField()->addGravitySource(body);
+    game->physicsWorld()->getForceField()->addGravitySource(body, body->getMass());
+    body->setDynamic(false);
     setZs(ZsAstroObjDefault);
     return true;
 }

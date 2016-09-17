@@ -19,22 +19,23 @@ class CC_DLL PhysicsForceField : public Ref
 {
 public:
     PhysicsForceField();
+    ~PhysicsForceField();
     virtual bool init();
 
-    void addGravitySource(PhysicsBody* body);
+    void addGravitySource(PhysicsBody* body, float mass);
 
     cpVect getGravity(cpVect p);
-    cpVect getBodyGravity(PhysicsBody* body, cpVect p);
-    Vec2 getBodyGravity(PhysicsBody* body, Vec2 p);
+//    cpVect getBodyGravity(PhysicsBody* body, cpVect p);
+//    Vec2 getBodyGravity(PhysicsBody* body, Vec2 p);
 
     float getGravityConstant() { return _gravityConstant; }
     void setGravityConstant(float value);
 
     CREATE_FUNC(PhysicsForceField);
 private:
-    void addBodyField(cpVect p, PhysicsBody* body, cpVect& ret);
+    void addBodyField(cpVect p, PhysicsBody* body, float mass, cpVect& ret);
 private:
-    Vector<PhysicsBody*> _gravitySources;
+    std::vector<std::pair<PhysicsBody*, float>> _gravitySources;
     float _gravityConstant;
     float _minDistanceSq;
 };

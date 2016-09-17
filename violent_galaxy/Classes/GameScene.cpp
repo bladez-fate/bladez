@@ -121,17 +121,10 @@ void GameScene::update(float delta)
     Layer::update(delta);
     playerUpdate(delta);
     keyboardUpdate(delta);
-    _planet->getNode()->getPhysicsBody()->setVelocity(Vec2::ZERO);
-    _planet->getNode()->getPhysicsBody()->setAngularVelocity(0);
 
     for (auto kv : *_objs) {
         Obj* obj = kv.second;
         obj->update(delta);
-        if (Building* building = dynamic_cast<Building*>(obj)) {
-            auto body = building->getNode()->getPhysicsBody();
-            body->setVelocity(Vec2::ZERO);
-            body->setAngularVelocity(0);
-        }
     }
 
     _view.update(delta);

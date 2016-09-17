@@ -57,6 +57,8 @@ bool CaptureChecker::onQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, voi
 bool Building::init(GameScene* game)
 {
     VisualObj::init(game);
+    auto body = _rootNode->getPhysicsBody();
+    body->setDynamic(false);
     setZs(ZsBuildingDefault);
     return true;
 }
