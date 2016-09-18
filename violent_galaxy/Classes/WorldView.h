@@ -6,6 +6,15 @@ class GameScene;
 class WorldViewAction;
 class WorldView;
 
+enum class EActionCategory : ui32 {
+    Update,
+    Scroll,
+    Move,
+    Zoom,
+    Rotate,
+    Follow
+};
+
 class WorldView {
 private:
     // Camera positioning, size and orientation
@@ -53,26 +62,35 @@ public:
     WorldViewAction* follow(cc::Vec2 p, Obj* obj, float duration);
     WorldViewAction* moveTo(cc::Vec2 p, float duration);
 
+    WorldViewAction* defaultView(cc::Vec2 p, float duration);
+
     void act(WorldViewAction* action);
     void clearActions();
 
     bool isSurfaceView() const { return _state.surfaceId; }
+    void setSurfaceId(Id id) { _state.surfaceId = id; }
     cc::Vec2 screen2world(cc::Vec2 s);
     cc::Vec2 world2screen(cc::Vec2 w);
     float angleDiff(float phi, float psi);
     float getZoom() const { return _state.zoom; }
+    cc::Vec2 getCenter() const { return _state.center; }
 private:
     void removeWorldCamera();
     void createWorldCamera();
-    WorldViewAction* applyState(const State& state, float duration);
+    WorldViewAction* applyState(const State& state, EActionCategory category, float duration);
     WorldViewAction* centerAt(cc::Vec2 center, float duration);
     State getViewStateAtPoint(cc::Vec2 center, bool zoomIfRequired, Id surfaceId) const;
-    bool onFollowQueryPoint(cc::PhysicsWorld& pworld, cc::PhysicsShape& shape, void* userdata);
+    bool onFollowQueryPoint(cc::PhysicsWorld& pworld, cc::PhysicsShape& shape, void* userdata,
+                            Id* surfaceId, Id* followId);
 private:
     GameScene* _game;
     cc::Camera* _camera = nullptr;
 
     State _state;
+
+    // TODO[fate]: use plain vector/array
+    std::map<EActionCategory, ui32> _actionsInFly;
+    std::map<EActionCategory, ui32> _actionsMaxInFly;
     std::list<WorldViewAction*> _actions;
 
     // Options
@@ -89,19 +107,20 @@ public:
         Smooth
     };
 public:
-    WorldViewAction(EType type, float duration)
+    WorldViewAction(EType type, EActionCategory category, float duration)
         : _type(type)
+        , _category(category)
         , _duration(duration)
     {}
 
-    static WorldViewAction* createLinear(float duration)
+    static WorldViewAction* createLinear(EActionCategory category, float duration)
     {
-        return new WorldViewAction(EType::Linear, duration);
+        return new WorldViewAction(EType::Linear, category, duration);
     }
 
-    static WorldViewAction* createSmooth(float duration)
+    static WorldViewAction* createSmooth(EActionCategory category, float duration)
     {
-        return new WorldViewAction(EType::Smooth, duration);
+        return new WorldViewAction(EType::Smooth, category, duration);
     }
 
     static void spawnAdd(WorldViewAction*& action, WorldViewAction* addAction)
@@ -129,6 +148,19 @@ public:
             return nullptr;
         _type = EType::Smooth;
         return this;
+    }
+
+    WorldViewAction* setCategory(EActionCategory category)
+    {
+        if (!this)
+            return nullptr;
+        _category = category;
+        return this;
+    }
+
+    EActionCategory getCategory()
+    {
+        return _category;
     }
 
     WorldViewAction* setPolar(bool polar)
@@ -172,6 +204,14 @@ public:
         return this;
     }
 
+    WorldViewAction* setSurfaceId(Id surfaceId)
+    {
+        if (!this)
+            return nullptr;
+        _surfaceId = surfaceId;
+        return this;
+    }
+
     WorldViewAction* spawn(WorldViewAction* action)
     {
         if (!this)
@@ -190,6 +230,7 @@ public:
 private:
     float smooth(float p);
 private:
+    EActionCategory _category;
     EType _type;
     float _duration;
     float _elapsed = 0.0f;
@@ -199,6 +240,7 @@ private:
     float _zoomTo = 1.0f;
     cc::Vec2 _zoomToPoint;
     float _rotate = 0.0f;
+    Id _surfaceId = 0;
     std::unique_ptr<WorldViewAction> _nextSpawn;
 };
 

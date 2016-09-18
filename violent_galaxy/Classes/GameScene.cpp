@@ -420,12 +420,12 @@ void GameScene::onMouseUp(Event *event)
         }
         mouseSelectRectStop(p, doSelection);
     } else if (e->getMouseButton() == 1) {
-//        if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
-//            _view.act(_view.follow(pw, _mouseFollowDuration));
-//        }
         bool add = isKeyHeld(EventKeyboard::KeyCode::KEY_SHIFT);
         playerOrderPoint(p, add);
     } else if (e->getMouseButton() == 2) {
+        if (isKeyHeld(EventKeyboard::KeyCode::KEY_CTRL)) {
+            _view.act(_view.follow(pw, _mouseFollowDuration));
+        }
         mousePanStop();
     }
 }
@@ -439,6 +439,7 @@ void GameScene::onMouseWheel(Event* event)
             _view.screen2world(e->getLocationInView()),
             _mouseViewActionDuration
         ));
+        _view.act(_view.defaultView(_view.getCenter(), 5*_mouseViewActionDuration));
     }
     if (e->getScrollX() != 0.0) {
         if (!_view.isSurfaceView()) {

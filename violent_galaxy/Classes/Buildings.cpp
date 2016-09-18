@@ -53,7 +53,6 @@ bool CaptureChecker::onQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, voi
     return true;
 }
 
-
 bool Building::init(GameScene* game)
 {
     VisualObj::init(game);

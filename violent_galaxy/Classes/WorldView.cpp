@@ -5,6 +5,12 @@ USING_NS_CC;
 
 void WorldView::init(GameScene* game)
 {
+    _actionsMaxInFly[EActionCategory::Update] = 1;
+    _actionsMaxInFly[EActionCategory::Scroll] = 10;
+    _actionsMaxInFly[EActionCategory::Move] = 10;
+    _actionsMaxInFly[EActionCategory::Zoom] = 10;
+    _actionsMaxInFly[EActionCategory::Rotate] = 10;
+    _actionsMaxInFly[EActionCategory::Follow] = 1;
     _game = game;
     createWorldCamera();
 }
@@ -14,13 +20,18 @@ void WorldView::update(float delta)
     for (auto i = _actions.begin(); i != _actions.end(); ) {
         WorldViewAction* a = *i;
         if (!a->perform(this, delta)) {
+            _actionsInFly[a->getCategory()]--;
             delete a;
             _actions.erase(i++);
         } else {
             ++i;
         }
     }
-    applyState(getViewStateAtPoint(_state.center, false, _state.surfaceId), 0.0f);
+    applyState(
+        getViewStateAtPoint(_state.center, false, _state.surfaceId),
+        EActionCategory::Update,
+        0.0f
+    );
 }
 
 WorldViewAction* WorldView::zoom(float scaleBy, float duration)
@@ -32,7 +43,7 @@ WorldViewAction* WorldView::zoom(float scaleBy, float duration)
         createWorldCamera();
         return nullptr;
     } else {
-        WorldViewAction* action = WorldViewAction::createLinear(duration);
+        WorldViewAction* action = WorldViewAction::createLinear(EActionCategory::Zoom, duration);
         action->zoom(zoom2 / _state.zoom);
         return action;
     }
@@ -52,7 +63,7 @@ WorldViewAction* WorldView::zoomTo(float scaleBy, Vec2 point, float duration)
         createWorldCamera();
         return nullptr;
     } else {
-        WorldViewAction* action = WorldViewAction::createLinear(duration);
+        WorldViewAction* action = WorldViewAction::createLinear(EActionCategory::Zoom, duration);
         action->zoomTo(zoom2 / _state.zoom, point);
         return action;
     }
@@ -65,7 +76,7 @@ WorldViewAction* WorldView::rotate(float rotateBy, float duration)
         centerAt(_state.center, 0.0f); // Just to enforce redraw
         return nullptr;
     } else {
-        WorldViewAction* action = WorldViewAction::createLinear(duration);
+        WorldViewAction* action = WorldViewAction::createLinear(EActionCategory::Rotate, duration);
         action->rotateBy(rotateBy);
         return action;
     }
@@ -81,7 +92,7 @@ WorldViewAction* WorldView::rotateAround(float rotateBy, Vec2 axis, float durati
         centerAt(center2, 0.0f);
         return nullptr;
     } else {
-        WorldViewAction* action = WorldViewAction::createLinear(duration);
+        WorldViewAction* action = WorldViewAction::createLinear(EActionCategory::Rotate, duration);
         action->moveBy(center2 - _state.center);
         action->rotateBy(rotateBy);
         return action;
@@ -116,7 +127,7 @@ WorldViewAction* WorldView::scroll(Vec2 offset, bool polar, float duration)
         }
         return nullptr;
     } else {
-        WorldViewAction* action = WorldViewAction::createLinear(duration);
+        WorldViewAction* action = WorldViewAction::createLinear(EActionCategory::Scroll, duration);
         action->setPolar(polar);
         action->moveBy(offset);
         return action;
@@ -130,11 +141,17 @@ WorldViewAction* WorldView::screenScroll(Vec2 offset, bool polar, float duration
 
 WorldViewAction* WorldView::follow(Vec2 p, float duration)
 {
+    Id surfaceId;
+    Id followId;
     _game->physicsWorld()->queryPoint(
-        CC_CALLBACK_3(WorldView::onFollowQueryPoint, this),
+        CC_CALLBACK_3(WorldView::onFollowQueryPoint, this, &surfaceId, &followId),
         p, nullptr
     );
-    return applyState(getViewStateAtPoint(p, true, _state.surfaceId), duration)->setSmooth();
+    return applyState(
+        getViewStateAtPoint(p, true, surfaceId),
+        EActionCategory::Follow,
+        duration
+    )->setSmooth();
 }
 
 WorldViewAction* WorldView::follow(Vec2 p, Obj* obj, float duration)
@@ -142,7 +159,11 @@ WorldViewAction* WorldView::follow(Vec2 p, Obj* obj, float duration)
     if (obj) {
         if (obj->getObjType() == ObjType::AstroObj) {
             _state.surfaceId = obj->getId();
-            return applyState(getViewStateAtPoint(p, true, _state.surfaceId), duration)->setSmooth();
+            return applyState(
+                getViewStateAtPoint(p, true, _state.surfaceId),
+                EActionCategory::Follow,
+                duration
+            )->setSmooth();
         }
     } else {
         _state.surfaceId = 0;
@@ -152,13 +173,38 @@ WorldViewAction* WorldView::follow(Vec2 p, Obj* obj, float duration)
 
 WorldViewAction* WorldView::moveTo(Vec2 p, float duration)
 {
-    return applyState(getViewStateAtPoint(p, true, _state.surfaceId), duration)->setSmooth();
+    return applyState(
+        getViewStateAtPoint(p, true, _state.surfaceId),
+        EActionCategory::Move,
+        duration
+    )->setSmooth();
+}
+
+WorldViewAction* WorldView::defaultView(Vec2 p, float duration)
+{
+    Id surfaceId;
+    Id followId;
+    _game->physicsWorld()->queryPoint(
+        CC_CALLBACK_3(WorldView::onFollowQueryPoint, this, &surfaceId, &followId),
+        p, nullptr
+    );
+    return applyState(
+        getViewStateAtPoint(p, false, surfaceId),
+        EActionCategory::Follow,
+        duration
+    )->setSmooth();
 }
 
 void WorldView::act(WorldViewAction* action)
 {
     if (action) {
-        _actions.push_back(action);
+        auto cat = action->getCategory();
+        if (_actionsInFly[cat] < _actionsMaxInFly[cat]) {
+            _actionsInFly[cat]++;
+            _actions.push_back(action);
+        } else {
+            delete action;
+        }
     }
 }
 
@@ -182,11 +228,6 @@ Vec2 WorldView::world2screen(Vec2 w)
     return Vec2(s.x, s.y);
 }
 
-float WorldView::angleDiff(float phi, float psi)
-{
-    return phi - psi; // TODO[fate]: normalize angles and find nearest rotation
-}
-
 void WorldView::removeWorldCamera()
 {
     _camera->removeFromParent();
@@ -206,7 +247,7 @@ void WorldView::createWorldCamera()
     _game->addChild(_camera);
 }
 
-WorldViewAction* WorldView::applyState(const WorldView::State& state, float duration)
+WorldViewAction* WorldView::applyState(const WorldView::State& state, EActionCategory category, float duration)
 {
     if (duration == 0.0f) {
         if (state.zoom == state.zoom) {
@@ -219,10 +260,11 @@ WorldViewAction* WorldView::applyState(const WorldView::State& state, float dura
         }
         return nullptr;
     } else {
-        WorldViewAction* action = WorldViewAction::createLinear(duration);
+        WorldViewAction* action = WorldViewAction::createLinear(category, duration);
         action->moveBy(state.center - _state.center);
         action->zoom(state.zoom / _state.zoom);
-        action->rotateBy(angleDiff(state.rotation, _state.rotation));
+        action->rotateBy(angleDistance(_state.rotation, state.rotation));
+        action->setSurfaceId(state.surfaceId);
         return action;
     }
 }
@@ -236,7 +278,7 @@ WorldViewAction* WorldView::centerAt(Vec2 center, float duration)
         _camera->lookAt(Vec3(eye.x, eye.y, 0.0f), _state.getUp());
         return nullptr;
     } else {
-        WorldViewAction* action = WorldViewAction::createLinear(duration);
+        WorldViewAction* action = WorldViewAction::createLinear(EActionCategory::Move, duration);
         action->moveBy(center - _state.center);
         return action;
     }
@@ -269,16 +311,17 @@ WorldView::State WorldView::getViewStateAtPoint(Vec2 center, bool zoomIfRequired
     return result;
 }
 
-bool WorldView::onFollowQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, void* userdata)
+bool WorldView::onFollowQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, void* userdata,
+                                   Id* surfaceId, Id* followId)
 {
     UNUSED(pworld);
     UNUSED(userdata);
     ObjTag tag(shape.getBody()->getNode()->getTag());
     if (tag.type() == ObjType::AstroObj) {
-        _state.surfaceId = tag.id();
+        *surfaceId = tag.id();
     }
     if (tag.type() == ObjType::Unit || tag.type() == ObjType::AstroObj) {
-        _state.followId = tag.id();
+        *followId = tag.id();
     }
     return true;
 }
@@ -318,6 +361,12 @@ bool WorldViewAction::perform(WorldView* view, float dt)
         }
     }
     bool res = _elapsed < _duration;
+    if (!res) {
+        if (_surfaceId) {
+            view->setSurfaceId(_surfaceId);
+            _surfaceId = 0;
+        }
+    }
     if (_nextSpawn) {
         bool nextRes = _nextSpawn->perform(view, dt);
         res = res || nextRes;
