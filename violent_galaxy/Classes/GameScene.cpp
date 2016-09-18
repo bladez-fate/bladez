@@ -1037,13 +1037,12 @@ void GameScene::updateUnitVelocityOnSurface(cpBody* body, float dt)
     }
 }
 
-float GameScene::initBuildings(Planet* planet)
+float GameScene::initBuildings(Planet* planet, Player** players, size_t playersCount)
 {
     auto pb = planet->getNode()->getPhysicsBody();
     auto segments = planet->segments();
 
-    bool playerStarted = false;
-    float playerLng = 0.0f;
+    std::vector<Building*> factories;
 
     for (const Segment& seg : segments) {
         const GeoPoint& pt1 = seg.pts.front();
@@ -1059,12 +1058,7 @@ float GameScene::initBuildings(Planet* planet)
                 continue;
             }
             building = Factory::create(this);
-            if (!playerStarted) {
-                // Create factory for active player
-                building->setPlayer(_activePlayer);
-                playerLng = CC_RADIANS_TO_DEGREES((pt1.angle + pt2.angle)/2);
-                playerStarted = true;
-            }
+            factories.push_back(building);
         } else if (seg.deposits.front()->res == Res::Ore) {
             if (random(0.0f, 1.0f) >= 0.8) {
                 continue;
@@ -1076,8 +1070,6 @@ float GameScene::initBuildings(Planet* planet)
             }
             building = PumpJack::create(this);
         }
-
-        //building->setPlayer(_activePlayer);
 
         Vec2 pw = planet->altAng2world(
             std::max(pt1.altitude, pt2.altitude) + 10.0f + building->getSize()/2,
@@ -1107,7 +1099,20 @@ float GameScene::initBuildings(Planet* planet)
             planet->altAng2local(planet->getAltitudeAt(rightEdge.getAngle()) - foundationHeight, rightEdge.getAngle())
         ));
     }
-    return playerLng;
+
+    size_t factoriesPerPlayer = factories.size() / playersCount;
+    size_t idx = 0;
+    while (playersCount-- > 0 && idx < factories.size()) {
+        Building* building = factories[idx];
+        building->setPlayer(*(players++));
+        if (factoriesPerPlayer > 0) {
+            idx += factoriesPerPlayer;
+        } else {
+            idx++;
+        }
+    }
+    Building* humanFact = factories[0]; // This must be the first player's factory
+    return planet->world2polar(humanFact->getNode()->getPosition()).getLongitude();
 }
 
 void GameScene::initGalaxy()
@@ -1118,14 +1123,29 @@ void GameScene::initGalaxy()
     //pl->getNode()->getPhysicsBody()->applyTorque(1e11);
     //pl->getNode()->getPhysicsBody()->applyImpulse(Vec2(1e11,0.5e11));
 
-    // Player
-    auto player = Player::create(this);
-    player->res = {{150, 0}};
-    player->name = "Player1";
-    player->color = gPlayerColor[0];
-    playerActivate(player);
+    // Human Player
+    auto human = Player::create(this);
+    human->res = {{150, 0}};
+    human->name = "Player1";
+    human->color = gPlayerColor[0];
+    playerActivate(human);
 
-    float startLng = initBuildings(pl);
+    // Computer1
+    auto computer1 = Player::create(this);
+    computer1->res = {{150, 0}};
+    computer1->name = "Computer1";
+    computer1->color = gPlayerColor[1];
+    computer1->ai.reset(new MoronAI(this, 1.0f));
+
+    // Computer2
+    auto computer2 = Player::create(this);
+    computer2->res = {{150, 0}};
+    computer2->name = "Computer2";
+    computer2->color = gPlayerColor[2];
+    computer2->ai.reset(new MoronAI(this, 1.0f));
+
+    Player* players[] = { human, computer1, computer2 };
+    float startLng = initBuildings(pl, players, sizeof(players)/sizeof(*players));
 
     // Starting location
     auto seg = pl->segments().locateLng(startLng);

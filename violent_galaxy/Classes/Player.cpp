@@ -1,5 +1,6 @@
 #include "Player.h"
 #include "GameScene.h"
+#include "Buildings.h"
 
 USING_NS_CC;
 
@@ -45,6 +46,9 @@ void Player::update(float delta)
             );
         }
     }
+    if (ai.get()) {
+        ai->update(delta);
+    }
 }
 
 bool Player::isSelect(Id id)
@@ -57,15 +61,36 @@ bool Player::isSelect(Id id)
     return false;
 }
 
+bool Player::canSelect(Id id) const
+{
+    if (Obj* obj = _game->objs()->getById(id)) {
+        if (Building* building = dynamic_cast<Building*>(obj)) {
+            if (building->getPlayer() == this) {
+                return true;
+            }
+        }
+        if (Unit* unit = dynamic_cast<Unit*>(obj)) {
+            if (unit->getPlayer() == this) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void Player::select(Id id)
 {
-    selected.clear();
-    selectAdd(id);
+    if (canSelect(id)) {
+        selected.clear();
+        selected.push_back(id);
+    }
 }
 
 void Player::selectAdd(Id id)
 {
-    selected.push_back(id);
+    if (canSelect(id)) {
+        selected.push_back(id);
+    }
 }
 
 void Player::selectRemove(Id id)
@@ -112,7 +137,6 @@ void Player::setSelectionToGroup(size_t idx)
 {
     CCASSERT(idx < groups.size(), "wrong group idx");
     groups[idx] = selected;
-    // TODO[fate]: do not allow enemies to be in group
 }
 
 void Player::addSelectionToGroup(size_t idx)
@@ -137,7 +161,6 @@ void Player::addSelectionToGroup(size_t idx)
             groups[idx].push_back(id);
         }
     }
-    // TODO[fate]: do not allow enemies to be in group
 }
 
 void Player::giveOrder(Unit::Order order, bool add)
@@ -156,4 +179,78 @@ void Player::giveOrder(Unit::Order order, bool add)
             unit->giveOrder(order, add);
         }
     }
+}
+
+MoronAI::MoronAI(GameScene* game, float thinkDuration)
+    : _game(game)
+    , _thinkDuration(thinkDuration)
+{}
+
+void MoronAI::update(float delta)
+{
+    _thinkElapsed += delta;
+    if (_thinkElapsed > _thinkDuration) {
+        _thinkElapsed = 0.0f;
+        think();
+    }
+    for (auto& kv : _tanks) {
+        TankState& ts = kv.second;
+        if (Tank* tank = _game->objs()->getByIdAs<Tank>(ts.id)) {
+            ts.ai->update(delta, tank);
+        }
+    }
+}
+
+void MoronAI::think()
+{
+    // Clear states for destroyed tanks
+    for (auto i = _tanks.begin(), e = _tanks.end(); i != e;) {
+        auto& kv = *i;
+        TankState& ts = kv.second;
+        if (!_game->objs()->getByIdAs<Tank>(ts.id)) {
+            // Tank was destroyed -- clear state
+            _tanks.erase(i++);
+        } else {
+            ++i;
+        }
+    }
+
+    // Assign strategy for newly created tanks
+    for (auto kv : *_game->objs()) {
+        Obj* obj = kv.second;
+        if (Tank* tank = dynamic_cast<Tank*>(obj)) {
+            Id id = tank->getId();
+            if (_tanks.find(id) == _tanks.end()) {
+                // Brand new tank has arrived
+                TankState& ts = _tanks[id];
+                ts.id = id;
+                ts.ai.reset(_tankCount % 2 == 0?
+                    (ITankAI*)(new ExploringTank(_game)):
+                    (ITankAI*)(new AttackingTank(_game))
+                );
+                _tankCount++;
+            }
+        }
+    }
+
+    // Switch strategy if something goes wrong
+    // Eventually all supply will be in exploring tanks!!!!!!!!!!
+}
+
+MoronAI::AttackingTank::AttackingTank(GameScene* game)
+    : _game(game)
+{}
+
+void MoronAI::AttackingTank::update(float delta, Tank* tank)
+{
+
+}
+
+MoronAI::ExploringTank::ExploringTank(GameScene* game)
+    : _game(game)
+{}
+
+void MoronAI::ExploringTank::update(float delta, Tank* tank)
+{
+
 }

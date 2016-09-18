@@ -201,6 +201,6 @@ private:
     void updateUnitVelocityOnSurface(cpBody* body, float dt);
 public: // Galaxy
     void initGalaxy();
-    float initBuildings(Planet* planet);
+    float initBuildings(Planet* planet, Player** players, size_t playersCount);
     Planet* _planet = nullptr;
 };
