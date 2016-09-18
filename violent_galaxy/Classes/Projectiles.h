@@ -16,6 +16,7 @@ public:
     virtual void hit(Unit* unit);
     virtual void setPlayer(Player* player);
     Player* getPlayer() { return _player; }
+    void setDamage(i32 damage) { _damage = damage; }
 protected:
     Projectile() {}
     bool init(GameScene* game) override;
@@ -29,6 +30,8 @@ class Shell : public Projectile {
 public:
     OBJ_CREATE_FUNC(Shell);
     float getSize() override;
+    static constexpr float bodyMass = 0.05f;
+    void setColor(cc::Color4F color);
 protected:
     Shell() {}
     virtual bool init(GameScene* game) override;
@@ -38,5 +41,6 @@ protected:
 protected:
     cc::DrawNode* node() { return static_cast<cc::DrawNode*>(_rootNode); }
     float _size;
+    cc::Color4F _color = cc::Color4F::WHITE;
 };
 

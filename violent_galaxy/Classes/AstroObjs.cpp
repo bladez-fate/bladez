@@ -26,8 +26,8 @@ Planet::Planet()
 {
     // Generate mountains
     for (int i = 0; i < 100; i++) {
-        float height = random<float>(50.0f, 400.0f);
-        float slope = random<float>(5.0f, 15.0f);
+        float height = random<float>(50.0f, 300.0f);
+        float slope = random<float>(4.0f, 12.0f);
         float width = std::min(180.0f, height / slope);
         float longitude = random<float>(0.0, 360.0);
         for (size_t i = 0; i < width; i++) {
@@ -67,7 +67,7 @@ Planet::Planet()
         _deposits.push_back(Deposit());
         Deposit& dep = _deposits.back();
         dep.res = res;
-        dep.resLeft = 10000;
+        dep.resLeft = 2000;
         seg.deposits.push_back(&dep);
 
         if (res == Res::Ore) {
@@ -169,7 +169,7 @@ void Planet::addPlatform(Platform&& platform)
 
 bool Planet::init(GameScene* game)
 {
-    _coreRadius = 8000;
+    _coreRadius = 6000;
     _surfAltitude = 100;
     _atmoAltitude = 1500;
     _spacAltitude = 6000;

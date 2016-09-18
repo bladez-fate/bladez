@@ -12,7 +12,8 @@ private:
     Player* _capturer = nullptr;
 public:
     void update(float delta, Player* player, VisualObj* obj, GameScene* game);
-    bool onQueryPoint(cc::PhysicsWorld& pworld, cc::PhysicsShape& shape, void* userdata);
+    bool onQueryPoint(cc::PhysicsWorld& pworld, cc::PhysicsShape& shape,
+                      void* userdata, cc::Vec2 pw, float distance, cc::Vec2 up);
 };
 
 class Building : public VisualObj {
@@ -53,7 +54,7 @@ public:
     OBJ_CREATE_FUNC(Factory);
     float getSize() override;
 protected:
-    Factory() : _unitProd({{150, 0}}, 1, 10) {}
+    Factory() : _unitProd({{150, 0}}, 1, 1.0f /* time to build */) {}
     virtual bool init(GameScene* game) override;
     cc::Node* createNodes() override;
     cc::PhysicsBody* createBody() override;
@@ -74,11 +75,17 @@ private:
     float _period;
     float _elapsed = 0.0f;
     Player* _player = nullptr;
+    Deposit* _deposit = nullptr;
 public:
     ResourceProducer(const ResVec& resAdd, float addPeriod)
         : _resAdd(resAdd)
         , _period(addPeriod)
     {}
+
+    void setDeposit(Deposit* deposit)
+    {
+        _deposit = deposit;
+    }
 
     void update(float delta, Player* player);
 };
@@ -87,6 +94,12 @@ class Mine : public Building {
 public:
     OBJ_CREATE_FUNC(Mine);
     float getSize() override;
+
+    void setDeposit(Deposit* deposit)
+    {
+        _resProd.setDeposit(deposit);
+    }
+
 protected:
     Mine() : _resProd({{10, 0}}, 1) {}
     virtual bool init(GameScene* game) override;
@@ -106,6 +119,12 @@ class PumpJack : public Building {
 public:
     OBJ_CREATE_FUNC(PumpJack);
     float getSize() override;
+
+    void setDeposit(Deposit* deposit)
+    {
+        _resProd.setDeposit(deposit);
+    }
+
 protected:
     PumpJack() : _resProd({{0, 5}}, 1) {}
     virtual bool init(GameScene* game) override;

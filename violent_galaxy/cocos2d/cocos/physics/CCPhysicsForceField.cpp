@@ -53,6 +53,12 @@ cpVect PhysicsForceField::getGravity(cpVect p)
     return ret;
 }
 
+Vec2 PhysicsForceField::getGravity(Vec2 p)
+{
+    cpVect res = getGravity(cpVect{p.x, p.y});
+    return Vec2(res.x, res.y);
+}
+
 //cpVect PhysicsForceField::getBodyGravity(PhysicsBody* body, cpVect p)
 //{
 //    cpVect ret = cpvzero;

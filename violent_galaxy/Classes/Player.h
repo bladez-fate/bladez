@@ -65,30 +65,50 @@ private:
         std::unique_ptr<ITankAI> ai;
     };
 
-    class AttackingTank : public ITankAI {
+    class Attacking : public ITankAI {
     private:
         GameScene* _game;
+        float _dir;
+
+        float _thinkElapsed = 0.0f;
+        float _thinkDuration = 0.1f;
+
+        Unit* _lastTarget = nullptr;
+        float _lastError; // in degrees
+        float _targetRandomAngle; // in degrees
+        float _initialError = 8; // in degrees
+        cc::Vec2 _targetRandomVector;
     public:
-        explicit AttackingTank(GameScene* game);
+        explicit Attacking(GameScene* game, float dir);
         void update(float delta, Tank* tank) override;
+        void randomizeAll();
+
+    private:
+        void think(Tank* tank);
+        void randomizeAll(Unit* target);
+        void decreaseAimError(Unit* target);
+        cc::Vec2 randomizeTarget(cocos2d::Vec2 targetPos);
+        float getAimError(Unit* target);
+        bool aim(Tank* tank, cc::Vec2 target, float targetSizeSq, float& shootAngle);
     };
 
-    class ExploringTank : public ITankAI {
+    class Defending : public ITankAI {
     private:
         GameScene* _game;
     public:
-        explicit ExploringTank(GameScene* game);
+        explicit Defending(GameScene* game);
         void update(float delta, Tank* tank) override;
     };
 
 private:
     GameScene* _game;
+    Player* _player;
     float _thinkElapsed = 0.0f;
     float _thinkDuration;
     std::unordered_map<Id, TankState> _tanks;
     ui64 _tankCount = 0;
 public:
-    MoronAI(GameScene* game, float thinkDuration);
+    MoronAI(GameScene* game, Player* player, float thinkDuration);
     void update(float delta);
 private:
     void think();

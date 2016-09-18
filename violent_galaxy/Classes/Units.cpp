@@ -54,6 +54,27 @@ void Unit::damage(i32 value)
 {
     hp -= value;
     if (hp <= 0) {
+        Vec2 pos = _rootNode->getPhysicsBody()->getPosition();
+        Color4F col = Color4F::WHITE;
+        if (auto player = getPlayer()) {
+            col = player->color;
+        }
+
+        // Create boom trash
+        Vec2 up = -_game->physicsWorld()->getForceField()->getGravity(pos).getNormalized();
+        for (int i = 0; i < 7; i++) {
+            Shell* shell = Shell::create(_game);
+            shell->setColor(col);
+            shell->setDamage(10);
+            shell->setPosition(pos);
+
+            float angle = CC_DEGREES_TO_RADIANS(random<float>(-60, 60));
+            Vec2 j = up * random<float>(10.0f, 25.0f);
+            j = j.rotate(Vec2::forAngle(angle));
+            shell->getNode()->getPhysicsBody()->applyTorque(random<float>(-100.0f, 100.0f));
+            shell->getNode()->getPhysicsBody()->applyImpulse(j);
+        }
+
         destroy();
     }
 }
@@ -178,6 +199,11 @@ float Tank::getSize()
     return _size;
 }
 
+Vec2 Tank::getShootCenter()
+{
+    return _body->local2World(_gunBegin);
+}
+
 void Tank::getShootParams(Vec2& fromPoint, Vec2& dir)
 {
     Vec2 localBegin = _gunBegin;
@@ -185,6 +211,13 @@ void Tank::getShootParams(Vec2& fromPoint, Vec2& dir)
     Vec2 begin = _body->local2World(localBegin);
     fromPoint = _body->local2World(localEnd);
     dir = (fromPoint - begin).getNormalized();
+}
+
+bool Tank::isGunAnglePossible(float angle)
+{
+    Vec2 localAxis = _body->world2Local(Vec2::forAngle(angle)) - _body->world2Local(Vec2::ZERO);
+    float localAngle = CC_RADIANS_TO_DEGREES(angleMain(localAxis.getAngle()));
+    return _angleMin < localAngle && localAngle < _angleMax;
 }
 
 void Tank::gunRotationSpeed(float speed)
@@ -202,7 +235,7 @@ void Tank::moveRight(bool go)
     _movingRight = go;
 }
 
-void Tank::shoot()
+bool Tank::shoot()
 {
     if (_cooldownLeft <= 0.0f) {
         _cooldownLeft = _cooldown;
@@ -214,7 +247,15 @@ void Tank::shoot()
         Vec2 j = dir * _power;
         proj->getNode()->getPhysicsBody()->applyImpulse(j);
         _body->applyImpulse(_body->world2Local(Vec2::ZERO) - _body->world2Local(j));
+        return true;
+    } else {
+        return false;
     }
+}
+
+float Tank::getInitialProjectileVelocity()
+{
+    return _power / Shell::bodyMass;
 }
 
 //void Tank::incAngle(float dt)
@@ -356,25 +397,24 @@ Tank::ExecResult Tank::executeAim(Vec2 p)
 {
     if (surfaceId) {
         if (Planet* planet = _game->objs()->getByIdAs<Planet>(surfaceId)) {
-            Vec2 src = _body->getPosition();
             Vec2 fromPoint;
             Vec2 sourceDir;
             getShootParams(fromPoint, sourceDir);
-            Vec2 targetDir = (p - src).getNormalized();
+            Vec2 targetDir = (p - getShootCenter()).getNormalized();
             if (targetDir.isSmall() || sourceDir.isSmall()) {
                 gunRotationSpeed(0.0f);
                 return ExecResult::Done; // We do not know where to aim, so we are done
             }
             float aDist = angleDistance(sourceDir.getAngle(), targetDir.getAngle());
             if (fabsf(aDist) < CC_DEGREES_TO_RADIANS(5)) {
-                if (fabsf(aDist) < CC_DEGREES_TO_RADIANS(1)) {
+                if (fabsf(aDist) < CC_DEGREES_TO_RADIANS(0.2)) {
                     gunRotationSpeed(0.0f);
                     return ExecResult::Done;
                 } else if (aDist < 0) {
-                    gunRotationSpeed(-0.2f);
+                    gunRotationSpeed(-0.1f);
                     return ExecResult::InProgress;
                 } else {
-                    gunRotationSpeed(0.2f);
+                    gunRotationSpeed(0.1f);
                     return ExecResult::InProgress;
                 }
             } else if (aDist < 0) {

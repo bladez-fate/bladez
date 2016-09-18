@@ -25,6 +25,7 @@ public:
     void addGravitySource(PhysicsBody* body, float mass);
 
     cpVect getGravity(cpVect p);
+    Vec2 getGravity(Vec2 p);
 //    cpVect getBodyGravity(PhysicsBody* body, cpVect p);
 //    Vec2 getBodyGravity(PhysicsBody* body, Vec2 p);
 

@@ -8,11 +8,13 @@ USING_NS_CC;
 void CaptureChecker::update(float delta, Player* player, VisualObj* obj, GameScene* game)
 {
     std::set<Id> ids;
+    Vec2 pw = obj->getNode()->getPosition();
     game->physicsWorld()->queryPoint(
-        CC_CALLBACK_3(CaptureChecker::onQueryPoint, this),
-        obj->getNode()->getPosition(),
+        CC_CALLBACK_3(CaptureChecker::onQueryPoint, this, pw, obj->getSize(),
+                      -game->physicsWorld()->getForceField()->getGravity(pw).getNormalized()),
+        pw,
         &ids,
-        obj->getSize()
+        obj->getSize() * 20
     );
     std::set<Player*> players;
     for (Id id : ids) {
@@ -41,14 +43,21 @@ void CaptureChecker::update(float delta, Player* player, VisualObj* obj, GameSce
     _capturer = nullptr;
 }
 
-bool CaptureChecker::onQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, void* userdata)
+bool CaptureChecker::onQueryPoint(PhysicsWorld& pworld, PhysicsShape& shape, void* userdata, Vec2 pw, float distance, Vec2 up)
 {
     UNUSED(pworld);
-    std::set<Id>& ids = *reinterpret_cast<std::set<Id>*>(userdata);
-    ObjTag tag(shape.getBody()->getNode()->getTag());
-    Id id = tag.id();
-    if (tag.type() == ObjType::Unit) {
-        ids.insert(id);
+    auto node = shape.getBody()->getNode();
+    Vec2 pos = node->getPhysicsBody()->getPosition();
+
+    Vec2 right = Vec2(up.y, -up.x); // rotate 90 degrees clockwise
+    float range = fabs(Vec2::dot(pos - pw, right));
+    if (range < distance) { // We take only horizontal coordinate into account to avoid problems with "flying" buildings
+        std::set<Id>& ids = *reinterpret_cast<std::set<Id>*>(userdata);
+        ObjTag tag(node->getTag());
+        Id id = tag.id();
+        if (tag.type() == ObjType::Unit) {
+            ids.insert(id);
+        }
     }
     return true;
 }
@@ -215,6 +224,16 @@ float Factory::getSize()
 
 void ResourceProducer::update(float delta, Player* player)
 {
+    if (!_deposit) {
+        return; // No deposit
+    }
+    if (_resAdd.amount[(int)_deposit->res] == 0) {
+        return; // Wrong resource
+    }
+    if (_deposit->resLeft < _resAdd.amount[(int)_deposit->res]) {
+        return; // Deposit exhausted
+    }
+
     if (player != _player) {
         _player = player;
         _elapsed = 0.0f; // Production cylce is reset on building capture
@@ -224,6 +243,7 @@ void ResourceProducer::update(float delta, Player* player)
         if (_elapsed > _period) {
             _elapsed -= _period;
             _player->res.add(_resAdd);
+            _deposit->resLeft -= _resAdd.amount[(int)_deposit->res];
         }
     }
 }

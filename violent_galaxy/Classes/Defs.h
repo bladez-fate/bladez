@@ -135,7 +135,6 @@ inline float angleMain(float a)
     if (a < 0 || a >= 2 * M_PI) {
         a -= (2 * M_PI) * floorf(a / (2 * M_PI));
         CCASSERT(a >= 0, "angle is still negative");
-        CCASSERT(a < 2 * M_PI , "angle is still above 2*pi");
     }
     return a;
 }

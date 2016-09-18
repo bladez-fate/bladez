@@ -1063,12 +1063,16 @@ float GameScene::initBuildings(Planet* planet, Player** players, size_t playersC
             if (random(0.0f, 1.0f) >= 0.8) {
                 continue;
             }
-            building = Mine::create(this);
+            auto mine = Mine::create(this);
+            mine->setDeposit(seg.deposits.front());
+            building = mine;
         } else if (seg.deposits.front()->res == Res::Oil) {
             if (random(0.0f, 1.0f) >= 0.8) {
                 continue;
             }
-            building = PumpJack::create(this);
+            auto pumpjack = PumpJack::create(this);
+            pumpjack->setDeposit(seg.deposits.front());
+            building = pumpjack;
         }
 
         Vec2 pw = planet->altAng2world(
@@ -1128,6 +1132,7 @@ void GameScene::initGalaxy()
     human->res = {{150, 0}};
     human->name = "Player1";
     human->color = gPlayerColor[0];
+    human->ai.reset(new MoronAI(this, human, 1.0f));
     playerActivate(human);
 
     // Computer1
@@ -1135,14 +1140,14 @@ void GameScene::initGalaxy()
     computer1->res = {{150, 0}};
     computer1->name = "Computer1";
     computer1->color = gPlayerColor[1];
-    computer1->ai.reset(new MoronAI(this, 1.0f));
+    computer1->ai.reset(new MoronAI(this, computer1, 1.0f));
 
     // Computer2
     auto computer2 = Player::create(this);
     computer2->res = {{150, 0}};
     computer2->name = "Computer2";
     computer2->color = gPlayerColor[2];
-    computer2->ai.reset(new MoronAI(this, 1.0f));
+    computer2->ai.reset(new MoronAI(this, computer2, 1.0f));
 
     Player* players[] = { human, computer1, computer2 };
     float startLng = initBuildings(pl, players, sizeof(players)/sizeof(*players));

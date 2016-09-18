@@ -30,7 +30,7 @@ const cc::Color4F gPlayerColor[3] = {
     Color4F(0.9f, 0.1f, 0.9f, 1.0f)
 };
 const cc::Color4F gSelectionColor(0.0f, 0.9f, 0.0f, 1.0f);
-const float gHpRedLevel    = 0.2f;
+const float gHpRedLevel    = 0.25f;
 const float gHpYellowLevel = 0.5f;
 const cc::Color4F gHpRedColor   (1.0f, 0.0f, 0.0f, 1.0f);
 const cc::Color4F gHpYellowColor(1.0f, 1.0f, 0.0f, 1.0f);

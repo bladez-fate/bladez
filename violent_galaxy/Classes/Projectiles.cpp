@@ -74,17 +74,23 @@ Node* Shell::createNodes()
 PhysicsBody* Shell::createBody()
 {
     _body = PhysicsBody::createCircle(_size, gProjectileMaterial);
-    _body->setMass(0.05);
+    _body->setMass(bodyMass);
     _body->setMoment(2.0);
     return _body;
 }
 
 void Shell::draw()
 {
-    node()->drawSolidCircle(Vec2::ZERO, _size, 0, 6, Color4F::WHITE);
+    node()->drawSolidCircle(Vec2::ZERO, _size, 0, 6, _color);
 }
 
 float Shell::getSize()
 {
     return _size;
+}
+
+void Shell::setColor(Color4F color)
+{
+    _color = color;
+    draw();
 }

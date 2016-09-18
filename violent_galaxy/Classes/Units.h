@@ -205,7 +205,11 @@ class Tank : public Unit {
 public:
     OBJ_CREATE_FUNC(Tank);
     float getSize() override;
-    void shoot();
+    bool shoot();
+    float getInitialProjectileVelocity();
+    cc::Vec2 getShootCenter();
+    void getShootParams(cc::Vec2& fromPoint, cc::Vec2& dir);
+    bool isGunAnglePossible(float angle);
 //    void incAngle(float dt);
 //    void decAngle(float dt);
 //    void subPower();
@@ -231,8 +235,6 @@ protected:
         Failed,
         MAX
     };
-
-    void getShootParams(cc::Vec2& fromPoint, cc::Vec2& dir);
 
     void gunRotationSpeed(float speed);
     void moveLeft(bool go);
