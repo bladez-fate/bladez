@@ -1132,7 +1132,7 @@ void GameScene::initGalaxy()
     human->res = {{150, 0}};
     human->name = "Player1";
     human->color = gPlayerColor[0];
-    human->ai.reset(new MoronAI(this, human, 1.0f));
+    //human->ai.reset(new MoronAI(this, human, 1.0f));
     playerActivate(human);
 
     // Computer1
